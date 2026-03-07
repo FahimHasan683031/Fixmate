@@ -1,0 +1,35 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "D:\\Fahim\\Tamplait\\tamplait_project\\logs\\winston\\errors\\.bf5dd8c4622d13b6f8d9c4b1b64f6d5676227d2d-audit.json",
+    "files": [
+        {
+            "date": 1768425372184,
+            "name": "D:\\Fahim\\Tamplait\\tamplait_project\\logs\\winston\\errors\\sg-2026-01-15-03-error.log",
+            "hash": "3473f0ef25281b8b164e4e8b433c4cd7af306e509293a442f38da6569c3252df"
+        },
+        {
+            "date": 1768431114923,
+            "name": "D:\\Fahim\\Tamplait\\tamplait_project\\logs\\winston\\errors\\sg-2026-01-15-04-error.log",
+            "hash": "39e3288b04d9f4c96c09def66d2c66f33f51c12ee4b3c55de12d3c52bcf94529"
+        },
+        {
+            "date": 1768431946079,
+            "name": "D:\\Fahim\\Tamplait\\tamplait_project\\logs\\winston\\errors\\sg-2026-01-15-05-error.log",
+            "hash": "b7a13d951dc18be5e3c181242e331ca9820db82b099aa1c3579e44321d5627e5"
+        },
+        {
+            "date": 1768435673097,
+            "name": "D:\\Fahim\\Tamplait\\tamplait_project\\logs\\winston\\errors\\sg-2026-01-15-06-error.log",
+            "hash": "ad0e802a8ea4f34fa02a0fad104cfc8f9faa824dfa5e6444d5b4b92375af004c"
+        },
+        {
+            "date": 1768495200445,
+            "name": "D:\\Fahim\\Tamplait\\tamplait_project\\logs\\winston\\errors\\sg-2026-01-15-22-error.log",
+            "hash": "61d323be945ccadaa356a20167848dc593807aecc476cbd079825bffc57a725a"
+        }
+    ],
+    "hashType": "sha256"
+}
