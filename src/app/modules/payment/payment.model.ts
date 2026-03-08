@@ -3,30 +3,56 @@ import { IPayment } from "./payment.interface";
 
 const PaymentSchema = new Schema<IPayment>(
   {
-    email: {
-      type: String,
-      required: true,
-      trim: true,
-      lowercase: true,
-    },
-    dateTime: {
-      type: Date,
-      required: true,
-    },
-    referenceId: {
+    customer: {
       type: Schema.Types.ObjectId,
-      required: false,
+      ref: "User",
+      required: true,
+    },
+    provider: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    service: {
+      type: Schema.Types.ObjectId,
+      ref: "Service",
+      required: true,
+    },
+    booking: {
+      type: Schema.Types.ObjectId,
+      ref: "Booking",
+      required: true,
     },
     amount: {
       type: Number,
       required: true,
       min: 0,
     },
+    paymentId: {
+      type: String,
+      required: false,
+    },
     transactionId: {
       type: String,
+      required: false,
+    },
+    paymentStatus: {
+      type: String,
       required: true,
-      unique: true,
+    },
+    email: {
+      type: String,
+      required: false,
       trim: true,
+      lowercase: true,
+    },
+    dateTime: {
+      type: Date,
+      required: false,
+    },
+    referenceId: {
+      type: Schema.Types.ObjectId,
+      required: false,
     },
     description: {
       type: String,
@@ -38,6 +64,7 @@ const PaymentSchema = new Schema<IPayment>(
       trim: true,
       maxlength: 100,
     },
+
   },
   { timestamps: true }
 );

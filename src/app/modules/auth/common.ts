@@ -12,7 +12,7 @@ import { emailHelper } from '../../../helpers/emailHelper'
 import bcrypt from "bcrypt";
 
 
-const handleLoginLogic = async (payload: ILoginData, isUserExist: IUser):Promise<IAuthResponse> => {
+const handleLoginLogic = async (payload: ILoginData, isUserExist: IUser): Promise<IAuthResponse> => {
   const { authentication, verified, status, password } = isUserExist
   const { restrictionLeftAt, wrongLoginAttempts } = authentication
 
@@ -36,8 +36,8 @@ const handleLoginLogic = async (payload: ILoginData, isUserExist: IUser):Promise
     })
 
     const otpTemplate = emailTemplate.createAccount({
-      name: `${isUserExist.firstName!} ${isUserExist.lastName!}`,
-      email: isUserExist.email!,   
+      name: isUserExist.name,
+      email: isUserExist.email!,
       otp,
     })
     setTimeout(() => {
@@ -53,24 +53,11 @@ const handleLoginLogic = async (payload: ILoginData, isUserExist: IUser):Promise
     )
   }
 
-  if (status === USER_STATUS.RESTRICTED) {
-    if (restrictionLeftAt && new Date() < restrictionLeftAt) {
-      const remainingMinutes = Math.ceil(
-        (restrictionLeftAt.getTime() - Date.now()) / 60000,
-      )
-      throw new ApiError(
-        StatusCodes.TOO_MANY_REQUESTS,
-        `You are restricted to login for ${remainingMinutes} minutes`,
-      )
-    }
-
-    // Handle restriction expiration
-    await User.findByIdAndUpdate(isUserExist._id, {
-      $set: {
-        authentication: { restrictionLeftAt: null, wrongLoginAttempts: 0 },
-        status: USER_STATUS.ACTIVE,
-      },
-    })
+  if (status === USER_STATUS.BLOCKED) {
+    throw new ApiError(
+      StatusCodes.FORBIDDEN,
+      'Your account has been blocked. Please contact support.',
+    )
   }
 
   console.log(payload.password, password)
@@ -126,24 +113,24 @@ const handleLoginLogic = async (payload: ILoginData, isUserExist: IUser):Promise
     { new: true },
   )
 
-  const tokens = AuthHelper.createToken(isUserExist._id, isUserExist.role, `${isUserExist.firstName!} ${isUserExist.lastName!}`, isUserExist.email)
-  const userInfo={
+  const tokens = AuthHelper.createToken(isUserExist._id, isUserExist.role, isUserExist.name, isUserExist.email)
+  const userInfo = {
     id: isUserExist._id,
     role: isUserExist.role,
-    name: `${isUserExist.firstName!} ${isUserExist.lastName!}`,
+    name: isUserExist.name,
     email: isUserExist.email!,
     image: isUserExist.image!,
   }
 
-  return  authResponse(
-  StatusCodes.OK,
-  `Welcome back ${isUserExist.firstName!} ${isUserExist.lastName!}`,
-  undefined,           
-  tokens.accessToken,     
-  tokens.refreshToken,     
-  undefined,                 
-  userInfo                   
-)
+  return authResponse(
+    StatusCodes.OK,
+    `Welcome back ${isUserExist.name}`,
+    undefined,
+    tokens.accessToken,
+    tokens.refreshToken,
+    undefined,
+    userInfo
+  )
 }
 
 

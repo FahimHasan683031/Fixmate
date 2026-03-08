@@ -14,6 +14,7 @@ import { MessageRoutes } from '../modules/message/message.routes';
 import { NotificationRoutes } from '../modules/notification/notification.routes';
 import { ClientRoutes } from '../modules/client/client.route';
 import { AdminRoutes } from '../modules/admin/admin.route';
+import { ProviderRoutes } from '../modules/provider/provider.route';
 
 
 
@@ -34,6 +35,7 @@ const apiRoutes = [
     { path: "/notification", route: NotificationRoutes },
     { path: "/client", route: ClientRoutes },
     { path: "/admin", route: AdminRoutes },
+    { path: "/provider", route: ProviderRoutes },
 ]
 
 

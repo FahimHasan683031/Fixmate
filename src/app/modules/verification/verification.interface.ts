@@ -5,5 +5,7 @@ export interface IVerificaiton {
     user: Types.ObjectId;
     status: VERIFICATION_STATUS;
     nid: string;
+    nidFront: string;
+    nidBack: string;
     license: string;
 }
