@@ -62,24 +62,14 @@ export const createUser = async (payload: IUser) => {
       wrongLoginAttempts: 0,
     }
 
-    // 3. Send OTP email
-    setTimeout(() => {
-      const createAccountEmail = emailTemplate.createAccount({
-        name: `${payload.firstName} ${payload.lastName}`,
-        email: payload.email,
-        otp,
-      })
-      emailHelper.sendEmail(createAccountEmail)
-    }, 0)
-
-    // 4. Create User
+    // 3. Create User
     const user = await User.create(
       [
         {
           ...payload,
           password: payload.password,
           authentication,
-          role: payload.role || USER_ROLES.USER,
+          role: payload.role || USER_ROLES.CLIENT,
         },
       ],
       { session },
@@ -89,6 +79,19 @@ export const createUser = async (payload: IUser) => {
       throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user.')
 
     const createdUser = user[0]
+
+    // 4. Send OTP email
+    // TODO: Implement email sending logic properly in shared/emailTemplate
+    /*
+    setTimeout(() => {
+      const createAccountEmail = emailTemplate.createAccount({
+        name: payload.name,
+        email: payload.email,
+        otp,
+      })
+      emailHelper.sendEmail(createAccountEmail)
+    }, 0)
+    */
 
     // 5. Commit Transaction
     await session.commitTransaction()
@@ -108,7 +111,7 @@ const login = async (payload: ILoginData): Promise<IAuthResponse> => {
 
   const isUserExist = await User.findOne({
     ...query,
-    status: { $in: [USER_STATUS.ACTIVE, USER_STATUS.RESTRICTED] },
+    status: { $in: [USER_STATUS.ACTIVE] },
   })
     .select('+password +authentication')
     .lean()
@@ -164,13 +167,13 @@ const adminLogin = async (payload: ILoginData): Promise<IAuthResponse> => {
   const tokens = AuthHelper.createToken(
     isUserExist._id,
     isUserExist.role,
-    `${isUserExist.firstName} ${isUserExist.lastName}`,
+    isUserExist.name,
     isUserExist.email,
   )
 
   return authResponse(
     StatusCodes.OK,
-    `Welcome back ${isUserExist.firstName}`,
+    `Welcome back ${isUserExist.name}`,
     isUserExist.role,
     tokens.accessToken,
     tokens.refreshToken,
@@ -183,7 +186,7 @@ const forgetPassword = async (email?: string, phone?: string) => {
     : { phone: phone }
   const isUserExist = await User.findOne({
     ...query,
-    status: { $in: [USER_STATUS.ACTIVE, USER_STATUS.RESTRICTED] },
+    status: { $in: [USER_STATUS.ACTIVE] },
   })
 
   if (!isUserExist) {
@@ -217,10 +220,11 @@ const forgetPassword = async (email?: string, phone?: string) => {
   // Send OTP to user
   if (email) {
     const forgetPasswordEmailTemplate = emailTemplate.resetPassword({
-      name: `${isUserExist.firstName} ${isUserExist.lastName}`,
+      name: isUserExist.name,
       email: isUserExist.email,
       otp,
     })
+
 
     setTimeout(() => {
       emailHelper.sendEmail(forgetPasswordEmailTemplate)
@@ -351,20 +355,20 @@ const verifyAccount = async (
     const tokens = AuthHelper.createToken(
       isUserExist._id,
       isUserExist.role,
-      isUserExist.firstName + ' ' + isUserExist.lastName,
+      isUserExist.name,
       isUserExist.email,
     )
     const userInfo = {
       id: isUserExist._id,
       role: isUserExist.role,
-      name: `${isUserExist.firstName!} ${isUserExist.lastName!}`,
+      name: isUserExist.name,
       email: isUserExist.email!,
       image: isUserExist.image!,
     }
 
     return authResponse(
       StatusCodes.OK,
-      `Welcome ${isUserExist.firstName} ${isUserExist.lastName} to our platform.`,
+      `Welcome ${isUserExist.name} to our platform.`,
       undefined,
       tokens.accessToken,
       tokens.refreshToken,
@@ -455,7 +459,7 @@ const resendOtpToPhoneOrEmail = async (
   const query = email ? { email: email } : { phone: phone }
   const isUserExist = await User.findOne({
     ...query,
-    status: { $in: [USER_STATUS.ACTIVE, USER_STATUS.RESTRICTED] },
+    status: { $in: [USER_STATUS.ACTIVE] },
   }).select('+authentication')
 
   if (!isUserExist) {
@@ -488,7 +492,7 @@ const resendOtpToPhoneOrEmail = async (
   if (email) {
     const forgetPasswordEmailTemplate = emailTemplate.resendOtp({
       email: isUserExist.email,
-      name: `${isUserExist.firstName} ${isUserExist.lastName}`,
+      name: isUserExist.name,
       otp,
       type: authType,
     })
@@ -560,7 +564,7 @@ const resendOtp = async (
 ) => {
   const isUserExist = await User.findOne({
     email: email.toLowerCase().trim(),
-    status: { $in: [USER_STATUS.ACTIVE, USER_STATUS.RESTRICTED] },
+    status: { $in: [USER_STATUS.ACTIVE] },
   }).select('+authentication')
 
   if (!isUserExist) {
@@ -600,7 +604,7 @@ const resendOtp = async (
   if (email) {
     const forgetPasswordEmailTemplate = emailTemplate.resendOtp({
       email: email,
-      name: `${isUserExist.firstName} ${isUserExist.lastName}`,
+      name: isUserExist.name,
       otp,
       type: authType,
     })
@@ -653,6 +657,17 @@ const changePassword = async (
   return { message: 'Password changed successfully' }
 }
 
+const refreshFcmToken = async (user: JwtPayload, token: string) => {
+  const result = await User.findByIdAndUpdate(
+    user.id || user.authId,
+    { fcmToken: token },
+    { new: true }
+  )
+  if (!result) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "User not found!")
+  }
+}
+
 export const AuthServices = {
   forgetPassword,
   resetPassword,
@@ -665,5 +680,6 @@ export const AuthServices = {
   resendOtp,
   changePassword,
   createUser,
-  adminLogin
+  adminLogin,
+  refreshFcmToken
 }

@@ -156,6 +156,17 @@ const logOut = catchAsync(async (req: Request, res: Response) => {
   })
 })
 
+const refreshFcmToken = catchAsync(async (req: Request, res: Response) => {
+  const { token } = req.body
+  const result = await AuthServices.refreshFcmToken(req.user!, token)
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'FCM token refreshed successfully',
+    data: result,
+  })
+})
+
 export const AuthController = {
   forgetPassword,
   resetPassword,
@@ -167,6 +178,8 @@ export const AuthController = {
   createUser,
   deleteAccount,
   adminLogin,
+  refreshFcmToken,
 
   logOut
 }
+

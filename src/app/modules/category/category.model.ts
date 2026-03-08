@@ -1,26 +1,23 @@
-import { model, Schema } from "mongoose";
-import { ICategory } from "./category.interface";
+import { Schema, model } from 'mongoose';
+import { ICategory } from './category.interface';
 
 const categorySchema = new Schema<ICategory>(
   {
     name: {
       type: String,
       required: true,
-      unique: true,
-      trim: true,
     },
     image: {
       type: String,
       required: true,
     },
-    parent: {
-      type: Schema.Types.ObjectId,
-      ref: 'Category',
-      default: null,
+    subCategory: {
+      type: [String],
+      default: [],
     },
-    isActive: {
+    isDeleted: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   {
@@ -28,4 +25,4 @@ const categorySchema = new Schema<ICategory>(
   }
 );
 
-export const CategoryModel = model<ICategory>("Category", categorySchema);
+export const Category = model<ICategory>('Category', categorySchema);

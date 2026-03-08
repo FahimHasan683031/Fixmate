@@ -12,6 +12,9 @@ import { SubscriptionRoutes } from '../modules/subscription/subscription.route';
 import { ChatRoutes } from '../modules/chat/chat.routes';
 import { MessageRoutes } from '../modules/message/message.routes';
 import { NotificationRoutes } from '../modules/notification/notification.routes';
+import { ClientRoutes } from '../modules/client/client.route';
+import { AdminRoutes } from '../modules/admin/admin.route';
+
 
 
 const router = express.Router();
@@ -29,7 +32,11 @@ const apiRoutes = [
     { path: "/chat", route: ChatRoutes },
     { path: "/message", route: MessageRoutes },
     { path: "/notification", route: NotificationRoutes },
+    { path: "/client", route: ClientRoutes },
+    { path: "/admin", route: AdminRoutes },
 ]
+
+
 
 router.post('/webhook', handleStripeWebhook);
 

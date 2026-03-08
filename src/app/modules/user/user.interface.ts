@@ -1,5 +1,6 @@
 import { Model, Types } from "mongoose";
-import { USER_ROLES, USER_STATUS } from "../../../enum/user";
+import { GENDER, USER_ROLES, USER_STATUS } from "../../../enum/user";
+import { SERVICE_DAY } from "../../../enum/service";
 export { USER_ROLES, USER_STATUS };
 
 type IAuthentication = {
@@ -16,20 +17,55 @@ type IAuthentication = {
 
 export type IUser = {
     _id: Types.ObjectId;
+
+    // Core
+    name: string;
     email: string;
-    image?: string;
     password: string;
-    firstName: string;
-    lastName: string;
+    image?: string;
+    contact: string;
+    whatsApp: string;
+    dateOfBirth: string;
+    gender: GENDER;
+    address: string;
+    role: USER_ROLES;
+
+    // Provider specific
+    category: string;
+    nationalId: string;
+    nationality: string;
+    experience: string;
+    language: string;
+    overView: string;
+    wallet: number;
+
+    // Location & Service
+    location: {
+        type: "Point";
+        coordinates: number[];
+    };
+    distance: number;
+    availableDay: SERVICE_DAY[];
+    startTime: string;
+    endTime: string;
+
+    // Stripe
+    stripeAccountId: string;
+
+    // Auth & Status
     status: USER_STATUS;
     verified: boolean;
-    role: USER_ROLES;
-    authentication: IAuthentication;
+    fcmToken: string;
     deviceToken?: string;
-    fcmToken?: string;
+    authentication: IAuthentication;
+
+    // Virtuals
     fullName?: string;
 };
 
 export type UserModel = {
     isPasswordMatched: (givenPassword: string, savedPassword: string) => Promise<boolean>;
+    isExistUserByEmail(email: string): Promise<IUser | null>;
+    isExistUserById(id: string): Promise<IUser | null>;
 } & Model<IUser>;
+

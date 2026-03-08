@@ -1,46 +1,142 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
-import { IUser, USER_STATUS, UserModel } from "./user.interface";
+import { IUser, UserModel } from "./user.interface";
+import { GENDER, USER_ROLES, USER_STATUS } from "../../../enum/user";
+import { SERVICE_DAY } from "../../../enum/service";
 import { StatusCodes } from "http-status-codes";
 import ApiError from "../../../errors/ApiError";
 import config from "../../../config";
 
-const UserSchema = new Schema(
+const UserSchema = new Schema<IUser, UserModel>(
     {
+        name: {
+            type: String,
+            required: true,
+        },
         email: {
             type: String,
             required: true,
             unique: true,
+            lowercase: true,
         },
         password: {
             type: String,
             required: true,
+            select: 0,
         },
         image: {
             type: String,
             default: "",
         },
-        firstName: {
+        contact: {
             type: String,
+            default: "",
+        },
+        whatsApp: {
+            type: String,
+            default: "",
+        },
+        dateOfBirth: {
+            type: String,
+            default: "",
+        },
+        gender: {
+            type: String,
+            enum: Object.values(GENDER),
+            default: GENDER.MALE,
+        },
+        address: {
+            type: String,
+            default: "",
+        },
+        role: {
+            type: String,
+            enum: Object.values(USER_ROLES),
             required: true,
         },
-        lastName: {
+
+        // Provider specific
+        category: {
             type: String,
-            required: true,
+            default: "",
         },
+        nationalId: {
+            type: String,
+            default: "",
+        },
+        nationality: {
+            type: String,
+            default: "",
+        },
+        experience: {
+            type: String,
+            default: "",
+        },
+        language: {
+            type: String,
+            default: "",
+        },
+        overView: {
+            type: String,
+            default: "",
+        },
+        wallet: {
+            type: Number,
+            default: 0,
+        },
+
+        // Location & Service
+        location: {
+            type: {
+                type: String,
+                default: "Point",
+            },
+            coordinates: {
+                type: [Number],
+                default: [0, 0],
+            },
+        },
+        distance: {
+            type: Number,
+            default: 20,
+        },
+        availableDay: {
+            type: [String],
+            enum: Object.values(SERVICE_DAY),
+            default: [],
+        },
+        startTime: {
+            type: String,
+            default: "",
+        },
+        endTime: {
+            type: String,
+            default: "",
+        },
+
+        // Stripe
+        stripeAccountId: {
+            type: String,
+            default: "",
+        },
+
+        // Auth & Status
         status: {
             type: String,
-            enum: ["active", "restricted", "deleted"],
-            default: "active",
+            enum: Object.values(USER_STATUS),
+            default: USER_STATUS.ACTIVE,
         },
         verified: {
             type: Boolean,
             default: false,
         },
-        role: {
+        fcmToken: {
             type: String,
-            enum: ["admin", "user"],
-            default: "user",
+            default: "",
+        },
+        deviceToken: {
+            type: String,
+            default: "",
         },
         authentication: {
             restrictionLeftAt: {
@@ -74,14 +170,6 @@ const UserSchema = new Schema(
                 enum: ['createAccount', 'resetPassword'],
             },
         },
-        deviceToken: {
-            type: String,
-            default: "",
-        },
-        fcmToken: {
-            type: String,
-            default: "",
-        },
     },
     {
         timestamps: true,
@@ -94,8 +182,10 @@ const UserSchema = new Schema(
     }
 );
 
+UserSchema.index({ location: "2dsphere" });
+
 UserSchema.virtual('fullName').get(function () {
-    return `${this.firstName} ${this.lastName}`;
+    return this.name;
 });
 
 UserSchema.statics.isPasswordMatched = async function (
@@ -105,12 +195,20 @@ UserSchema.statics.isPasswordMatched = async function (
     return bcrypt.compare(givenPassword, savedPassword);
 };
 
+UserSchema.statics.isExistUserById = async function (id: string) {
+    return await this.findById(id).select("+password");
+};
+
+UserSchema.statics.isExistUserByEmail = async function (email: string) {
+    return await this.findOne({ email }).select("+password");
+};
+
 UserSchema.pre("save", async function (next) {
     try {
         if (this.isModified("email")) {
             const isExist = await User.findOne({
                 email: this.email,
-                status: { $in: [USER_STATUS.ACTIVE, USER_STATUS.RESTRICTED] },
+                status: { $in: [USER_STATUS.ACTIVE, USER_STATUS.BLOCKED] },
                 _id: { $ne: this._id },
             });
 
@@ -129,7 +227,6 @@ UserSchema.pre("save", async function (next) {
                 Number(config.bcrypt_salt_rounds)
             );
         }
-
         next();
     } catch (error) {
         next(error as Error);
@@ -137,3 +234,4 @@ UserSchema.pre("save", async function (next) {
 });
 
 export const User = mongoose.model<IUser, UserModel>("User", UserSchema);
+

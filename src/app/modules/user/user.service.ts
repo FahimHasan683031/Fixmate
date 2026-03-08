@@ -10,25 +10,26 @@ import config from '../../../config'
 
 
 const getAllUser = async (query: Record<string, unknown>) => {
-    const userQueryBuilder = new QueryBuilder(User.find().select('-password -authentication'), query)
+    const userQuery = User.find().select('-password -authentication');
+
+    const searchableFields = ["name", "email", "contact"];
+
+    const userQueryBuilder = new QueryBuilder(userQuery, query)
+        .search(searchableFields)
         .filter()
         .sort()
-        .fields()
         .paginate()
+        .fields();
 
-
-    const users = await userQueryBuilder.modelQuery.lean()
-    const paginationInfo = await userQueryBuilder.getPaginationInfo()
-
-    const totalUsers = await User.countDocuments()
-    const staticData = { totalUsers }
+    const data = await userQueryBuilder.modelQuery.lean().exec();
+    const meta = await userQueryBuilder.getPaginationInfo();
 
     return {
-        users,
-        staticData,
-        meta: paginationInfo,
-    }
-}
+        data,
+        meta,
+    };
+};
+
 
 const getSingleUser = async (id: string) => {
     const result = await User.findById(id).select('-password -authentication')

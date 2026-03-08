@@ -4,12 +4,12 @@ import { USER_ROLES, USER_STATUS } from "./user.interface";
 export const userSignupSchema = z.object({
   body: z.object({
     email: z.string().email("Invalid email address").toLowerCase().trim(),
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
+    name: z.string().min(1, "Name is required"),
     password: z.string().min(6, "Password must be at least 6 characters"),
-    role: z.literal(USER_ROLES.USER),
+    role: z.enum([USER_ROLES.CLIENT, USER_ROLES.PROVIDER]),
   })
 });
+
 
 export const userLoginSchema = z.object({
   body: z.object({
@@ -21,8 +21,8 @@ export const userLoginSchema = z.object({
 export const userUpdateSchema = z.object({
   body: z.object({
     email: z.string().email("Invalid email address").trim().toLowerCase().optional(),
-    firstName: z.string().min(1, "First name is required").optional(),
-    lastName: z.string().min(1, "Last name is required").optional(),
+    name: z.string().min(1, "Name is required").optional(),
+
     image: z.string().url("Invalid image URL").optional(),
     password: z.string().min(6, "Password must be at least 6 characters").optional(),
     status: z.nativeEnum(USER_STATUS).optional(),
