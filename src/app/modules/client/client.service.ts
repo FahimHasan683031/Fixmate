@@ -443,21 +443,23 @@ export const acceptBooking = async (user: JwtPayload, id: string) => {
 };
 
 export const giveReview = async (user: JwtPayload, id: string, data: { feedback: string, rating: number }) => {
-    const booking: any = await Booking.find({ _id: new Types.ObjectId(id) }).populate([
-        { path: "service", select: "image price category subCategory" },
-        { path: "provider", select: "name image address category" }
-    ]).lean().exec();
-
-    if (!booking.length) throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
+    const booking = await Booking.findById(id).populate("service provider").lean().exec();
+    if (!booking) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
+    }
 
     const review = await Review.create({
         creator: new Types.ObjectId(user.id || user.authId),
-        provider: booking[0].provider,
+        provider: (booking.provider as any)._id || booking.provider,
         review: data.feedback,
         rating: data.rating,
-        service: booking[0].service
+        service: (booking.service as any)._id || booking.service
     });
-    if (!review) throw new ApiError(StatusCodes.NOT_FOUND, "Review not created!");
+
+    if (!review) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, "Review not created!");
+    }
+
     return review;
 };
 

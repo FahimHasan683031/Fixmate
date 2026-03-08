@@ -1,20 +1,20 @@
 import QueryBuilder from "../../builder/QueryBuilder";
 import { ICategory } from "./category.interface";
-import { CategoryModel } from "./category.model";
+import { Category } from "./category.model";
 
 // Create service
 const createCategory = async (payload: ICategory) => {
-  const result = await CategoryModel.create(payload);
+  const result = await Category.create(payload);
   return result;
 };
 
 // Get all categories
 const getAllCategories = async (query: Record<string, unknown>) => {
-  const categoryQueryBuilder = new QueryBuilder(CategoryModel.find({ isActive: true, parent: null }), query)
+  const categoryQueryBuilder = new QueryBuilder(Category.find({ isActive: true, parent: null }), query)
     .filter()
     .fields()
 
-  const totalCategories = await CategoryModel.countDocuments()
+  const totalCategories = await Category.countDocuments()
 
   const categories = await categoryQueryBuilder.modelQuery
 
@@ -25,7 +25,7 @@ const getAllCategories = async (query: Record<string, unknown>) => {
 
 // Update service
 const updateCategory = async (id: string, payload: ICategory) => {
-  const result = await CategoryModel.findByIdAndUpdate(id, payload, {
+  const result = await Category.findByIdAndUpdate(id, payload, {
     new: true,
   });
   return result;
@@ -33,7 +33,7 @@ const updateCategory = async (id: string, payload: ICategory) => {
 
 // Delete service
 const deleteCategory = async (id: string) => {
-  const result = await CategoryModel.findByIdAndDelete(id);
+  const result = await Category.findByIdAndDelete(id);
   return result;
 };
 

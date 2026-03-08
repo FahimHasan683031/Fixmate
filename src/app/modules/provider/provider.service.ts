@@ -24,6 +24,7 @@ import { Booking } from "../booking/booking.model";
 import { Payment } from "../payment/payment.model";
 import { Review } from "../review/review.model";
 import { Category } from "../category/category.model";
+import { paginationHelper } from "../../../helpers/paginationHelper";
 
 
 export const profile = async (payload: JwtPayload) => {
@@ -454,16 +455,16 @@ export const whitdrawal = async (user: JwtPayload, data: { amount: number }, req
     return;
 };
 
-export const myReviews = async (user: JwtPayload, paginationOptions: any) => {
-    const page = Number(paginationOptions.page || 1);
-    const limit = Number(paginationOptions.limit || 10);
-    const sortBy = paginationOptions.sortBy || 'createdAt';
-    const sortOrder = paginationOptions.sortOrder === 'asc' ? 1 : -1;
+export const myReviews = async (user: JwtPayload, query: IPaginationOptions) => {
+    const { skip, limit, sortBy, sortOrder } = paginationHelper.calculatePagination(query);
 
-    const reviews = await Review.find({ provider: user.id || user.authId })
+    const reviews = await Review.find({ provider: new Types.ObjectId(user.id || user.authId) })
+        .populate("creator", "name image")
         .select("-updatedAt -__v -provider -service")
-        .populate({ path: "creator", select: "name image" })
-        .sort({ [sortBy]: sortOrder }).skip((page - 1) * limit).limit(limit).lean().exec();
+        .skip(skip)
+        .limit(limit)
+        .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
+        .lean().exec();
 
     let averageRating = 0;
     if (reviews.length > 0) {

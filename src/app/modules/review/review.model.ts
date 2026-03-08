@@ -1,24 +1,38 @@
-import mongoose from "mongoose"
-import { IReview } from "./review.interface"
+import { model, Schema } from "mongoose";
+import { IReview } from "./review.interface";
 
-const ReviewSchema = new mongoose.Schema<IReview>({
-  name: {
-    type: String,
-    required: true,
+const ReviewSchema = new Schema<IReview>({
+  creator: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true
   },
-  email: {
+  provider: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+  service: {
+    type: Schema.Types.ObjectId,
+    ref: "Service",
+    required: true
+  },
+  review: {
     type: String,
-    required: true,
+    required: true
   },
   rating: {
     type: Number,
-    required: true,
-  },
-  comment: {
-    type: String
-  },
+    required: true
+  }
 }, {
   timestamps: true,
-})
+  versionKey: false
+});
 
-export const Review = mongoose.model<IReview>('Review', ReviewSchema)
+ReviewSchema.index({ provider: 1 });
+ReviewSchema.index({ service: 1 });
+ReviewSchema.index({ rating: 1 });
+ReviewSchema.index({ createdAt: -1 });
+
+export const Review = model<IReview>("Review", ReviewSchema);

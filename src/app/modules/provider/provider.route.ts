@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { ProviderControllers } from "./provider.controller";
 import { ProviderValidation } from "./provider.validation";
-import validateRequest from "../../middlewares/validateRequest";
-import auth from "../../middlewares/auth";
+import validateRequest from "../../middleware/validateRequest";
+import auth from "../../middleware/auth";
 import { USER_ROLES } from "../../../enum/user";
-import fileUploadHandler from "../../middlewares/fileUploadHandler";
+import fileUploadHandler from "../../middleware/fileUploadHandler";
 
 const router = Router();
 
