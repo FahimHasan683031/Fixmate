@@ -8,18 +8,19 @@ let isFirebaseInitialized = false;
 
 const initializeFirebase = () => {
     try {
-        let serviceAccountPath = path.join(process.cwd(), 'serviceAccountKey.json');
-
-        // Check if file exists, if not, try one level up
-        if (!require('fs').existsSync(serviceAccountPath)) {
-            serviceAccountPath = path.join(process.cwd(), '..', 'serviceAccountKey.json');
-        }
-
         if (admin.apps.length === 0) {
+            const base64key = config.firebase_service_account_base64;
+            if (!base64key) {
+                logger.error('Firebase initialization failed: FIREBASE_SERVICE_ACCOUNT_BASE64 not found in config');
+                return;
+            }
+
+            const serviceAccountKey = JSON.parse(Buffer.from(base64key, 'base64').toString('utf-8'));
+
             admin.initializeApp({
-                credential: admin.credential.cert(serviceAccountPath),
+                credential: admin.credential.cert(serviceAccountKey),
             });
-            logger.info('Firebase Admin initialized successfully using: ' + serviceAccountPath);
+            logger.info('Firebase Admin initialized successfully using base64 config');
         }
 
         isFirebaseInitialized = true;

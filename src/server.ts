@@ -5,14 +5,12 @@ import app from './app'
 import config from './config'
 import { errorLogger, logger } from './shared/logger'
 import { socketHelper } from './helpers/socketHelper'
-import { UserServices } from './app/modules/user/user.service'
 
 process.on('uncaughtException', error => {
     errorLogger.error('UnhandledException Detected', error)
     process.exit(1)
 })
 
-export const onlineUsers = new Map()
 let server: any
 async function main() {
     try {

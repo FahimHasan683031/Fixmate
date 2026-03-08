@@ -17,8 +17,7 @@ import { PAYMENT_STATUS } from "../../../enum/payment";
 import { Service } from "../service/service.model";
 import { Notification } from "../notification/notification.model";
 import { sendNotification } from "../../../helpers/SocketUtils";
-import { redisDB } from "../../../redis/connectedUsers";
-import { emailQueue } from "../../../queues/email.queue";
+import { PushNotificationService } from "../notification/pushNotification.service";
 
 const overview = async (yearChart: string) => {
     const totalProviders = await User.countDocuments({ role: USER_ROLES.PROVIDER });
@@ -249,21 +248,12 @@ const approveOrReject = async (id: string, status: "approve" | "reject") => {
     const socket = (global as any).io;
     await sendNotification(socket, message);
 
-    const isProviderOnline = await redisDB.get(`user:${updated.user}`);
-    if (!isProviderOnline) {
-        const provider = await User.findById(updated.user).lean().exec() as any;
-        await emailQueue.add(
-            "push-notification",
-            {
-                notification: {
-                    title:
-                        "Your verification request has been " +
-                        (status === "approve" ? "approved" : "rejected"),
-                    body: `Admin has ${status === "approve" ? "approved" : "rejected"} your verification request`,
-                },
-                token: provider?.fcmToken,
-            },
-            { removeOnComplete: true, removeOnFail: false }
+    const provider = await User.findById(updated.user).lean().exec() as any;
+    if (provider && provider.fcmToken) {
+        await PushNotificationService.sendPushNotification(
+            provider.fcmToken,
+            "Your verification request has been " + (status === "approve" ? "approved" : "rejected"),
+            `Admin has ${status === "approve" ? "approved" : "rejected"} your verification request`
         );
     }
 

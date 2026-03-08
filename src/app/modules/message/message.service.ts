@@ -4,8 +4,7 @@ import { IMessage } from './message.interface';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { Types } from 'mongoose';
-import { emailQueue } from '../../../queues/email.queue';
-import { redisDB } from '../../../redis/connectedUsers';
+import { PushNotificationService } from '../notification/pushNotification.service';
 import { Chat } from '../chat/chat.model';
 import { Message } from './message.model';
 import { User } from '../user/user.model';
@@ -29,39 +28,25 @@ const create = async (user: JwtPayload, payload: Partial<IMessage>) => {
     { lastMessage: new Types.ObjectId(message._id) }
   );
 
-  const isCustomerOnline = await redisDB.get(`user:${user.id}`);
-  if (!isCustomerOnline) {
-    const customerId = chat.participants.find(p => p.toString() !== user.id);
-    if (customerId) {
-      const customer = await User.findById(new Types.ObjectId(customerId));
-      if (customer && customer.fcmToken) {
-        await emailQueue.add(
-          'push-notification',
-          {
-            notification: {
-              title: 'Got message',
-              body: 'You have a new message',
-            },
-            token: customer.fcmToken,
-          },
-          {
-            removeOnComplete: true,
-            removeOnFail: false,
-          }
-        );
-      }
+  const customerId = chat.participants.find(p => p.toString() !== user.id);
+  if (customerId) {
+    const customer = await User.findById(new Types.ObjectId(customerId));
+    if (customer && customer.fcmToken) {
+      await PushNotificationService.sendPushNotification(
+        customer.fcmToken,
+        'Got message',
+        'You have a new message'
+      );
     }
   }
 
   //@ts-ignore
   const socket = global.io;
   if (socket) {
-    chat.participants.forEach(async element => {
-      const socketId = await redisDB.get(`user:${element}`);
-      if (socketId) {
-        socket.to(socketId).emit('message', message);
-      }
-    });
+    // Real-time message emitting removed as requested for messaging only
+    // If you still need basic socket emitting for messages, it should happen here without connection tracking.
+    // But user said: "message er jonno only push notification hobe realtime notificaton dorkar ni"
+    // So we keep it simplified.
   }
 
   return message;

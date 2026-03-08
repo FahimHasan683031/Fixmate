@@ -4,7 +4,7 @@ import validateRequest from '../../middleware/validateRequest'
 import { AuthValidations } from './auth.validation'
 import { USER_ROLES } from '../../../enum/user'
 import auth, { tempAuth } from '../../middleware/auth'
-import { UserValidations } from '../user/user.validation'
+// import { UserValidations } from '../user/user.validation'
 import { fileAndBodyProcessorUsingDiskStorage } from '../../middleware/processReqBody'
 
 const router = express.Router()
@@ -12,7 +12,7 @@ const router = express.Router()
 router.post(
   '/signup',
   fileAndBodyProcessorUsingDiskStorage(),
-  validateRequest(UserValidations.userSignupSchema),
+  validateRequest(AuthValidations.createUserZodSchema),
   AuthController.createUser,
 )
 router.post(

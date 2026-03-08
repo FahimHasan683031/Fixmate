@@ -4,14 +4,13 @@ import { Types } from "mongoose";
 import { accountLinks, accounts, checkout } from "../../../helpers/stripeHelper";
 import { PAYMENT_STATUS } from "../../../enum/payment";
 import { Notification } from "../notification/notification.model";
-import { redisDB } from "../../../redis/connectedUsers";
+import { PushNotificationService } from "../notification/pushNotification.service";
 import { Request } from "express";
 import { sendNotification } from "../../../helpers/SocketUtils";
 import { Booking } from "../booking/booking.model";
 import { Payment } from "./payment.model";
 import { Service } from "../service/service.model";
 import { User } from "../user/user.model";
-import { emailQueue } from "../../../queues/email.queue";
 
 const success = async (query: any) => {
   const sessionId = query.sessionId;
@@ -81,18 +80,16 @@ const success = async (query: any) => {
     await sendNotification(socket, notification);
   }
 
-  const isProviderOnline = await redisDB.get(`user:${providerId}`);
-  if (!isProviderOnline) {
-    await emailQueue.add("push-notification", {
-      notification: {
-        title: "You got a new booking request",
-        body: `${customerData.name} has requested a booking for ${serviceData.category}`
-      },
-      token: providerData?.fcmToken
-    }, {
-      removeOnComplete: true,
-      removeOnFail: false,
-    });
+  if (providerData && providerData.fcmToken) {
+    await PushNotificationService.sendPushNotification(
+      providerData.fcmToken,
+      "You got a new booking request",
+      `${customerData.name} has requested a booking for ${serviceData.category}`
+    );
+  }
+
+  if (socket) {
+    await sendNotification(socket, notification);
   }
 
   return `

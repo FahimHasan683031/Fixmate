@@ -11,9 +11,8 @@ import { USER_STATUS, VERIFICATION_STATUS } from "../../../enum/user";
 import { IService } from "../service/service.interface";
 import { IPaginationOptions } from "../../../interfaces/pagination";
 import { Notification } from "../notification/notification.model";
-import { emailQueue } from "../../../queues/email.queue";
 import { BOOKING_STATUS } from "../../../enum/booking";
-import { redisDB } from "../../../redis/connectedUsers";
+import { PushNotificationService } from "../notification/pushNotification.service";
 import { PAYMENT_STATUS } from "../../../enum/payment";
 import { transfers, accounts, accountLinks } from "../../../helpers/stripeHelper";
 import { sendNotification } from "../../../helpers/SocketUtils";
@@ -259,17 +258,19 @@ export const actionBooking = async (user: JwtPayload, data: { bookId: string, ac
             type: "USER"
         });
 
-        const isProviderOnline = await redisDB.get(`user:${booking[0].customer}`);
-        if (!isProviderOnline) {
-            const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
-            await emailQueue.add("push-notification", {
-                notification: { title: "Booking Accepted", body: "Your Booking accepted" },
-                token: customer?.fcmToken
-            }, { removeOnComplete: true, removeOnFail: false });
+        const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
+        if (customer && customer.fcmToken) {
+            await PushNotificationService.sendPushNotification(
+                customer.fcmToken,
+                "Booking Accepted",
+                "Your Booking accepted"
+            );
         }
 
         const socket = (global as any).io;
-        await sendNotification(socket, notification);
+        if (socket) {
+            await sendNotification(socket, notification);
+        }
 
     } else if (data.action == "reject") {
         await Booking.findByIdAndUpdate(data.bookId, { bookingStatus: BOOKING_STATUS.REJECTED, rejectReason: data.reason }).lean().exec();
@@ -280,17 +281,19 @@ export const actionBooking = async (user: JwtPayload, data: { bookId: string, ac
             type: "USER"
         });
 
-        const isProviderOnline = await redisDB.get(`user:${booking[0].customer}`);
-        if (!isProviderOnline) {
-            const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
-            await emailQueue.add("push-notification", {
-                notification: { title: "Booking Rejected", body: "Your Booking rejected " + data.reason },
-                token: customer?.fcmToken
-            }, { removeOnComplete: true, removeOnFail: false });
+        const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
+        if (customer && customer.fcmToken) {
+            await PushNotificationService.sendPushNotification(
+                customer.fcmToken,
+                "Booking Rejected",
+                "Your Booking rejected " + data.reason
+            );
         }
 
         const socket = (global as any).io;
-        await sendNotification(socket, notification);
+        if (socket) {
+            await sendNotification(socket, notification);
+        }
     }
 };
 
@@ -367,17 +370,19 @@ export const cancelBooking = async (user: JwtPayload, id: string) => {
         type: "USER"
     });
 
-    const isCustomerOnline = await redisDB.get(`user:${booking[0].customer}`);
-    if (!isCustomerOnline) {
-        const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
-        await emailQueue.add("push-notification", {
-            notification: { title: "Booking Cancelled", body: "Your Booking cancelled" },
-            token: customer?.fcmToken
-        }, { removeOnComplete: true, removeOnFail: false });
+    const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
+    if (customer && customer.fcmToken) {
+        await PushNotificationService.sendPushNotification(
+            customer.fcmToken,
+            "Booking Cancelled",
+            "Your Booking cancelled"
+        );
     }
 
     const socket = (global as any).io;
-    await sendNotification(socket, notification);
+    if (socket) {
+        await sendNotification(socket, notification);
+    }
 
     return providerUpdated?.wallet;
 };

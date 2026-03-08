@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "D:\\Fahim\\Projects\\Fixmate-server\\logs\\winston\\errors\\.4e9a1c959621302fb3f51ca128506cb3949868d1-audit.json",
+    "files": [
+        {
+            "date": 1772957766291,
+            "name": "D:\\Fahim\\Projects\\Fixmate-server\\logs\\winston\\errors\\sg-2026-03-08-14-error.log",
+            "hash": "a5a2371500aa68379d0dcc2ba477f81f039b1576438b159efa6b15f4052d6bbf"
+        },
+        {
+            "date": 1772960684168,
+            "name": "D:\\Fahim\\Projects\\Fixmate-server\\logs\\winston\\errors\\sg-2026-03-08-15-error.log",
+            "hash": "66325e2fc08a0f1fdccebefb0d91e4ee965b66e0b05a7ee7ef8c6fa952c3c990"
+        }
+    ],
+    "hashType": "sha256"
+}

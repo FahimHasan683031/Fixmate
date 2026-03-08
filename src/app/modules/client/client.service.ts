@@ -14,8 +14,7 @@ import { CustomerFavorite } from '../favorites/customer.favorite.model';
 import { Review } from '../review/review.model';
 import { User } from '../user/user.model';
 import { Notification } from '../notification/notification.model';
-import { emailQueue } from '../../../queues/email.queue';
-import { redisDB } from '../../../redis/connectedUsers';
+import { PushNotificationService } from '../notification/pushNotification.service';
 import { PAYMENT_STATUS } from '../../../enum/payment';
 import { calculateDistanceInKm } from '../../../helpers/calculateDistance';
 import bcrypt from "bcrypt";
@@ -308,23 +307,19 @@ export const cancelBooking = async (user: JwtPayload, id: Types.ObjectId) => {
         amount: refundAmount,
     });
 
-    const isProviderOnline = await redisDB.get(`user:${booking.provider}`);
-    if (!isProviderOnline) {
-        const provider = await User.findById(booking.provider).lean().exec() as IUser;
-        await emailQueue.add("push-notification", {
-            notification: {
-                title: `Booking Cancelled`,
-                body: `Your booking for ${booking.service.subCategory} on ${booking.date} has been cancelled.`
-            },
-            token: provider?.fcmToken
-        }, {
-            removeOnComplete: true,
-            removeOnFail: false,
-        });
+    const provider = await User.findById(booking.provider).lean().exec() as IUser;
+    if (provider && provider.fcmToken) {
+        await PushNotificationService.sendPushNotification(
+            provider.fcmToken,
+            `Booking Cancelled`,
+            `Your booking for ${booking.service.subCategory} on ${booking.date} has been cancelled.`
+        );
     }
 
     const socket = (global as any).io;
-    sendNotification(socket, notification);
+    if (socket) {
+        sendNotification(socket, notification);
+    }
 
     return booking;
 };
@@ -422,23 +417,19 @@ export const acceptBooking = async (user: JwtPayload, id: string) => {
         message: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been accepted.`
     });
 
-    const isProviderOnline = await redisDB.get(`user:${booking[0].provider}`);
-    if (!isProviderOnline) {
-        const provider = await User.findById(booking[0].provider).lean().exec() as IUser;
-        await emailQueue.add("push-notification", {
-            notification: {
-                title: "Booking Accepted",
-                body: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been accepted.`
-            },
-            token: provider?.fcmToken
-        }, {
-            removeOnComplete: true,
-            removeOnFail: false,
-        });
+    const provider = await User.findById(booking[0].provider).lean().exec() as IUser;
+    if (provider && provider.fcmToken) {
+        await PushNotificationService.sendPushNotification(
+            provider.fcmToken,
+            "Booking Accepted",
+            `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been accepted.`
+        );
     }
 
     const socket = (global as any).io;
-    sendNotification(socket, notification);
+    if (socket) {
+        sendNotification(socket, notification);
+    }
     return;
 };
 
