@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "D:\\Fahim\\Projects\\New project\\Fixmate-server\\logs\\winston\\errors\\.b0aeed106178f35c3336249d2e16b217314447c9-audit.json",
+    "files": [
+        {
+            "date": 1772943649049,
+            "name": "D:\\Fahim\\Projects\\New project\\Fixmate-server\\logs\\winston\\errors\\sg-2026-03-08-10-error.log",
+            "hash": "01553b2317d0b7e3b5a09d5475cb444e71eee90fda4c2d75b56ddfae07c74617"
+        }
+    ],
+    "hashType": "sha256"
+}
