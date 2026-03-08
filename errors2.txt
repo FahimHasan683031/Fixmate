@@ -1,1 +1,0 @@
-src/app/modules/category/category.service.ts(3,10): error TS2305: Module '"./category.model"' has no exported member 'CategoryModel'.

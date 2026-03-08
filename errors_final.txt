@@ -1,6 +1,0 @@
-src/app/modules/category/category.service.ts(3,10): error TS2305: Module '"./category.model"' has no exported member 'CategoryModel'.
-src/app/modules/message/message.service.ts(15,51): error TS2339: Property 'image' does not exist on type 'Partial<IMessage>'.
-src/app/modules/provider/provider.controller.ts(63,46): error TS2345: Argument of type '"nid"' is not assignable to parameter of type 'IFolderName'.
-src/app/modules/provider/provider.route.ts(4,29): error TS2307: Cannot find module '../../middlewares/validateRequest' or its corresponding type declarations.
-src/app/modules/provider/provider.route.ts(5,18): error TS2307: Cannot find module '../../middlewares/auth' or its corresponding type declarations.
-src/app/modules/provider/provider.route.ts(7,31): error TS2307: Cannot find module '../../middlewares/fileUploadHandler' or its corresponding type declarations.

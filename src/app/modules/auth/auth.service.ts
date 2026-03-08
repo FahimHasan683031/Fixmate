@@ -81,8 +81,6 @@ export const createUser = async (payload: IUser) => {
     const createdUser = user[0]
 
     // 4. Send OTP email
-    // TODO: Implement email sending logic properly in shared/emailTemplate
-    /*
     setTimeout(() => {
       const createAccountEmail = emailTemplate.createAccount({
         name: payload.name,
@@ -91,7 +89,7 @@ export const createUser = async (payload: IUser) => {
       })
       emailHelper.sendEmail(createAccountEmail)
     }, 0)
-    */
+    
 
     // 5. Commit Transaction
     await session.commitTransaction()
@@ -450,7 +448,6 @@ const getAccessToken = async (token: string) => {
 }
 
 
-
 const resendOtpToPhoneOrEmail = async (
   authType: 'resetPassword' | 'createAccount',
   email?: string,
@@ -674,7 +671,6 @@ export const AuthServices = {
   verifyAccount,
   login,
   getAccessToken,
-
   resendOtpToPhoneOrEmail,
   deleteAccount,
   resendOtp,

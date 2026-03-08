@@ -179,7 +179,6 @@ export const AuthController = {
   deleteAccount,
   adminLogin,
   refreshFcmToken,
-
   logOut
 }
 

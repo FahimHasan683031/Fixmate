@@ -10,3 +10,32 @@
 {Sun Mar 08 2026 15:25:27} [APP 🚀] info: [32m🚀 Database connected successfully[39m
 {Sun Mar 08 2026 15:25:27} [APP 🚀] info: [32m🍁 Server connected successfully[39m
 {Sun Mar 08 2026 15:25:27} [APP 🚀] info: [33m♻️  Application listening on port:5004[39m
+{Sun Mar 08 2026 15:28:15} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 08 2026 15:28:15} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 08 2026 15:28:15} [APP 🚀] info: [33m♻️  Application listening on port:5004[39m
+{Sun Mar 08 2026 15:46:37} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 200 - 31.344 ms
+{Sun Mar 08 2026 15:53:34} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/signup 200 - 440.798 ms
+{Sun Mar 08 2026 15:54:45} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 08 2026 15:54:45} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 08 2026 15:54:45} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 08 2026 15:54:48} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 4.834 ms
+{Sun Mar 08 2026 15:54:50} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.460 ms
+{Sun Mar 08 2026 15:54:51} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.339 ms
+{Sun Mar 08 2026 15:54:51} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.338 ms
+{Sun Mar 08 2026 15:54:51} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.315 ms
+{Sun Mar 08 2026 15:54:51} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.342 ms
+{Sun Mar 08 2026 15:54:52} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.986 ms
+{Sun Mar 08 2026 15:54:52} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.535 ms
+{Sun Mar 08 2026 15:54:52} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.711 ms
+{Sun Mar 08 2026 15:54:52} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.300 ms
+{Sun Mar 08 2026 15:54:52} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.446 ms
+{Sun Mar 08 2026 15:54:53} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.367 ms
+{Sun Mar 08 2026 15:54:53} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.500 ms
+{Sun Mar 08 2026 15:54:54} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.341 ms
+{Sun Mar 08 2026 15:54:54} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 2.092 ms
+{Sun Mar 08 2026 15:54:54} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.519 ms
+{Sun Mar 08 2026 15:54:54} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.380 ms
+{Sun Mar 08 2026 15:54:54} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.500 ms
+{Sun Mar 08 2026 15:55:01} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 200 - 4.215 ms
+{Sun Mar 08 2026 15:55:18} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 304 - 0.881 ms
+{Sun Mar 08 2026 15:56:34} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/signup 200 - 233.346 ms
