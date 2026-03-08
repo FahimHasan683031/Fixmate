@@ -1,17 +1,16 @@
 import { JwtPayload } from "jsonwebtoken";
-import { ISupport } from "./support.interface";
 import { IPaginationOptions } from "../../../interfaces/pagination";
+import { ISupport } from "./support.interface";
 import { Support } from "./support.model";
 import { User } from "../user/user.model";
 import { USER_ROLES } from "../../../enum/user";
 import { Notification } from "../notification/notification.model";
-import { emailQueue } from "../../../queues/email.queue";
 import { Types } from "mongoose";
 import { SupportStatus } from "../../../enum/support";
 import { redisDB } from "../../../redis/connectedUsers";
 import ApiError from "../../../errors/ApiError";
 import { StatusCodes } from "http-status-codes";
-
+import { emailQueue } from "../../../queues/email.queue";
 
 const createSupport = async (user: JwtPayload, data: Partial<ISupport>) => {
     const support = await Support.create({
@@ -21,22 +20,24 @@ const createSupport = async (user: JwtPayload, data: Partial<ISupport>) => {
         user: user.id || user.authId
     });
 
-    const [admins, currentUser] = await Promise.all([
+    const [getAdmins, getUser] = await Promise.all([
         User.find({ role: USER_ROLES.ADMIN }),
         User.findById(user.id || user.authId).select("name email").lean()
     ]);
 
-    admins.forEach(async (admin) => {
+    getAdmins.forEach(async element => {
         const notification = await Notification.create({
-            for: admin._id,
-            message: `New Support Request from ${currentUser?.name || currentUser?.email}`,
-            body: `New Support Request from ${currentUser?.name || currentUser?.email} with title: ${data.title}`
+            receiver: element._id,
+            title: `New Support Request`,
+            message: `New Support Request from ${getUser?.name || getUser?.email} with title: ${data.title}`,
+            type: "ADMIN"
         });
 
         //@ts-ignore
         const socket = global.io;
         if (socket) {
-            const socketId = await redisDB.get(`user:${admin._id}`);
+            const userId = notification.receiver;
+            const socketId = await redisDB.get(`user:${userId}`);
             if (socketId) {
                 socket.to(socketId).emit("notification", notification);
             }
@@ -47,13 +48,20 @@ const createSupport = async (user: JwtPayload, data: Partial<ISupport>) => {
 };
 
 const getSupports = async (pagination: IPaginationOptions & { status?: string; search?: string }) => {
-    const { page = 1, limit = 10, sortOrder = "desc", sortBy = "createdAt", status, search } = pagination;
-    const skip = (page - 1) * limit;
+    const {
+        page = 1,
+        limit = 10,
+        sortOrder = "desc",
+        sortBy = "createdAt",
+        status,
+        search,
+    } = pagination;
 
+    const skip = (page - 1) * limit;
     const queryFilter: any = {};
 
     if (status && status.trim() !== "") {
-        queryFilter.status = status.toLowerCase() === "pending" ? SupportStatus.PENDING : SupportStatus.COMPLETED;
+        queryFilter.status = status.toUpperCase() === "PENDING" ? SupportStatus.PENDING : SupportStatus.COMPLETED;
     }
 
     if (search && search.trim() !== "") {
@@ -81,7 +89,15 @@ const getSupports = async (pagination: IPaginationOptions & { status?: string; s
         Support.countDocuments(queryFilter),
     ]);
 
-    return { meta: { page, limit, total, totalPage: Math.ceil(total / limit) }, data };
+    return {
+        meta: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPage: Math.ceil(total / limit)
+        },
+        data
+    };
 };
 
 const markAsResolve = async (user: JwtPayload, supportId: string) => {
@@ -106,7 +122,7 @@ const markAsResolve = async (user: JwtPayload, supportId: string) => {
     return support;
 };
 
-export const SupportService = {
+export const SupportServices = {
     createSupport,
     getSupports,
     markAsResolve

@@ -240,7 +240,7 @@ const resetPassword = async (resetToken: string, payload: IResetPassword) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Passwords do not match')
   }
 
-  const isTokenExist = await Token.findOne({ token: resetToken }).lean()
+  const isTokenExist = await Token.isExistToken(resetToken)
 
   if (!isTokenExist) {
     throw new ApiError(
@@ -269,7 +269,7 @@ const resetPassword = async (resetToken: string, payload: IResetPassword) => {
     )
   }
 
-  const isTokenValid = isTokenExist?.expireAt > new Date()
+  const isTokenValid = await Token.isExpireToken(resetToken)
   if (!isTokenValid) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,

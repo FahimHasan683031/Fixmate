@@ -1,30 +1,32 @@
 import { Router } from "express";
-import { SupportController } from "./support.controller";
+import { SupportControllers } from "./support.controller";
 import auth from "../../middleware/auth";
 import { USER_ROLES } from "../../../enum/user";
 import validateRequest from "../../middleware/validateRequest";
-import { SupportValidation } from "./support.validation";
 import fileUploadHandler from "../../middleware/fileUploadHandler";
+import { supportValidation } from "./support.validation";
 
 const router = Router();
 
-router.route("/")
+router
+    .route("/")
     .get(
         auth(USER_ROLES.ADMIN),
-        validateRequest(SupportValidation.getSupportSchema),
-        SupportController.getSupports
+        validateRequest(supportValidation.getSupportSchema),
+        SupportControllers.getSupports
     )
     .post(
         auth(USER_ROLES.CLIENT, USER_ROLES.ADMIN, USER_ROLES.PROVIDER),
         fileUploadHandler(),
-        validateRequest(SupportValidation.supportSchema),
-        SupportController.createSupport
+        validateRequest(supportValidation.supportSchema),
+        SupportControllers.createSupport
     );
 
-router.route("/:id")
+router
+    .route("/:id")
     .patch(
         auth(USER_ROLES.ADMIN),
-        SupportController.markAsResolve
+        SupportControllers.markAsResolve
     );
 
 export const SupportRoutes = router;

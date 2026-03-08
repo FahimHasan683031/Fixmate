@@ -1,15 +1,15 @@
 import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
+import { SupportServices } from "./support.service";
 import { Request, Response } from "express";
 import { getSingleFilePath } from "../../../shared/getFilePath";
-import { SupportService } from "./support.service";
 
-const createSupport = catchAsync(async (req: Request, res: Response) => {
+const createSupport = catchAsync(async (req: Request | any, res: Response) => {
     const image = getSingleFilePath(req.files, "image");
     if (image) req.body.attachment = image;
 
-    const result = await SupportService.createSupport(req.user, req.body);
+    const result = await SupportServices.createSupport(req.user, req.body);
 
     sendResponse(res, {
         success: true,
@@ -19,8 +19,8 @@ const createSupport = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const getSupports = catchAsync(async (req: Request, res: Response) => {
-    const result = await SupportService.getSupports(req.query as any);
+const getSupports = catchAsync(async (req: Request | any, res: Response) => {
+    const result = await SupportServices.getSupports(req.query);
 
     sendResponse(res, {
         success: true,
@@ -30,18 +30,18 @@ const getSupports = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const markAsResolve = catchAsync(async (req: Request, res: Response) => {
-    const result = await SupportService.markAsResolve(req.user, req.params.id);
+const markAsResolve = catchAsync(async (req: Request | any, res: Response) => {
+    const result = await SupportServices.markAsResolve(req.user, req.params.id);
 
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Support resolved successfully",
+        message: "Support given successfully",
         data: result,
     });
 });
 
-export const SupportController = {
+export const SupportControllers = {
     createSupport,
     getSupports,
     markAsResolve

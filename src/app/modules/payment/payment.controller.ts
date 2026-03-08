@@ -1,61 +1,50 @@
 import { Request, Response } from "express";
-import catchAsync from "../../../shared/catchAsync";
-import { PaymentService } from "./payment.service";
 import { StatusCodes } from "http-status-codes";
+import { PaymentServices } from "./payment.service";
+import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
-import handleStripeWebhook from "../../../stripe/handleStripeWebhook";
 
-const createCheckoutSession = catchAsync(async (req: Request, res: Response) => {
-  const { amount } = req.body; // User should provide amount or it should be fetched based on referenceId
-  const result = await PaymentService.creatSession(req.user!, req.params.referenceId as string, amount);
-
-  res.status(StatusCodes.OK).json({ url: result.url })
-
-})
-
-
-// create payment
-export const createPaymentController = catchAsync(async (req: Request, res: Response) => {
-  const payload = req.body;
-  const payment = await PaymentService.createPayment(payload);
-  sendResponse(res, {
-    statusCode: StatusCodes.CREATED,
-    success: true,
-    message: 'Payment created successfully',
-    data: payment,
-  });
+const success = catchAsync(async (req: Request, res: Response) => {
+  const result = await PaymentServices.success(req.query);
+  res.send(result);
 });
 
-// get payments
-export const getPaymentsController = catchAsync(async (req: Request, res: Response) => {
-  const payments = await PaymentService.getPayments(req.query);
+const failure = catchAsync(async (req: Request, res: Response) => {
+  res.send(`
+    <html>
+        <body>
+            <h1 style="color: red;">Payment Failed!</h1>
+            <p>There was an error processing your payment. Please try again.</p>
+        </body>
+    </html>
+    `);
+});
+
+const createConnectedAccount = catchAsync(async (req: Request, res: Response) => {
+  const result = await PaymentServices.createConnectedAccount(req);
+
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'Payments retrieved successfully',
-    data: payments.data,
-    meta: payments.meta,
+    message: "Connected account created successfully",
+    data: result
   });
 });
 
-// get payment by id
-export const getPaymentByIdController = catchAsync(async (req: Request, res: Response) => {
-  const id = req.params.id;
-  const payment = await PaymentService.getPaymentById(id);
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'Payment retrieved successfully',
-    data: payment,
-  });
+const successAccount = catchAsync(async (req: Request, res: Response) => {
+  const result = await PaymentServices.successAccount(req);
+  res.send(result);
 });
 
+const refreshAccount = catchAsync(async (req: Request, res: Response) => {
+  const result = await PaymentServices.refreshAccount(req);
+  res.send(result);
+});
 
-
-export const PaymentController = {
-  createCheckoutSession,
-  createPaymentController,
-  getPaymentsController,
-  getPaymentByIdController,
-  handleStripeWebhook,
-}
+export const PaymentControllers = {
+  success,
+  failure,
+  createConnectedAccount,
+  successAccount,
+  refreshAccount
+};

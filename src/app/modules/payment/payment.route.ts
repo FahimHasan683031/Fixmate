@@ -1,29 +1,39 @@
 import { Router } from "express";
-import { PaymentController } from "./payment.controller";
-import auth from "../../middleware/auth";
+import { PaymentControllers } from "./payment.controller";
 import { USER_ROLES } from "../../../enum/user";
-import express from "express";
+import auth from "../../middleware/auth";
 
 const router = Router();
 
+router
+    .route("/success")
+    .get(
+        PaymentControllers.success
+    );
 
+router
+    .route("/account/:id")
+    .get(
+        PaymentControllers.successAccount
+    );
 
-router.post(
-    "/checkout-session/:referenceId",
-    PaymentController.createCheckoutSession
-)
+router
+    .route("/account/refresh/:id")
+    .get(
+        PaymentControllers.refreshAccount
+    );
 
-router.get(
-    "/",
-    auth(USER_ROLES.ADMIN),
-    PaymentController.getPaymentsController
-)
-router.get(
-    "/:id",
-    auth(USER_ROLES.ADMIN),
-    PaymentController.getPaymentByIdController
-)
+router
+    .route("/cancel")
+    .get(
+        PaymentControllers.failure
+    );
 
-
+router
+    .route("/connected-account")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        PaymentControllers.createConnectedAccount
+    );
 
 export const PaymentRoutes = router;

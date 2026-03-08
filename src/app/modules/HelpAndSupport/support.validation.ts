@@ -9,8 +9,8 @@ const supportSchema = z.object({
 
 const getSupportSchema = z.object({
     query: z.object({
-        page: z.union([z.number(), z.string()]).optional().transform(val => Number(val)).default(1),
-        limit: z.union([z.number(), z.string()]).optional().transform(val => Number(val)).default(10),
+        page: z.coerce.number().optional().default(1),
+        limit: z.coerce.number().optional().default(10),
         sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
         sortBy: z.string().optional().default("createdAt"),
         status: z.string().optional(),
@@ -18,7 +18,7 @@ const getSupportSchema = z.object({
     }).strict()
 });
 
-export const SupportValidation = {
+export const supportValidation = {
     supportSchema,
     getSupportSchema
 };
