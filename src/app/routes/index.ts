@@ -19,6 +19,7 @@ import { ServiceRoutes } from '../modules/service/service.route';
 import { BookingRoutes } from '../modules/booking/booking.route';
 import { TermsAndPolicyRoutes } from '../modules/terms&policy/terms&policy.route';
 import { VerificationRoutes } from '../modules/verification/verification.route';
+import { SupportRoutes } from '../modules/support/support.routes';
 
 
 
@@ -44,6 +45,7 @@ const apiRoutes = [
     { path: "/booking", route: BookingRoutes },
     { path: "/terms-and-policy", route: TermsAndPolicyRoutes },
     { path: "/verification", route: VerificationRoutes },
+    { path: "/support", route: SupportRoutes }
 ]
 
 

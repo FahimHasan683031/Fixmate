@@ -6,46 +6,26 @@ const messageSchema = new Schema<IMessage, MessageModel>(
   {
     chatId: {
       type: Schema.Types.ObjectId,
-      required: true,
-      ref: 'Chat',
+      ref: "Chat"
     },
     sender: {
       type: Schema.Types.ObjectId,
-      required: true,
-      ref: 'User',
+      ref: "User"
     },
-    text: {
-      type: String,
-      required: false
+    image: {
+      type: String
     },
-    files: {
-      type: [String],
-      required: false
+    message: {
+      type: String
     },
-    type: {
-      type: String,
-      enum: Object.values(MESSAGE),
-      default: MESSAGE.Text
-    },
-    readBy: [{
-      type: Schema.Types.ObjectId,
-      ref: 'User'
-    }],
-    amount: {
-      type: Number,
-      required: false
-    },
-    moneyRequestStatus: {
-      type: String,
-      enum: ['pending', 'accepted', 'rejected'],
-      required: false,
-      default: function (this: any) {
-        return this.type === MESSAGE.MoneyRequest ? 'pending' : undefined;
-      }
+    isSeen: {
+      type: Boolean,
+      default: false
     }
   },
   {
     timestamps: true,
+    versionKey: false
   }
 );
 

@@ -1,49 +1,63 @@
 import { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import { ChatServices } from "./chat.service";
 import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
-import { StatusCodes } from "http-status-codes";
-import { ChatService } from "./chat.service";
-import { JwtPayload } from "jsonwebtoken";
 
-const createChat = catchAsync(async (req: Request, res: Response) => {
-    const chat = await ChatService.createChatToDB(req.body);
-
+const create = catchAsync(async (req: Request, res: Response) => {
+    const result = await ChatServices.create(req.user, req.body);
     sendResponse(res, {
-        statusCode: StatusCodes.OK,
         success: true,
-        message: 'Create Chat Successfully',
-        data: chat,
+        statusCode: StatusCodes.CREATED,
+        message: "Chat created successfully",
+        data: result,
     });
 });
 
-const getChat = catchAsync(async (req: Request, res: Response) => {
-    const result = await ChatService.getChatFromDB(
-        req.user as JwtPayload,
-        req.query
-    );
-
+const getOneRoom = catchAsync(async (req: Request, res: Response) => {
+    const result = await ChatServices.getById(req.params.id, req.user);
     sendResponse(res, {
-        statusCode: StatusCodes.OK,
         success: true,
-        message: 'Chat Retrieve Successfully',
-        data: result.data,
-        meta: result.pagination
+        statusCode: StatusCodes.OK,
+        message: "Chat retrieved successfully",
+        data: result,
     });
 });
 
-const deleteChat = catchAsync(async (req: Request, res: Response) => {
-    await ChatService.deleteChatFromDB(req.params.id, req.user.id);
-
+const getAllChats = catchAsync(async (req: Request, res: Response) => {
+    const result = await ChatServices.allChats(req.user, req.query);
     sendResponse(res, {
-        statusCode: StatusCodes.OK,
         success: true,
-        message: 'Chat Deleted Successfully',
-        data: null
+        statusCode: StatusCodes.OK,
+        message: "All Chat's retrieved successfully",
+        data: result,
     });
 });
 
-export const ChatController = {
-    createChat,
-    getChat,
-    deleteChat
+const deleteOnChat = catchAsync(async (req: Request, res: Response) => {
+    const result = await ChatServices.deleteOneChat(req.user, req.params.id);
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,
+        message: "Chat delete successfully",
+        data: result,
+    });
+});
+
+const findChat = catchAsync(async (req: Request, res: Response) => {
+    const result = await ChatServices.findChat(req.user, req.query.name as string);
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,
+        message: "Chat found successfully",
+        data: result,
+    });
+});
+
+export const ChatControllers = {
+    create,
+    getOneRoom,
+    getAllChats,
+    deleteOnChat,
+    findChat
 };

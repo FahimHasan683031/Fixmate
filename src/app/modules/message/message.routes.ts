@@ -1,53 +1,37 @@
-import express from 'express';
-import { USER_ROLES } from '../../../enum/user';
-import auth from '../../middleware/auth';
-import { MessageController } from './message.controller';
-import fileUploadHandler from '../../middleware/fileUploadHandler';
-import { getSingleFilePath } from '../../../shared/getFilePath';
-import { fileAndBodyProcessorUsingDiskStorage } from '../../middleware/processReqBody';
+import { Router } from "express";
+import { MessageControllers } from "./message.controller";
+import auth from "../../middleware/auth";
+import { USER_ROLES } from "../../../enum/user";
+import fileUploadHandler from "../../middleware/fileUploadHandler";
+import validateRequest from "../../middleware/validateRequest";
+import { MessageValidations } from "./message.validation";
 
-const router = express.Router();
+const router = Router();
 
-// Send a message
-router.post('/',
-  auth(USER_ROLES.USER, USER_ROLES.ADMIN),
-  fileAndBodyProcessorUsingDiskStorage(),
-  MessageController.sendMessage
-);
+router.route("/")
+  .post(
+    auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT, USER_ROLES.ADMIN),
+    fileUploadHandler(),
+    validateRequest(MessageValidations.sendMessageValidator),
+    MessageControllers.create
+  );
 
-// Get messages for a chat
-router.get(
-  '/:id',
-  auth(USER_ROLES.USER, USER_ROLES.ADMIN),
-  MessageController.getMessage
-);
-
-// Update a message
-router.patch(
-  '/:id',
-  auth(USER_ROLES.USER, USER_ROLES.ADMIN),
-  MessageController.updateMessage
-);
-
-// Get total unread count
-router.get(
-  '/unread/count',
-  auth(USER_ROLES.USER, USER_ROLES.ADMIN),
-  MessageController.getUnreadCount
-);
-
-// Update money request status (accept/reject)
-router.patch(
-  '/:messageId/money-request',
-  auth(USER_ROLES.USER),
-  MessageController.updateMoneyRequestStatus
-);
-
-// Delete a message
-router.delete(
-  '/:id',
-  auth(USER_ROLES.USER, USER_ROLES.ADMIN),
-  MessageController.deleteMessage
-);
+router.route("/:id")
+  .get(
+    auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT, USER_ROLES.ADMIN),
+    validateRequest(MessageValidations.getMessagesOfChat),
+    MessageControllers.messagesOfChat
+  )
+  .patch(
+    auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT, USER_ROLES.ADMIN),
+    fileUploadHandler(),
+    validateRequest(MessageValidations.updateMessage),
+    MessageControllers.updateMessage
+  )
+  .delete(
+    auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT, USER_ROLES.ADMIN),
+    validateRequest(MessageValidations.deleteMessage),
+    MessageControllers.deleteMessage
+  );
 
 export const MessageRoutes = router;

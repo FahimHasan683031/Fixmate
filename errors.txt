@@ -1,0 +1,26 @@
+src/app/modules/auth/auth.validation.ts(144,20): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/category/category.service.ts(3,10): error TS2305: Module '"./category.model"' has no exported member 'CategoryModel'.
+src/app/modules/chat/chat.routes.ts(11,19): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/chat/chat.routes.ts(30,19): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/chat/chat.routes.ts(38,19): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/client/client.service.ts(6,10): error TS2305: Module '"../../../enum/user"' has no exported member 'STATUS'.
+src/app/modules/message/message.routes.ts(13,19): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/message/message.routes.ts(21,19): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/message/message.routes.ts(28,19): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/message/message.routes.ts(35,19): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/message/message.routes.ts(42,19): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/message/message.routes.ts(49,19): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/notification/notification.routes.ts(8,21): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/notification/notification.routes.ts(13,21): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/plan/plan.route.ts(16,43): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/plan/plan.route.ts(22,21): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/app/modules/subscription/subscription.route.ts(13,21): error TS2339: Property 'USER' does not exist on type 'typeof USER_ROLES'.
+src/helpers/fireBaseHelper.ts(10,26): error TS2551: Property 'fire_base_service_account' does not exist on type '{ ip_address: string | undefined; database_url: string | undefined; node_env: string | undefined; port: string | undefined; bcrypt_salt_rounds: string | undefined; firebase_service_account_base64: string | undefined; ... 7 more ...; stripe: { ...; }; }'. Did you mean 'firebase_service_account_base64'?
+src/helpers/pdfMaker.ts(1,25): error TS2307: Cannot find module 'pdfkit' or its corresponding type declarations.
+src/helpers/pdfMaker.ts(7,34): error TS2307: Cannot find module '../app/modules/client/client.repository' or its corresponding type declarations.
+src/helpers/SocketUtils.ts(11,33): error TS2339: Property 'for' does not exist on type 'INotification'.
+src/helpers/stripeHelper.ts(5,125): error TS2551: Property 'stripe_secret_key' does not exist on type '{ stripeSecretKey: string | undefined; webhookSecret: string | undefined; paymentSuccess: string | undefined; frontendUrl: string | undefined; }'. Did you mean 'stripeSecretKey'?
+src/queues/email.queue.ts(1,23): error TS2307: Cannot find module 'bullmq' or its corresponding type declarations.
+src/queues/email.queue.ts(2,29): error TS2307: Cannot find module '../config/redis' or its corresponding type declarations.
+src/redis/connectedUsers.ts(1,19): error TS2307: Cannot find module 'ioredis' or its corresponding type declarations.
+src/redis/connectedUsers.ts(2,29): error TS2307: Cannot find module '../config/redis' or its corresponding type declarations.

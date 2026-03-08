@@ -1,11 +1,12 @@
 import { z } from "zod";
-import { GENDER, USER_ROLES } from "../../../enum/user";
+import { GENDER } from "../../../enum/user";
 import { SERVICE_DAY } from "../../../enum/service";
 
 const updateProviderProfileSchema = z.object({
+    // body: z.object({
     name: z.string().optional(),
     overView: z.string().optional(),
-    gender: z.enum([GENDER.MALE, GENDER.FEMALE, GENDER.OTHERS]).optional(),
+    gender: z.enum([GENDER.MALE, GENDER.FEMALE, GENDER.OTHERS], { invalid_type_error: `You must give the gender ${GENDER.OTHERS} or ${GENDER.MALE} or ${GENDER.FEMALE}` }).optional(),
     dateOfBirth: z.string().optional(),
     nationality: z.string().optional(),
     category: z.string().optional(),
@@ -16,11 +17,12 @@ const updateProviderProfileSchema = z.object({
     nationalId: z.string().optional(),
     address: z.string().optional(),
     distance: z.coerce.number().optional(),
-    availableDay: z.array(z.enum([SERVICE_DAY.FRI, SERVICE_DAY.MON, SERVICE_DAY.SAT, SERVICE_DAY.SUN, SERVICE_DAY.THU, SERVICE_DAY.TUE, SERVICE_DAY.WED])).optional(),
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
+    availableDay: z.array(z.enum([SERVICE_DAY.FRI, SERVICE_DAY.MON, SERVICE_DAY.SAT, SERVICE_DAY.SUN, SERVICE_DAY.THU, SERVICE_DAY.TUE, SERVICE_DAY.WED]), { invalid_type_error: "Available day is required" }).optional(),
+    startTime: z.string({ invalid_type_error: "Start time is required" }).optional(),
+    endTime: z.string({ invalid_type_error: "End time is required" }).optional(),
     longitude: z.coerce.number().optional(),
     latitude: z.coerce.number().optional(),
+    // }).strict()
 });
 
 const createServiceSchema = z.object({
@@ -86,19 +88,10 @@ const getCategoriesSchema = z.object({
     }).strict(),
 });
 
-const withdrawalSchema = z.object({
+const whitdrawalSchema = z.object({
     body: z.object({
         amount: z.coerce.number({ required_error: "Amount is required" }),
     }).strict(),
-});
-
-const sendVerificaitonRequestSchema = z.object({
-    body: z.object({
-        nid: z.string({ required_error: "NID is required" }),
-        nidFront: z.string().optional(),
-        nidBack: z.string().optional(),
-        license: z.string().optional(),
-    }),
 });
 
 export const ProviderValidation = {
@@ -110,6 +103,5 @@ export const ProviderValidation = {
     getPaginationZodSchema,
     bookingsActionZodSchema,
     getCategoriesSchema,
-    withdrawalSchema,
-    sendVerificaitonRequestSchema
+    whitdrawalSchema
 };

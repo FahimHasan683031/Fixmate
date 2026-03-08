@@ -5,7 +5,7 @@ import sendResponse from "../../../shared/sendResponse";
 import { getSingleFilePath } from "../../../shared/getFilePath";
 import { ProviderServices } from "./provider.service";
 
-const profile = catchAsync(async (req: Request, res: Response) => {
+const provider = catchAsync(async (req: Request, res: Response) => {
     const result = await ProviderServices.profile(req.user);
     sendResponse(res, {
         success: true,
@@ -15,27 +15,41 @@ const profile = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const profileUpdate = catchAsync(async (req: Request, res: Response) => {
+const providerHome = catchAsync(async (req: Request, res: Response) => {
+    const result = await ProviderServices.providerHome(req.user);
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,
+        message: "Provider home retrieved successfully",
+        data: result,
+    });
+});
+
+const providerProfileUpdate = catchAsync(async (req: Request, res: Response) => {
     const image = getSingleFilePath(req.files, "image");
     if (image) req.body.image = image;
-
-    if (req.body.longitude && req.body.latitude) {
-        req.body.location = {
-            type: "Point",
-            coordinates: [Number(req.body.longitude), Number(req.body.latitude)],
-        };
-    }
+    if (req.body.longitude && req.body.latitude) req.body.location = { type: "Point", coordinates: [Number(req.body.longitude), Number(req.body.latitude)] };
 
     const result = await ProviderServices.profileUpdate(req.user, req.body);
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Provider updated successfully",
+        message: "Provider update successfully",
         data: result,
     });
 });
 
-const verificaitonStatusCheck = catchAsync(async (req: Request, res: Response) => {
+const providerProfileDelete = catchAsync(async (req: Request, res: Response) => {
+    const result = await ProviderServices.profileDelete(req.user, req.body);
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,
+        message: "Provider delete successfully",
+        data: result,
+    });
+});
+
+const providerVerification = catchAsync(async (req: Request, res: Response) => {
     const result = await ProviderServices.verificaitonStatusCheck(req.user);
     sendResponse(res, {
         success: true,
@@ -45,20 +59,17 @@ const verificaitonStatusCheck = catchAsync(async (req: Request, res: Response) =
     });
 });
 
-const sendVerificaitonRequest = catchAsync(async (req: Request, res: Response) => {
-    const nidFront = getSingleFilePath(req.files, "nidFront");
-    const nidBack = getSingleFilePath(req.files, "nidBack");
+const sendVerification = catchAsync(async (req: Request, res: Response) => {
+    const nid = getSingleFilePath(req.files, "nid");
     const license = getSingleFilePath(req.files, "license");
-
-    if (nidFront) req.body.nidFront = nidFront;
-    if (nidBack) req.body.nidBack = nidBack;
+    if (nid) req.body.nid = nid;
     if (license) req.body.license = license;
 
     const result = await ProviderServices.sendVerificaitonRequest(req.user, req.body);
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Successfully sent verification request",
+        message: "Successfully send verification request",
         data: result,
     });
 });
@@ -68,7 +79,7 @@ const providerServices = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Successfully retrieved provider services",
+        message: "Successfully get provider services",
         data: result,
     });
 });
@@ -81,7 +92,7 @@ const addService = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Successfully added service",
+        message: "Successfully add service",
         data: result,
     });
 });
@@ -91,7 +102,7 @@ const deleteService = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Successfully deleted service",
+        message: "Successfully delete service",
         data: result,
     });
 });
@@ -104,7 +115,7 @@ const updateService = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Successfully updated service",
+        message: "Successfully update service",
         data: result,
     });
 });
@@ -114,13 +125,13 @@ const viewService = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Successfully retrieved service",
+        message: "Successfully get service",
         data: result,
     });
 });
 
 const getBookings = catchAsync(async (req: Request, res: Response) => {
-    const result = await ProviderServices.getBookings(req.user, req.query, req.body);
+    const result = await ProviderServices.getBookings(req.user, req.query as any, req.body as any);
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
@@ -130,11 +141,11 @@ const getBookings = catchAsync(async (req: Request, res: Response) => {
 });
 
 const actionBooking = catchAsync(async (req: Request, res: Response) => {
-    const result = await ProviderServices.actionBooking(req.user, req.body);
+    const result = await ProviderServices.actionBooking(req.user, req.body as any);
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Booking action successful",
+        message: "Bookings retrieved successfully",
         data: result,
     });
 });
@@ -144,7 +155,7 @@ const seeBooking = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Booking retrieved successfully",
+        message: "Bookings retrieved successfully",
         data: result,
     });
 });
@@ -180,7 +191,7 @@ const cancelBooking = catchAsync(async (req: Request, res: Response) => {
 });
 
 const wallet = catchAsync(async (req: Request, res: Response) => {
-    const result = await ProviderServices.wallet(req.user, req.query);
+    const result = await ProviderServices.wallet(req.user, req.query as any);
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
@@ -189,41 +200,43 @@ const wallet = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const withdrawal = catchAsync(async (req: Request, res: Response) => {
-    const result = await ProviderServices.withdrawal(req.user, req.body);
+const whitdrawal = catchAsync(async (req: Request, res: Response) => {
+    const result = await ProviderServices.whitdrawal(req.user, req.body as any, req);
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Withdrawal successful",
+        message: "Wallet retrieved successfully",
         data: result,
     });
 });
 
 const ratings = catchAsync(async (req: Request, res: Response) => {
-    const result = await ProviderServices.myReviews(req.user, req.query);
+    const result = await ProviderServices.myReviews(req.user, req.query as any);
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Successfully retrieved reviews",
+        message: "Successfully get reviews",
         data: result,
     });
 });
 
 const getPaymentHistory = catchAsync(async (req: Request, res: Response) => {
-    const result = await ProviderServices.walletHistory(req.user, req.query);
+    const result = await ProviderServices.walletHistory(req.user, req.query as any);
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Successfully retrieved payment history",
+        message: "Successfully get payment history!",
         data: result,
     });
 });
 
 export const ProviderControllers = {
-    profile,
-    profileUpdate,
-    verificaitonStatusCheck,
-    sendVerificaitonRequest,
+    provider,
+    providerHome,
+    providerProfileUpdate,
+    providerProfileDelete,
+    providerVerification,
+    sendVerification,
     providerServices,
     addService,
     deleteService,
@@ -236,7 +249,7 @@ export const ProviderControllers = {
     getCustomer,
     cancelBooking,
     wallet,
-    withdrawal,
+    whitdrawal,
     ratings,
-    getPaymentHistory,
+    getPaymentHistory
 };

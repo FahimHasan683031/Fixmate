@@ -4,6 +4,19 @@ import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 import { AdminServices } from "./admin.service";
 import { getSingleFilePath } from "../../../shared/getFilePath";
+import { PDFMultiInvoiceMaker } from "../../../helpers/pdfMaker";
+
+const overview = catchAsync(async (req: Request, res: Response) => {
+    const result = await AdminServices.overview(req.query.year as string);
+
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,
+        message: "Admin overview retrieved successfully",
+        data: result,
+    });
+});
+
 
 const getUsers = catchAsync(async (req: Request, res: Response) => {
     const result = await AdminServices.getUsers(req.query as any);
@@ -148,6 +161,35 @@ const approveOrReject = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const find = catchAsync(async (req: Request, res: Response) => {
+    const result = await AdminServices.find(req.query as any);
+
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,
+        message: "Find successful",
+        data: result,
+    });
+});
+
+const getBookings = catchAsync(async (req: Request, res: Response) => {
+    const result = await AdminServices.bookingData(req.query as any);
+
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,
+        message: "Successfully get all Bookings!",
+        data: result,
+    });
+});
+
+const generateMultiInvoices = catchAsync(async (req: Request, res: Response) => {
+    const orders = await AdminServices.generateMultiInvoices(req.body);
+
+    const pdfMaker = new PDFMultiInvoiceMaker();
+    pdfMaker.streamMultiPDFToResponse(res, orders, "combined-invoices.pdf");
+});
+
 export const AdminController = {
     getUsers,
     getUser,
@@ -162,4 +204,8 @@ export const AdminController = {
     blockAndUnblockUser,
     getRequests,
     approveOrReject,
+    overview,
+    find,
+    getBookings,
+    generateMultiInvoices,
 };

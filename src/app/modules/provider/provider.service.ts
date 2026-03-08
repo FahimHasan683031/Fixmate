@@ -1,500 +1,526 @@
+import { StatusCodes } from "http-status-codes";
 import mongoose, { Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
-import { StatusCodes } from "http-status-codes";
+import bcrypt from "bcrypt";
+import { Request } from "express";
+
 import ApiError from "../../../errors/ApiError";
-import { User } from "../user/user.model";
+import unlinkFile from "../../../shared/unlinkFile";
 import { IUser } from "../user/user.interface";
 import { USER_STATUS, VERIFICATION_STATUS } from "../../../enum/user";
+import { IService } from "../service/service.interface";
+import { IPaginationOptions } from "../../../interfaces/pagination";
+import { Notification } from "../notification/notification.model";
+import { emailQueue } from "../../../queues/email.queue";
+import { BOOKING_STATUS } from "../../../enum/booking";
+import { redisDB } from "../../../redis/connectedUsers";
+import { PAYMENT_STATUS } from "../../../enum/payment";
+import { transfers, accounts, accountLinks } from "../../../helpers/stripeHelper";
+import { sendNotification } from "../../../helpers/SocketUtils";
 import { Verification } from "../verification/verification.model";
 import { Service } from "../service/service.model";
+import { User } from "../user/user.model";
 import { Booking } from "../booking/booking.model";
 import { Payment } from "../payment/payment.model";
-import QueryBuilder from "../../builder/QueryBuilder";
-import { IService } from "../service/service.interface";
-import { BOOKING_STATUS } from "../../../enum/booking";
-import { PAYMENT_STATUS } from "../../../enum/payment";
-import { Notification } from "../notification/notification.model";
 import { Review } from "../review/review.model";
 import { Category } from "../category/category.model";
 
-const profile = async (payload: JwtPayload) => {
-    const provider = await User.findById(payload.authId).select(
+
+export const profile = async (payload: JwtPayload) => {
+    const provider = await User.findById(
+        payload.id || payload.authId,
         "name image overView gender dateOfBirth nationality experience language contact whatsApp nationalId email address distance availableDay startTime endTime category"
-    );
-    if (!provider) {
-        throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
-    }
+    ).lean().exec();
+
+    if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
     return provider;
 };
 
-const profileUpdate = async (payload: JwtPayload, data: Partial<IUser>) => {
-    const provider = await User.findOneAndUpdate(
-        { _id: payload.authId, status: { $ne: USER_STATUS.DELETED } },
-        data,
-        { new: true }
-    ).select("+image");
+export const providerHome = async (payload: JwtPayload) => {
+    const id = new Types.ObjectId(payload.id || payload.authId);
+    const now = new Date();
 
-    if (!provider) {
-        throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
-    }
-    return provider;
+    const [balanceResult, pendingBookingsResult, completedBookingsResult, availableDayResult] = await Promise.all([
+        User.findById(id).select('wallet').lean(),
+        Booking.countDocuments({ provider: id, bookingStatus: BOOKING_STATUS.PENDING }),
+        Booking.countDocuments({ provider: id, bookingStatus: BOOKING_STATUS.COMPLETED }),
+        Booking.find({
+            provider: id,
+            date: { $gte: now },
+            bookingStatus: BOOKING_STATUS.ACCEPTED
+        }).select('date').sort({ date: 1 }).limit(1).lean()
+    ]);
+
+    return {
+        balance: balanceResult?.wallet || 0,
+        pendigTask: pendingBookingsResult,
+        complitedTask: completedBookingsResult,
+        availableDay: availableDayResult.length > 0 ? availableDayResult[0].date : null
+    };
 };
 
-const verificaitonStatusCheck = async (payload: JwtPayload) => {
-    const userId = new mongoose.Types.ObjectId(payload.authId);
-    const request = await Verification.findOne({ user: userId });
-    const user = await User.findById(userId);
+export const profileUpdate = async (payload: JwtPayload, data: Partial<IUser>) => {
+    const provider = await User.findByIdAndUpdate(payload.id || payload.authId, data).lean().exec();
+    if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
+    if (data.image && provider.image) unlinkFile(provider.image);
 
-    return request
-        ? {
-            message: "This is your current request status",
-            user: {
-                name: user?.name,
-                image: user?.image,
-                category: user?.category,
-                data: request,
-            },
+    const updatedProvider = await User.findById(payload.id || payload.authId).select("+image").lean().exec();
+    return updatedProvider;
+};
+
+export const profileDelete = async (payload: JwtPayload, data: { password: string }) => {
+    const provider = await User.findById(payload.id || payload.authId).select("+password").lean().exec();
+    if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, "User not found");
+
+    const isMatch = data.password && await bcrypt.compare(data.password, provider.password);
+    if (!isMatch) throw new ApiError(StatusCodes.NOT_FOUND, "Password not match!");
+
+    await Service.updateMany({ creator: provider._id }, { isDeleted: true }).lean().exec();
+    await User.findByIdAndUpdate(provider._id, { status: USER_STATUS.DELETED }).lean().exec();
+};
+
+export const verificaitonStatusCheck = async (payload: JwtPayload) => {
+    const userId = new Types.ObjectId(payload.id || payload.authId);
+    const request = await Verification.findOne({ user: userId }).lean().exec();
+    const user = await User.findById(userId).lean().exec();
+
+    return request ? {
+        message: "This is your current request status",
+        user: {
+            name: user?.name,
+            image: user?.image,
+            category: user?.category,
+            data: request
         }
-        : {
-            message: "You don't have send the request!",
-            user: {
-                name: user?.name,
-                image: user?.image,
-                category: user?.category,
-                data: null,
-            },
-        };
+    } : {
+        message: "You don't have send the request!",
+        user: {
+            name: user?.name,
+            image: user?.image,
+            category: user?.category,
+            data: null
+        }
+    };
 };
 
-const sendVerificaitonRequest = async (payload: JwtPayload, data: any) => {
-    const userObjID = new mongoose.Types.ObjectId(payload.authId);
-    const isVerifirequestExist = await Verification.findOne({ user: userObjID });
+export const sendVerificaitonRequest = async (payload: JwtPayload, data: any) => {
+    const userObjID = new Types.ObjectId(payload.id || payload.authId);
+    const isVerifirequestExist = await Verification.findOne({ user: userObjID }).lean().exec();
 
-    if (isVerifirequestExist && isVerifirequestExist.status === VERIFICATION_STATUS.PENDING) {
-        throw new ApiError(
-            StatusCodes.EXPECTATION_FAILED,
-            "You have already sent a request, please wait for approval."
-        );
+    if (isVerifirequestExist && isVerifirequestExist.status == VERIFICATION_STATUS.PENDING) {
+        throw new ApiError(StatusCodes.EXPECTATION_FAILED, "You are already sended the request so you must wait");
     }
+
+    if (!data.license || !data.nid) throw new ApiError(StatusCodes.NOT_FOUND, "License or NID not found!");
 
     if (!isVerifirequestExist) {
-        await Verification.create({
-            ...data,
-            status: VERIFICATION_STATUS.PENDING,
-            user: payload.authId,
-        });
+        await Verification.create({ ...data, status: VERIFICATION_STATUS.PENDING, user: userObjID });
     } else {
-        await Verification.findByIdAndUpdate(isVerifirequestExist._id, {
-            ...data,
-            status: VERIFICATION_STATUS.PENDING,
-        });
+        await Verification.findByIdAndUpdate(isVerifirequestExist._id, { ...data, status: VERIFICATION_STATUS.PENDING }).lean().exec();
     }
+
+    const admins = await User.find({ role: "ADMIN" }).lean().exec();
+
+    admins.forEach(async (admin) => {
+        const notification = await Notification.create({
+            receiver: admin._id,
+            message: "A new verification request has been sent",
+            type: "ADMIN"
+        });
+        const socket = (global as any).io;
+        await sendNotification(socket, notification);
+    });
 
     return data;
 };
 
-const providerServices = async (payload: JwtPayload, query: Record<string, unknown>) => {
-    const serviceQuery = Service.find({ creator: payload.authId, isDeleted: false });
-    const searchableFields = ["category", "subCategory"];
+export const providerServices = async (payload: JwtPayload, query: { page?: number; limit?: number; sortBy?: string; sortOrder?: "asc" | "desc" }) => {
+    const { page = 1, limit = 10, sortBy, sortOrder } = query;
+    const skip = (Number(page) - 1) * Number(limit);
 
-    const serviceQueryBuilder = new QueryBuilder(serviceQuery, query)
-        .search(searchableFields)
-        .filter()
-        .sort()
-        .paginate()
-        .fields();
+    const sortStage: any = {};
+    sortStage[sortBy || "createdAt"] = sortOrder === "desc" ? -1 : 1;
 
-    const data = await serviceQueryBuilder.modelQuery.lean().exec();
-    const meta = await serviceQueryBuilder.getPaginationInfo();
+    const services = await Service.aggregate([
+        { $match: { creator: new Types.ObjectId(payload.id || payload.authId), isDeleted: false } },
+        { $lookup: { from: "reviews", localField: "_id", foreignField: "service", as: "reviews" } },
+        {
+            $addFields: {
+                reviewCount: { $size: "$reviews" },
+                averageRating: {
+                    $cond: [
+                        { $gt: [{ $size: "$reviews" }, 0] },
+                        { $round: [{ $avg: "$reviews.rating" }, 1] },
+                        0,
+                    ],
+                },
+            },
+        },
+        { $project: { reviews: 0, __v: 0, updatedAt: 0, creator: 0 } },
+        { $sort: sortStage },
+        { $skip: skip },
+        { $limit: Number(limit) },
+    ]);
 
-    return { data, meta };
+    const total = await Service.countDocuments({ creator: payload.id || payload.authId, isDeleted: false });
+
+    return { meta: { page: Number(page), limit: Number(limit), total }, data: services };
 };
 
-const addService = async (payload: JwtPayload, data: Partial<IService>) => {
-    const verification = await Verification.findOne({ user: payload.authId });
+export const addService = async (payload: JwtPayload, data: Partial<IService>) => {
+    if (!data.image) throw new ApiError(StatusCodes.NOT_FOUND, "Image not found!");
 
-    if (!verification || verification.status !== VERIFICATION_STATUS.APPROVED) {
-        throw new ApiError(
-            StatusCodes.FORBIDDEN,
-            "Your profile is not verified yet, verify and try again"
-        );
+    const verification = await Verification.findOne({ user: new Types.ObjectId(payload.id || payload.authId) }).lean().exec();
+
+    if (!verification) {
+        throw new ApiError(StatusCodes.FORBIDDEN, "You must verify your account first, please verify and try again.");
+    }
+    if (verification.status !== VERIFICATION_STATUS.APPROVED) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, "Your profile is not verified by the admin yet, verify and try again");
     }
 
-    const result = await Service.create({ ...data, creator: payload.authId });
+    const result: any = await Service.create({ ...data, creator: new Types.ObjectId(payload.id || payload.authId) });
+
+    const createdObj = result.toObject();
+    delete createdObj.creator; delete createdObj.__v; delete createdObj.updatedAt; delete createdObj.createdAt; delete createdObj._id;
+    return createdObj;
+};
+
+export const deleteService = async (payload: JwtPayload, id: string) => {
+    const result: any = await Service.findByIdAndUpdate(id, { isDeleted: true }, { new: true }).lean().exec();
+    if (!result) throw new ApiError(StatusCodes.NOT_FOUND, "Service not found!");
+
+    delete result.creator; delete result.__v; delete result.updatedAt; delete result.createdAt; delete result._id;
     return result;
 };
 
-const deleteService = async (payload: JwtPayload, id: string) => {
-    const result = await Service.findOneAndUpdate(
-        { _id: id, creator: payload.authId },
-        { isDeleted: true },
-        { new: true }
-    );
-    if (!result) {
-        throw new ApiError(StatusCodes.NOT_FOUND, "Service not found!");
-    }
+export const updateService = async (payload: JwtPayload, id: string, data: Partial<IService>) => {
+    const result: any = await Service.findByIdAndUpdate(id, data, { new: true }).lean().exec();
+    if (!result) throw new ApiError(StatusCodes.NOT_FOUND, "Service not found!");
+
+    delete result.creator; delete result.__v; delete result.updatedAt; delete result.createdAt; delete result._id;
     return result;
 };
 
-const updateService = async (
-    payload: JwtPayload,
-    id: string,
-    data: Partial<IService>
-) => {
-    const result = await Service.findOneAndUpdate(
-        { _id: id, creator: payload.authId },
-        data,
-        { new: true }
-    );
-    if (!result) {
-        throw new ApiError(StatusCodes.NOT_FOUND, "Service not found!");
-    }
-    return result;
+export const viewService = async (payload: JwtPayload, id: string) => {
+    const result: any = await Service.find({ creator: new Types.ObjectId(payload.id || payload.authId), _id: new Types.ObjectId(id) })
+        .select("-__v -updatedAt -creator").lean().exec();
+
+    if (!result.length) throw new ApiError(StatusCodes.NOT_FOUND, "Service not found!");
+    delete result[0].createdAt; delete result[0]._id;
+    return result[0];
 };
 
-const viewService = async (payload: JwtPayload, id: string) => {
-    const result = await Service.findOne({
-        _id: id,
-        creator: payload.authId,
-        isDeleted: false,
-    }).select("-__v -updatedAt -creator");
+export const getBookings = async (user: JwtPayload, query: any, body: { status: "pending" | "upcoming" | "history" | "rejected" | "completed" | "cancelled" }) => {
+    const page = Number(query.page || 1);
+    const limit = Number(query.limit || 10);
+    const sortBy = query.sortBy || 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
 
-    if (!result) {
-        throw new ApiError(StatusCodes.NOT_FOUND, "Service not found!");
-    }
-    return result;
-};
+    const statusFilter =
+        body.status === "pending" ? BOOKING_STATUS.PENDING :
+            body.status === "upcoming" ? BOOKING_STATUS.ACCEPTED :
+                body.status === "rejected" || body.status === "cancelled" ? { $in: [BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED] } :
+                    body.status === "completed" ? BOOKING_STATUS.COMPLETED :
+                        { $ne: BOOKING_STATUS.PENDING };
 
-const getBookings = async (
-    user: JwtPayload,
-    query: Record<string, unknown>,
-    body: { status: string }
-) => {
-    const filter: any = {
-        provider: user.authId,
+    const bookings = await Booking.find({
+        provider: user.id || user.authId,
         isPaid: true,
         isDeleted: { $ne: true },
-    };
+        bookingStatus: statusFilter
+    })
+        .select("customer service date bookingStatus")
+        .populate([
+            { path: "customer", select: "name image address contact whatsApp" },
+            { path: "service", select: "name image price category subCategory" }
+        ])
+        .sort({ [sortBy]: sortOrder })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean().exec();
 
-    if (body.status === "pending") {
-        filter.bookingStatus = BOOKING_STATUS.PENDING;
-    } else if (body.status === "upcoming") {
-        filter.bookingStatus = BOOKING_STATUS.ACCEPTED;
-    } else if (body.status === "rejected" || body.status === "cancelled") {
-        filter.bookingStatus = {
-            $in: [BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED],
-        };
-    } else if (body.status === "completed") {
-        filter.bookingStatus = BOOKING_STATUS.COMPLETED;
-    } else {
-        filter.bookingStatus = { $ne: BOOKING_STATUS.PENDING };
-    }
-
-    const bookingQuery = Booking.find(filter)
-        .populate({
-            path: "customer",
-            select: "name image address contact whatsApp",
-        })
-        .populate({
-            path: "service",
-            select: "name image price category subCategory",
-        });
-
-    const bookingQueryBuilder = new QueryBuilder(bookingQuery, query)
-        .filter()
-        .sort()
-        .paginate()
-        .fields();
-
-    const data = await bookingQueryBuilder.modelQuery.lean().exec();
-    const meta = await bookingQueryBuilder.getPaginationInfo();
-
-    return { data, meta };
+    return bookings;
 };
 
-const actionBooking = async (
-    user: JwtPayload,
-    data: { bookId: string; action: "accept" | "reject"; reason?: string }
-) => {
-    const booking = await Booking.findOne({
-        _id: data.bookId,
-        provider: user.authId,
-    });
+export const actionBooking = async (user: JwtPayload, data: { bookId: string, action: "accept" | "reject", reason?: string }) => {
+    const booking: any = await Booking.find({ _id: new Types.ObjectId(data.bookId) }).lean().exec();
 
-    if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
-    if (booking.bookingStatus !== BOOKING_STATUS.PENDING)
-        throw new ApiError(StatusCodes.NOT_FOUND, "Booking already interacted!");
+    if (!booking.length) throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
+    if (booking[0].bookingStatus != BOOKING_STATUS.PENDING) throw new ApiError(StatusCodes.NOT_FOUND, "Booking already interacted!");
 
-    if (data.action === "accept") {
-        booking.bookingStatus = BOOKING_STATUS.ACCEPTED;
-        await booking.save();
+    if (data.action == "accept") {
+        await Booking.findByIdAndUpdate(data.bookId, { bookingStatus: BOOKING_STATUS.ACCEPTED }).lean().exec();
 
-        await Notification.create({
-            receiver: booking.customer,
-            title: "Booking Accepted",
-            message: "Your Booking has been accepted",
-            referenceId: booking._id,
-            model_type: "Booking",
+        const notification = await Notification.create({
+            receiver: booking[0].customer,
+            message: "Your Booking accepted",
+            type: "USER"
         });
 
-        // Push notification logic would go here if PushNotificationService exists
-    } else if (data.action === "reject") {
-        booking.bookingStatus = BOOKING_STATUS.REJECTED;
-        booking.rejectReason = data.reason || "";
-        await booking.save();
+        const isProviderOnline = await redisDB.get(`user:${booking[0].customer}`);
+        if (!isProviderOnline) {
+            const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
+            await emailQueue.add("push-notification", {
+                notification: { title: "Booking Accepted", body: "Your Booking accepted" },
+                token: customer?.fcmToken
+            }, { removeOnComplete: true, removeOnFail: false });
+        }
 
-        await Notification.create({
-            receiver: booking.customer,
-            title: "Booking Rejected",
-            message: `Your Booking has been rejected. Reason: ${data.reason || "N/A"}`,
-            referenceId: booking._id,
-            model_type: "Booking",
+        const socket = (global as any).io;
+        await sendNotification(socket, notification);
+
+    } else if (data.action == "reject") {
+        await Booking.findByIdAndUpdate(data.bookId, { bookingStatus: BOOKING_STATUS.REJECTED, rejectReason: data.reason }).lean().exec();
+
+        const notification = await Notification.create({
+            receiver: booking[0].customer,
+            message: "Your Booking rejected " + data.reason,
+            type: "USER"
         });
+
+        const isProviderOnline = await redisDB.get(`user:${booking[0].customer}`);
+        if (!isProviderOnline) {
+            const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
+            await emailQueue.add("push-notification", {
+                notification: { title: "Booking Rejected", body: "Your Booking rejected " + data.reason },
+                token: customer?.fcmToken
+            }, { removeOnComplete: true, removeOnFail: false });
+        }
+
+        const socket = (global as any).io;
+        await sendNotification(socket, notification);
     }
-
-    return booking;
 };
 
-const seeBooking = async (user: JwtPayload, id: string) => {
-    const provider = await User.findById(user.authId);
-    if (!provider)
-        throw new ApiError(StatusCodes.NOT_FOUND, "Provider not found!");
+export const seeBooking = async (user: JwtPayload, id: string) => {
+    const provider = await User.findById(user.id || user.authId).lean().exec();
+    if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, "Provider not found!");
 
-    const booking = await Booking.findOne({ _id: id, provider: user.authId })
-        .populate({
-            path: "service",
-            select: "image price category subCategory whatsApp contact",
-        })
-        .populate({
-            path: "customer",
-            select: "name image address category whatsApp contact",
-        });
+    const booking: any = await Booking.find({ _id: new Types.ObjectId(id) })
+        .populate([
+            { path: "service", select: "image price category subCategory whatsApp contact" },
+            { path: "customer", select: "name image address category whatsApp contact" }
+        ]).lean().exec();
 
-    if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
+    if (!booking.length) throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
 
     return {
-        service: {
-            ...booking.service,
-            date: booking.date,
-        },
+        service: { ...booking[0].service, date: booking[0].date },
         details: {
             distance: provider.distance,
-            status: booking.bookingStatus,
-            fee: (booking.service as any).price,
-            address: booking.address,
-            specialNote: booking.specialNote,
-            customer: booking.customer,
-            paymentStatus: booking.isPaid ? "PAID" : "UNPAID",
-        },
+            status: booking[0].bookingStatus,
+            fee: booking[0].service.price,
+            address: booking[0].address,
+            specialNote: booking[0].specialNote,
+            customer: booking[0].customer,
+            paymentStatus: booking[0].paymentStatus
+        }
     };
 };
 
-const getCategories = async (query: Record<string, unknown>) => {
-    const categoryQuery = Category.find({});
-    const categoryQueryBuilder = new QueryBuilder(categoryQuery, query)
-        .search(["name"])
-        .filter()
-        .sort()
-        .paginate()
-        .fields();
-
-    const data = await categoryQueryBuilder.modelQuery.lean().exec();
-    const meta = await categoryQueryBuilder.getPaginationInfo();
-
-    return { data, meta };
+export const getCategories = async (query: any) => {
+    const page = Number(query.page || 1);
+    const limit = Number(query.limit || 10);
+    return Category.find({ isDeleted: false }).select("-createdAt -updatedAt -__v -isDeleted").skip((page - 1) * limit).limit(limit).lean().exec();
 };
 
-const getCustomer = async (id: string) => {
-    const customer = await User.findById(id).select(
-        "name image address gender dateOfBirth nationality contact whatsApp"
-    );
+export const getCustomer = async (id: string) => {
+    const customer = await User.findById(id).select("name image address gender dateOfBirth nationality contact whatsApp").lean().exec();
     if (!customer) throw new ApiError(StatusCodes.NOT_FOUND, "Customer not found!");
     return customer;
 };
 
-const cancelBooking = async (user: JwtPayload, id: string) => {
-    const booking = await Booking.findOne({ _id: id, provider: user.authId });
-    if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
+export const cancelBooking = async (user: JwtPayload, id: string) => {
+    const booking: any = await Booking.find({ _id: new Types.ObjectId(id) }).lean().exec();
+    if (!booking.length) throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
 
-    if ([BOOKING_STATUS.COMPLETED, BOOKING_STATUS.CANCELLED, BOOKING_STATUS.REJECTED].includes(booking.bookingStatus)) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, `Booking already ${booking.bookingStatus.toLowerCase()}`);
-    }
+    if (booking[0].bookingStatus == BOOKING_STATUS.PENDING) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already pending");
+    if (booking[0].bookingStatus == BOOKING_STATUS.COMPLETED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already completed");
+    if (booking[0].bookingStatus == BOOKING_STATUS.CANCELLED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already cancelled");
+    if (booking[0].bookingStatus == BOOKING_STATUS.REJECTED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already rejected");
 
-    booking.bookingStatus = BOOKING_STATUS.CANCELLED;
-    await booking.save();
+    await Booking.findByIdAndUpdate(id, { bookingStatus: BOOKING_STATUS.CANCELLED }).lean().exec();
 
-    const provider = await User.findById(user.authId);
-    if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, "Provider not found!");
+    const findProvider = await User.findById(booking[0].provider).lean().exec() as any;
+    if (!findProvider) throw new ApiError(StatusCodes.NOT_FOUND, "Provider not found!");
 
-    // Cancellation fee logic
-    const cancellationFee = (booking as any).totalAmount * 0.05;
-    provider.wallet = (provider.wallet || 0) - cancellationFee;
-    await provider.save();
+    const service = await Service.findById(booking[0].service).lean().exec();
+
+    const providerWallet = findProvider.wallet - ((service?.price || 0) * 0.05);
+
+    const providerUpdated = await User.findByIdAndUpdate(booking[0].provider, { wallet: providerWallet }, { new: true }).lean().exec();
 
     await Payment.create({
-        booking: booking._id,
-        provider: booking.provider,
-        customer: booking.customer,
-        service: booking.service,
-        amount: cancellationFee,
-        status: PAYMENT_STATUS.CANCELLED,
+        booking: booking[0]._id,
+        provider: booking[0].provider,
+        customer: booking[0].customer,
+        service: booking[0].service,
+        amount: (service?.price || 0) * 0.05,
+        paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED
     });
 
-    await Notification.create({
-        receiver: booking.customer,
-        title: "Booking Cancelled",
-        message: "Your Booking has been cancelled by provider",
-        referenceId: booking._id,
-        model_type: "Booking",
+    const notification = await Notification.create({
+        receiver: booking[0].customer,
+        message: "Your Booking cancelled",
+        type: "USER"
     });
 
-    return provider.wallet;
+    const isCustomerOnline = await redisDB.get(`user:${booking[0].customer}`);
+    if (!isCustomerOnline) {
+        const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
+        await emailQueue.add("push-notification", {
+            notification: { title: "Booking Cancelled", body: "Your Booking cancelled" },
+            token: customer?.fcmToken
+        }, { removeOnComplete: true, removeOnFail: false });
+    }
+
+    const socket = (global as any).io;
+    await sendNotification(socket, notification);
+
+    return providerUpdated?.wallet;
 };
 
-const wallet = async (user: JwtPayload, query: Record<string, unknown>) => {
-    const paymentQuery = Payment.find({
-        provider: user.authId,
-        status: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.CANCELLED] },
-    }).populate({
-        path: "service",
-        select: "image category subCategory",
-    });
+export const wallet = async (user: JwtPayload, query: any) => {
+    const provider = await User.findById(user.id || user.authId).lean().exec() as IUser;
+    const page = Number(query.page || 1);
+    const limit = Number(query.limit || 10);
+    const sortBy = query.sortBy || 'createdAt';
+    const sortOrder = query.sortOrder === 'asc' ? 1 : -1;
 
-    const paymentQueryBuilder = new QueryBuilder(paymentQuery, query)
-        .filter()
-        .sort()
-        .paginate()
-        .fields();
+    const walletItems: any = await Payment.find({
+        provider: new Types.ObjectId(user.id || user.authId),
+        $or: [{ paymentStatus: PAYMENT_STATUS.PAID }, { paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED }]
+    }).select("service amount paymentStatus").populate([{ path: "service", select: "image category subCategory" }])
+        .sort({ [sortBy]: sortOrder }).skip((page - 1) * limit).limit(limit).lean().exec();
 
-    const history = await paymentQueryBuilder.modelQuery.lean().exec();
-    const meta = await paymentQueryBuilder.getPaginationInfo();
-
-    const processedHistory = history.map((item: any) => ({
+    const historyWithDeduction = walletItems.map((item: any) => ({
         ...item,
-        amount: Number((item.amount * 0.9).toFixed(2)), // 10% deduction example
+        amount: Number((item.amount * 0.9).toFixed(2)),
     }));
 
-    const balance = processedHistory
-        .filter((item: any) => item.status === PAYMENT_STATUS.PAID)
+    const deductedBalance = historyWithDeduction
+        .filter((item: any) => item.paymentStatus === PAYMENT_STATUS.PAID)
         .reduce((sum: number, item: any) => sum + item.amount, 0);
 
-    return {
-        balance: Number(balance.toFixed(2)),
-        history: processedHistory,
-        meta,
-    };
+    return { balance: Number(deductedBalance.toFixed(2)), history: historyWithDeduction };
 };
 
-const withdrawal = async (user: JwtPayload, data: { amount: number }) => {
-    const provider = await User.findById(user.authId);
+export const whitdrawal = async (user: JwtPayload, data: { amount: number }, req: Request) => {
+    const provider = await User.findById(user.id || user.authId).lean().exec() as IUser;
     if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, "Provider not found!");
 
     const maxWithdrawable = (provider.wallet || 0) * 0.9;
-    if (data.amount > maxWithdrawable) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, `Insufficient balance! Max withdrawable: ${maxWithdrawable.toFixed(2)}`);
-    }
+    if (data.amount > maxWithdrawable) throw new ApiError(StatusCodes.BAD_REQUEST, `Insufficient balance! You can withdraw up to ${maxWithdrawable.toFixed(2)}`);
 
-    // Connect account logic placeholder
     if (!provider.stripeAccountId) {
+        const account = await accounts.create({
+            type: "express",
+            email: provider.email,
+            capabilities: {
+                card_payments: { requested: true },
+                transfers: { requested: true }
+            },
+            metadata: { userId: (user.id || user.authId).toString() }
+        });
+        const onboardLink = await accountLinks.create({
+            account: account.id,
+            refresh_url: `${process.env.SERVER_DOMAIN}/api/v1/payment/account/refresh/${account.id}`,
+            return_url: `${process.env.SERVER_DOMAIN}/api/v1/payment/account/${account.id}`,
+            type: "account_onboarding"
+        });
         return {
-            message: "Connect stripe account to withdraw",
-            url: "https://stripe.com/connect", // Placeholder
+            message: "Please connect your account with stripe to withdraw money",
+            url: onboardLink.url
         };
     }
 
-    // Stripe transfer logic placeholder
-    provider.wallet = (provider.wallet || 0) - data.amount;
-    await provider.save();
+    const amountAfterFee = Number((data.amount * 0.9).toFixed(2));
+
+    await transfers.create({
+        amount: amountAfterFee * 100,
+        currency: 'usd',
+        destination: provider.stripeAccountId as string,
+        transfer_group: `provider_${provider._id}`
+    });
+
+    await User.findByIdAndUpdate(provider._id, { wallet: (provider.wallet || 0) - data.amount }).lean().exec();
 
     await Payment.create({
-        provider: provider._id,
         amount: -data.amount,
-        status: PAYMENT_STATUS.WITHDRAWN,
+        paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED,
+        provider: provider._id
     });
-
-    return { message: "Withdrawal request processed successfully" };
+    return;
 };
 
-const myReviews = async (user: JwtPayload, query: Record<string, unknown>) => {
-    const reviewQuery = Review.find({ provider: user.authId }).populate({
-        path: "customer",
-        select: "name image",
-    });
+export const myReviews = async (user: JwtPayload, paginationOptions: any) => {
+    const page = Number(paginationOptions.page || 1);
+    const limit = Number(paginationOptions.limit || 10);
+    const sortBy = paginationOptions.sortBy || 'createdAt';
+    const sortOrder = paginationOptions.sortOrder === 'asc' ? 1 : -1;
 
-    const reviewQueryBuilder = new QueryBuilder(reviewQuery, query)
-        .filter()
-        .sort()
-        .paginate()
-        .fields();
+    const reviews = await Review.find({ provider: user.id || user.authId })
+        .select("-updatedAt -__v -provider -service")
+        .populate({ path: "creator", select: "name image" })
+        .sort({ [sortBy]: sortOrder }).skip((page - 1) * limit).limit(limit).lean().exec();
 
-    const data = await reviewQueryBuilder.modelQuery.lean().exec();
-    const meta = await reviewQueryBuilder.getPaginationInfo();
-
-    const ratingsCount = {
-        oneStar: await Review.countDocuments({ provider: user.authId, rating: 1 }),
-        twoStar: await Review.countDocuments({ provider: user.authId, rating: 2 }),
-        threeStar: await Review.countDocuments({ provider: user.authId, rating: 3 }),
-        fourStar: await Review.countDocuments({ provider: user.authId, rating: 4 }),
-        fiveStar: await Review.countDocuments({ provider: user.authId, rating: 5 }),
-    };
-
-    const totalReviews = await Review.countDocuments({ provider: user.authId });
-    const averageRating = totalReviews > 0 ? (await Review.aggregate([
-        { $match: { provider: new mongoose.Types.ObjectId(user.authId) } },
-        { $group: { _id: null, avg: { $avg: "$rating" } } }
-    ]))[0]?.avg || 0 : 0;
+    let averageRating = 0;
+    if (reviews.length > 0) {
+        const total = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+        averageRating = total / reviews.length;
+    }
 
     return {
         overview: {
-            averageRating: Number(averageRating.toFixed(1)),
-            totalReviews,
-            stars: ratingsCount,
+            averageRating,
+            totalReviews: reviews.length,
+            start: {
+                oneStar: reviews.filter(r => r.rating === 1).length,
+                twoStar: reviews.filter(r => r.rating === 2).length,
+                threeStar: reviews.filter(r => r.rating === 3).length,
+                fourStar: reviews.filter(r => r.rating === 4).length,
+                fiveStar: reviews.filter(r => r.rating === 5).length,
+            }
         },
-        reviews: data,
-        meta,
+        all: reviews,
     };
 };
 
-const walletHistory = async (user: JwtPayload, query: Record<string, unknown>) => {
+export const walletHistory = async (user: JwtPayload, query: any) => {
     const { startTime, endTime, ...rest } = query;
-    const filter: any = {
-        provider: user.authId,
-        status: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.CANCELLED] },
+    const provider = await User.findById(user.id || user.authId).lean().exec() as IUser;
+
+    const page = Number(rest.page || 1);
+    const limit = Number(rest.limit || 10);
+    const sortBy = rest.sortBy || 'createdAt';
+    const sortOrder = rest.sortOrder === 'asc' ? 1 : -1;
+
+    const filterOptionsQuery: any = {
+        provider: new Types.ObjectId(user.id || user.authId),
+        $or: [{ paymentStatus: PAYMENT_STATUS.PAID }, { paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED }]
     };
 
     if (startTime && endTime) {
-        filter.createdAt = {
-            $gte: new Date(startTime as string),
-            $lte: new Date(endTime as string),
-        };
+        filterOptionsQuery.createdAt = { $gte: new Date(startTime), $lte: new Date(endTime) };
     }
 
-    const paymentQuery = Payment.find(filter).populate({
-        path: "service",
-        select: "image category subCategory",
-    });
-
-    const paymentQueryBuilder = new QueryBuilder(paymentQuery, rest)
-        .filter()
-        .sort()
-        .paginate()
-        .fields();
-
-    const data = await paymentQueryBuilder.modelQuery.lean().exec();
-    const meta = await paymentQueryBuilder.getPaginationInfo();
-
-    const provider = await User.findById(user.authId);
+    const walletItems = await Payment.find(filterOptionsQuery)
+        .select("service amount paymentStatus")
+        .populate([{ path: "service", select: "image category subCategory" }])
+        .sort({ [sortBy]: sortOrder }).skip((page - 1) * limit).limit(limit).lean().exec();
 
     return {
-        balance: provider?.wallet || 0,
-        history: data,
-        meta,
+        balance: provider.wallet,
+        history: walletItems
     };
 };
 
 export const ProviderServices = {
     profile,
+    providerHome,
     profileUpdate,
+    profileDelete,
     verificaitonStatusCheck,
     sendVerificaitonRequest,
     providerServices,
@@ -509,9 +535,7 @@ export const ProviderServices = {
     getCustomer,
     cancelBooking,
     wallet,
-    withdrawal,
+    whitdrawal,
     myReviews,
     walletHistory
 };
-
-

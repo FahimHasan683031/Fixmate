@@ -1,28 +1,42 @@
-import { z } from 'zod';
-import { MESSAGE } from '../../../enum/message';
+import { z } from "zod"
 
-export const sendMessageZod = z.object({
+const sendMessageValidator = z.object({
     body: z.object({
-        chatId: z.string().min(1, 'Chat ID is required'),
-        text: z.string().optional(),
-        image: z.string().optional(),
-        type: z.nativeEnum(MESSAGE).optional(),
-    }).refine(
-        (data) => data.text || data.image,
-        {
-            message: 'Either text or image must be provided',
-        }
-    ),
-});
+        chatId: z.string({ required_error: "You must give the chat ID" }),
+        message: z.string().optional()
+    })
+})
 
-export const getMessageZod = z.object({
+const deleteMessage = z.object({
     params: z.object({
-        id: z.string().min(1, 'Chat ID is required'),
-    }),
-});
+        id: z.string({ required_error: "You must give the id of your message to delete!" })
+    }).strict()
+})
 
-export const markAsReadZod = z.object({
+const updateMessage = z.object({
     params: z.object({
-        chatId: z.string().min(1, 'Chat ID is required'),
-    }),
-});
+        id: z.string({ required_error: "You must give the id of your message to delete!" })
+    }).strict(),
+    body: z.object({
+        message: z.string().optional(),
+    }).strict()
+})
+
+const getMessagesOfChat = z.object({
+    params: z.object({
+        id: z.string({ required_error: "You must give the id of your message to delete!" })
+    }).strict(),
+    query: z.object({
+        page: z.string().optional(),
+        limit: z.string().optional(),
+        sortBy: z.string().optional(),
+        sortOrder: z.enum(["asc", "desc"]).optional()
+    }).strict()
+})
+
+export const MessageValidations = {
+    sendMessageValidator,
+    deleteMessage,
+    getMessagesOfChat,
+    updateMessage
+}

@@ -1,13 +1,18 @@
 import { z } from 'zod';
 
-export const createChatZod = z.object({
+const createChatSchema = z.object({
     body: z.object({
-        participant: z.string().min(1, 'Participant ID is required'),
-    }),
+        user: z.string({ required_error: "User is required" }),
+    }).required()
 });
 
-export const deleteChatZod = z.object({
+const chatIdSchema = z.object({
     params: z.object({
-        id: z.string().min(1, 'Chat ID is required'),
-    }),
-});
+        id: z.string({ required_error: "Chat ID is required" })
+    }).strict()
+})
+
+export const ChatValidations = {
+    createChatSchema,
+    chatIdSchema
+};

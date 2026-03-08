@@ -13,13 +13,13 @@ router.route("/")
         PlanController.createPlan
     )
     .get(
-        auth(USER_ROLES.ADMIN, USER_ROLES.USER),
+        auth(USER_ROLES.ADMIN, USER_ROLES.CLIENT),
         PlanController.getPlan
     )
 
 router.post(
     "/create-checkout-session/:planId",
-    auth(USER_ROLES.USER),
+    auth(USER_ROLES.CLIENT),
     PlanController.createCheckoutSession
 )
 

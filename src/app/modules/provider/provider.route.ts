@@ -1,40 +1,55 @@
-import express from "express";
-import auth from "../../middleware/auth";
-import { USER_ROLES } from "../../../enum/user";
-import fileUploadHandler from "../../middleware/fileUploadHandler";
-import validateRequest from "../../middleware/validateRequest";
+import { NextFunction, Request, Response, Router } from "express";
 import { ProviderControllers } from "./provider.controller";
 import { ProviderValidation } from "./provider.validation";
+import validateRequest from "../../middlewares/validateRequest";
+import auth from "../../middlewares/auth";
+import { USER_ROLES } from "../../../enum/user";
+import fileUploadHandler from "../../middlewares/fileUploadHandler";
 
-const router = express.Router();
+const router = Router();
 
-router
-    .route("/")
-    .get(auth(USER_ROLES.PROVIDER), ProviderControllers.profile)
+router.route("/")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        ProviderControllers.provider
+    )
     .patch(
         auth(USER_ROLES.PROVIDER),
         fileUploadHandler(),
-        (req, res, next) => {
-            if (req.body.data) {
-                req.body = JSON.parse(req.body.data);
+        (req: Request, res: Response, next: NextFunction) => {
+            if (req.body?.data) {
+                req.body = ProviderValidation.updateProviderProfileSchema.parse(JSON.parse(req.body.data));
             }
-            next();
-        },
-        validateRequest(ProviderValidation.updateProviderProfileSchema),
-        ProviderControllers.profileUpdate
+            return ProviderControllers.providerProfileUpdate(req, res, next);
+        }
+    )
+    .delete(
+        auth(USER_ROLES.PROVIDER),
+        ProviderControllers.providerProfileDelete
     );
 
-router.get("/verification", auth(USER_ROLES.PROVIDER), ProviderControllers.verificaitonStatusCheck);
-router.post(
-    "/verification",
-    auth(USER_ROLES.PROVIDER),
-    fileUploadHandler(),
-    ProviderControllers.sendVerificaitonRequest
-);
+router.route("/home")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        ProviderControllers.providerHome
+    );
 
-router
-    .route("/service")
-    .get(auth(USER_ROLES.PROVIDER), ProviderControllers.providerServices)
+router.route("/verification")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        ProviderControllers.providerVerification
+    )
+    .post(
+        auth(USER_ROLES.PROVIDER),
+        fileUploadHandler(),
+        ProviderControllers.sendVerification
+    );
+
+router.route("/service")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        ProviderControllers.providerServices
+    )
     .post(
         auth(USER_ROLES.PROVIDER),
         fileUploadHandler(),
@@ -42,39 +57,88 @@ router
         ProviderControllers.addService
     );
 
-router
-    .route("/service/:id")
-    .get(auth(USER_ROLES.PROVIDER), ProviderControllers.viewService)
+router.route("/service/:id")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.viewServiceSchema),
+        ProviderControllers.viewService
+    )
     .patch(
         auth(USER_ROLES.PROVIDER),
         fileUploadHandler(),
         validateRequest(ProviderValidation.updateServiceSchema),
         ProviderControllers.updateService
     )
-    .delete(auth(USER_ROLES.PROVIDER), ProviderControllers.deleteService);
+    .delete(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.deleteServiceSchema),
+        ProviderControllers.deleteService
+    );
 
-router.get("/book", auth(USER_ROLES.PROVIDER), ProviderControllers.getBookings);
-router.post(
-    "/book",
-    auth(USER_ROLES.PROVIDER),
-    validateRequest(ProviderValidation.bookingsActionZodSchema),
-    ProviderControllers.actionBooking
-);
+router.route("/book")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.getPaginationZodSchema),
+        ProviderControllers.getBookings
+    )
+    .post(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.bookingsActionZodSchema),
+        ProviderControllers.actionBooking
+    );
 
-router.get("/book/:id", auth(USER_ROLES.PROVIDER), ProviderControllers.seeBooking);
-router.get("/categories", auth(USER_ROLES.PROVIDER), ProviderControllers.getCategories);
-router.get("/customer/:id", auth(USER_ROLES.PROVIDER), ProviderControllers.getCustomer);
-router.post("/book/cancel/:id", auth(USER_ROLES.PROVIDER), ProviderControllers.cancelBooking);
+router.route("/book/:id")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.viewServiceSchema),
+        ProviderControllers.seeBooking
+    );
 
-router.get("/wallet", auth(USER_ROLES.PROVIDER), ProviderControllers.wallet);
-router.post(
-    "/withdrawal",
-    auth(USER_ROLES.PROVIDER),
-    validateRequest(ProviderValidation.withdrawalSchema),
-    ProviderControllers.withdrawal
-);
+router.route("/categories")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.getCategoriesSchema),
+        ProviderControllers.getCategories
+    );
 
-router.get("/reviews", auth(USER_ROLES.PROVIDER), ProviderControllers.ratings);
-router.get("/payment-history", auth(USER_ROLES.PROVIDER), ProviderControllers.getPaymentHistory);
+router.route("/customer/:id")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.viewServiceSchema),
+        ProviderControllers.getCustomer
+    );
+
+router.route("/book/cancel/:id")
+    .post(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.viewServiceSchema),
+        ProviderControllers.cancelBooking
+    );
+
+router.route("/payment-history")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.getPaginationZodSchema),
+        ProviderControllers.getPaymentHistory
+    );
+
+router.route("/wallet")
+    .post(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.whitdrawalSchema),
+        ProviderControllers.whitdrawal
+    )
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.getPaginationZodSchema),
+        ProviderControllers.wallet
+    );
+
+router.route("/reviews")
+    .get(
+        auth(USER_ROLES.PROVIDER),
+        validateRequest(ProviderValidation.getPaginationZodSchema),
+        ProviderControllers.ratings
+    );
 
 export const ProviderRoutes = router;

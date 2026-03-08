@@ -1,136 +1,149 @@
-import { FilterQuery, Types } from 'mongoose';
-import { Message } from '../message/message.model';
-import { IChat } from './chat.interface';
-import { Chat } from './chat.model';
-import { JwtPayload } from 'jsonwebtoken';
-import { User } from '../user/user.model';
-import ApiError from '../../../errors/ApiError';
-import { StatusCodes } from 'http-status-codes';
-import QueryBuilder from '../../builder/QueryBuilder';
+import { Types } from "mongoose";
+import { StatusCodes } from "http-status-codes";
+import { JwtPayload } from "jsonwebtoken";
 
-const createChatToDB = async (payload: {
-    participants: string[];
-    isAdminSupport?: boolean;
-}): Promise<IChat> => {
-    // Check if chat already exists between these participants
-    const isExistChat: IChat | null = await Chat.findOne({
-        participants: { $all: payload.participants },
-        $expr: { $eq: [{ $size: "$participants" }, payload.participants.length] }
-    });
+import ApiError from "../../../errors/ApiError";
+import { Chat } from "./chat.model";
+import { Message } from "../message/message.model";
+import { IPaginationOptions } from "../../../interfaces/pagination";
 
-    if (isExistChat) {
-        return isExistChat;
-    }
+const create = async (payload: JwtPayload, data: { user: string }) => {
+    const chat = await Chat.findOne({
+        participants: { $all: [new Types.ObjectId(payload.id), new Types.ObjectId(data.user)] }
+    }).lean().exec();
 
-    // Create new chat
-    const chat: IChat = await Chat.create({
-        participants: payload.participants,
-        isAdminSupport: payload.isAdminSupport || false
-    });
+    if (chat) return chat;
 
-    return chat;
+    return Chat.create({ participants: [payload.id, data.user] });
 };
 
-const getChatFromDB = async (
-    user: JwtPayload,
-    query: Record<string, unknown>
-): Promise<any> => {
-    // Build query to find chats where user is a participant
-    const chatFilter: FilterQuery<IChat> = {
-        participants: { $in: [user.id] },
+const getById = async (id: string, payload: JwtPayload) => {
+    const result = await Chat.findById(new Types.ObjectId(id))
+        .select("-createdAt -updatedAt -__v")
+        .populate("participants", "name image")
+        .lean().exec();
+
+    if (!result) throw new ApiError(StatusCodes.NOT_FOUND, "Chat not found!");
+
+    return {
+        _id: result._id,
+        chatWith: result.participants.find((participant: any) => participant._id.toString() !== payload.id),
     };
-
-    if (query.searchTerm) {
-        // Use QueryBuilder's native search implementation on the User model
-        const userQueryBuilder = new QueryBuilder(User.find(), query)
-            .search(['fullName', 'email']);
-
-        const matchingUsers = await userQueryBuilder.modelQuery
-            .select('_id')
-            .lean();
-
-        const matchingUserIds = matchingUsers.map((u: any) => u._id);
-
-        // Add to query: at least one of the OTHER participants must be in matchingUserIds
-        chatFilter.participants = {
-            $all: [user.id],
-            $in: matchingUserIds
-        };
-    }
-
-    const chatQueryBuilder = new QueryBuilder(Chat.find(chatFilter), query);
-    chatQueryBuilder
-        .filter()
-        .paginate();
-
-    const chats = await chatQueryBuilder.modelQuery
-        .populate({
-            path: 'participants',
-            select: '_id fullName profilePicture role email',
-            match: { _id: { $ne: user.id } }
-        })
-        .populate({
-            path: 'lastMessage',
-            select: 'text files type createdAt sender'
-        })
-        .select('participants status isAdminSupport lastMessage lastMessageAt')
-        .lean();
-
-    const pagination = await chatQueryBuilder.getPaginationInfo();
-
-    // Calculate unread count for each chat
-    const chatsWithDetails = await Promise.all(
-        chats.map(async (chat: any) => {
-            const unreadCount = await Message.countDocuments({
-                chatId: chat._id,
-                sender: { $ne: new Types.ObjectId(user.id) },
-                readBy: { $ne: new Types.ObjectId(user.id) }
-            });
-
-            return {
-                ...chat,
-                unreadCount
-            };
-        })
-    );
-
-    // Filter out chats where participants array is empty after filtering
-    const filteredChats = chatsWithDetails.filter(
-        (chat: any) => chat.participants.length > 0
-    );
-
-    return { data: filteredChats, pagination };
 };
 
-// Delete a chat
-const deleteChatFromDB = async (chatId: string, userId: string): Promise<void> => {
-    const chat = await Chat.findById(chatId);
+const allChats = async (payload: JwtPayload, query: Partial<IPaginationOptions>) => {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const sortBy = query.sortBy ?? 'createdAt';
+    const sortOrder = query.sortOrder === 'desc' ? -1 : 1;
+    const id = new Types.ObjectId(payload.id);
 
-    if (!chat) {
-        throw new ApiError(StatusCodes.NOT_FOUND, 'Chat not found');
-    }
+    const chats = await Chat.find({ participants: id })
+        .populate("participants", "name image whatsApp")
+        .populate({
+            path: "lastMessage",
+            select: "sender message isSeen createdAt",
+            populate: {
+                path: "sender",
+                select: "name image"
+            }
+        })
+        .limit(limit)
+        .skip((page - 1) * limit)
+        .sort({ [sortBy as string]: sortOrder })
+        .select("-createdAt -updatedAt -__v")
+        .lean()
+        .exec();
 
-    // Check if user is a participant
-    const isParticipant = chat.participants.some(
-        (p) => p.toString() === userId
-    );
-
-    if (!isParticipant) {
-        throw new ApiError(
-            StatusCodes.FORBIDDEN,
-            'You are not authorized to delete this chat'
-        );
-    }
-
-    // Delete all messages in the chat
-    await Message.deleteMany({ chatId });
-
-    // Delete the chat
-    await Chat.findByIdAndDelete(chatId);
+    return chats.map(c => ({
+        ...c,
+        participants: c.participants.filter((u: any) => u._id.toString() !== id.toString())
+    }));
 };
 
-export const ChatService = {
-    createChatToDB,
-    getChatFromDB,
-    deleteChatFromDB
+const deleteOneChat = async (payload: JwtPayload, id: string) => {
+    const chat = await Chat.findById(new Types.ObjectId(id)).lean().exec();
+    if (!chat) throw new ApiError(StatusCodes.NOT_FOUND, "Chat not found!");
+
+    const isParticipant = chat.participants.some((participant) => participant.toString() === payload.id);
+    if (!isParticipant) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not a participant of this chat!");
+
+    const deletedChat = await Chat.findByIdAndDelete(id).lean().exec();
+    if (deletedChat) {
+        await Message.deleteMany({ chatId: deletedChat._id });
+    }
+
+    return deletedChat;
+};
+
+const findChat = async (user: JwtPayload, name: string) => {
+    const userId = new Types.ObjectId(user.id);
+    const chats = await Chat.aggregate([
+        {
+            $lookup: {
+                from: "users",
+                localField: "participants",
+                foreignField: "_id",
+                as: "participants"
+            }
+        },
+        {
+            $lookup: {
+                from: "messages",
+                localField: "lastMessage",
+                foreignField: "_id",
+                as: "lastMessage"
+            }
+        },
+        { $unwind: { path: "$lastMessage", preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: "users",
+                localField: "lastMessage.sender",
+                foreignField: "_id",
+                as: "lastMessage.sender"
+            }
+        },
+        { $unwind: { path: "$lastMessage.sender", preserveNullAndEmptyArrays: true } },
+        {
+            $match: {
+                "participants.name": { $regex: name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" },
+                participants: { $elemMatch: { _id: { $ne: userId } } }
+            }
+        },
+        {
+            $project: {
+                _id: 1,
+                participants: {
+                    $map: {
+                        input: "$participants",
+                        as: "p",
+                        in: { _id: "$$p._id", name: "$$p.name", image: "$$p.image" }
+                    }
+                },
+                lastMessage: {
+                    _id: "$lastMessage._id",
+                    sender: {
+                        _id: "$lastMessage.sender._id",
+                        name: "$lastMessage.sender.name",
+                        image: "$lastMessage.sender.image"
+                    },
+                    message: "$lastMessage.message",
+                    isSeen: "$lastMessage.isSeen",
+                    createdAt: "$lastMessage.createdAt"
+                }
+            }
+        },
+        { $sort: { "lastMessage.createdAt": -1 } },
+    ]);
+
+    return chats;
+};
+
+export const ChatServices = {
+    create,
+    getById,
+    allChats,
+    deleteOneChat,
+    findChat
 };

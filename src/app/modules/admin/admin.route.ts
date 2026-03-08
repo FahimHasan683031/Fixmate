@@ -11,7 +11,7 @@ const router = Router();
 router.get(
     "/overview",
     auth(USER_ROLES.ADMIN),
-    // AdminController.overview
+    AdminController.overview
 );
 
 router.get(
@@ -98,6 +98,27 @@ router.post(
     auth(USER_ROLES.ADMIN),
     validateRequest(AdminValidation.approveOrRejectSchema),
     AdminController.approveOrReject
+);
+
+router.get(
+    "/find",
+    auth(USER_ROLES.ADMIN),
+    validateRequest(AdminValidation.findSchema),
+    AdminController.find
+);
+
+router.get(
+    "/bookings",
+    auth(USER_ROLES.ADMIN),
+    validateRequest(AdminValidation.getBookingsSchema),
+    AdminController.getBookings
+);
+
+router.post(
+    "/generate-multi-invoices",
+    auth(USER_ROLES.ADMIN),
+    validateRequest(AdminValidation.generateMultiInvoicesSchema),
+    AdminController.generateMultiInvoices
 );
 
 export const AdminRoutes = router;
