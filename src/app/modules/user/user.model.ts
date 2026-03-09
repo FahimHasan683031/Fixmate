@@ -139,37 +139,44 @@ const UserSchema = new Schema<IUser, UserModel>(
             default: "",
         },
         authentication: {
-            restrictionLeftAt: {
-                type: Date,
-                default: null,
+            type: {
+                restrictionLeftAt: {
+                    type: Date,
+                    default: null,
+                },
+                resetPassword: {
+                    type: Boolean,
+                    default: false,
+                },
+                wrongLoginAttempts: {
+                    type: Number,
+                    default: 0,
+                },
+                passwordChangedAt: {
+                    type: Date,
+                },
+                oneTimeCode: {
+                    type: String,
+                    default: "",
+                },
+                latestRequestAt: {
+                    type: Date,
+                    default: Date.now,
+                },
+                expiresAt: {
+                    type: Date,
+                },
+                requestCount: {
+                    type: Number,
+                    default: 0,
+                },
+                authType: {
+                    type: String,
+                    enum: ['createAccount', 'resetPassword'],
+                },
             },
-            resetPassword: {
-                type: Boolean,
-                default: false,
-            },
-            wrongLoginAttempts: {
-                type: Number,
-                default: 0,
-            },
-            passwordChangedAt: Date,
-            oneTimeCode: {
-                type: String,
-                default: "",
-            },
-            latestRequestAt: {
-                type: Date,
-                default: Date.now,
-            },
-            expiresAt: Date,
-            requestCount: {
-                type: Number,
-                default: 0,
-            },
-            authType: {
-                type: String,
-                enum: ['createAccount', 'resetPassword'],
-            },
-        },
+            select: 0
+        }
     },
     {
         timestamps: true,

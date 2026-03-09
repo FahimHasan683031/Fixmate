@@ -16,14 +16,6 @@ const verificaitonSchema = new Schema<IVerificaiton>({
         type: String,
         required: true
     },
-    nidFront: {
-        type: String,
-        required: true
-    },
-    nidBack: {
-        type: String,
-        required: true
-    },
     license: {
         type: String,
         required: true

@@ -21,6 +21,7 @@ const addNewCategorySchema = z.object({
     body: z.object({
         name: z.string({ invalid_type_error: "Category name is required" }),
         subCategory: z.any(),
+        image: z.string().optional(),
     }).strict()
 });
 
@@ -39,6 +40,7 @@ const updateCategorySchema = z.object({
         id: z.string({ required_error: "Category id is required" }),
         name: z.string({ invalid_type_error: "Category name is required" }).optional(),
         subCategory: z.any(),
+        image: z.string().optional(),
     }).strict()
 });
 

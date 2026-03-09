@@ -7,7 +7,7 @@ export const sendNotification = async (
   notification: INotification
 ) => {
   try {
-    const userId = notification.receiver?.toString();
+    const userId = notification.for?.toString();
     if (!userId) throw new Error('Notification missing recipient userId');
 
     // Emit to the user's room (room name is the userId)

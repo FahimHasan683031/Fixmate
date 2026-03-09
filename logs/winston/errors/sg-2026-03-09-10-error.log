@@ -1,0 +1,6 @@
+{Mon Mar 09 2026 10:05:26} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/auth/signup 400 - 28.713 ms
+{Mon Mar 09 2026 10:27:30} [APP 🐞] error: ::ffff:10.10.7.50 - PATCH /api/v1/provider 400 - 44.648 ms
+{Mon Mar 09 2026 10:41:31} [APP 🐞] error: ::ffff:10.10.7.50 - PATCH /api/v1/provider 400 - 96.406 ms
+{Mon Mar 09 2026 10:53:00} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/provider/categories?page=1&limit=10 500 - 16.300 ms
+{Mon Mar 09 2026 10:55:45} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/service 403 - 76.982 ms
+{Mon Mar 09 2026 10:57:19} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/verification 500 - 12.502 ms

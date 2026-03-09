@@ -4,10 +4,9 @@ import { ISupport } from "./support.interface";
 import { Support } from "./support.model";
 import { User } from "../user/user.model";
 import { USER_ROLES } from "../../../enum/user";
-import { Notification } from "../notification/notification.model";
+import { NotificationService } from "../notification/notification.service";
 import { Types } from "mongoose";
 import { SupportStatus } from "../../../enum/support";
-import { PushNotificationService } from "../notification/pushNotification.service";
 import ApiError from "../../../errors/ApiError";
 import { StatusCodes } from "http-status-codes";
 import { emailHelper } from "../../../helpers/emailHelper";
@@ -26,21 +25,10 @@ const createSupport = async (user: JwtPayload, data: Partial<ISupport>) => {
     ]);
 
     getAdmins.forEach(async element => {
-        const notification = await Notification.create({
-            receiver: element._id,
-            title: `New Support Request`,
+        await NotificationService.insertNotification({
+            for: element._id,
             message: `New Support Request from ${getUser?.name || getUser?.email} with title: ${data.title}`,
-            type: "ADMIN"
         });
-
-        //@ts-ignore
-        const socket = global.io;
-        if (socket) {
-            const userId = notification.receiver;
-            if (socket) {
-                socket.to(userId.toString()).emit("notification", notification);
-            }
-        }
     });
 
     return support;

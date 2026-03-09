@@ -6,7 +6,6 @@ import { fileAndBodyProcessorUsingDiskStorage } from "../../middleware/processRe
 import { USER_ROLES } from "../../../enum/user";
 import validateRequest from "../../middleware/validateRequest";
 import { generateInvoiceAPI } from "../../../helpers/pdfMaker";
-import fileUploadHandler from "../../middleware/fileUploadHandler";
 
 const router = Router();
 
@@ -18,7 +17,7 @@ router
     )
     .patch(
         auth(USER_ROLES.ADMIN, USER_ROLES.CLIENT),
-        fileUploadHandler(),
+        fileAndBodyProcessorUsingDiskStorage(),
         validateRequest(ClientValidation.updateUserZodSchema),
         ClientControllers.updateProfile
     )

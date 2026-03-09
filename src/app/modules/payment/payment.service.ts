@@ -3,10 +3,8 @@ import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
 import { accountLinks, accounts, checkout } from "../../../helpers/stripeHelper";
 import { PAYMENT_STATUS } from "../../../enum/payment";
-import { Notification } from "../notification/notification.model";
-import { PushNotificationService } from "../notification/pushNotification.service";
+import { NotificationService } from "../notification/notification.service";
 import { Request } from "express";
-import { sendNotification } from "../../../helpers/SocketUtils";
 import { Booking } from "../booking/booking.model";
 import { Payment } from "./payment.model";
 import { Service } from "../service/service.model";
@@ -67,30 +65,10 @@ const success = async (query: any) => {
   });
 
   // Notify provider
-  const notification = await Notification.create({
-    receiver: providerId,
-    title: "New Booking Request",
+  await NotificationService.insertNotification({
+    for: providerId,
     message: `You have a new booking request, ${customerData.name} has requested a booking for ${serviceData.category}`,
-    type: "USER"
   });
-
-  //@ts-ignore
-  const socket = global.io;
-  if (socket) {
-    await sendNotification(socket, notification);
-  }
-
-  if (providerData && providerData.fcmToken) {
-    await PushNotificationService.sendPushNotification(
-      providerData.fcmToken,
-      "You got a new booking request",
-      `${customerData.name} has requested a booking for ${serviceData.category}`
-    );
-  }
-
-  if (socket) {
-    await sendNotification(socket, notification);
-  }
 
   return `
     <html>

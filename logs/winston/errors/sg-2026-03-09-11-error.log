@@ -1,0 +1,7 @@
+{Mon Mar 09 2026 11:07:39} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/verification 400 - 50.609 ms
+{Mon Mar 09 2026 11:08:54} [APP 🐞] error: UnhandledRejection Detected Notification validation failed: title: Path `title` is required.
+{Mon Mar 09 2026 11:17:55} [APP 🐞] error: UnhandledRejection Detected Notification validation failed: title: Path `title` is required.
+{Mon Mar 09 2026 11:23:19} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/admin/requests/69ae580388e877a3dafa564c/APPROVED 400 - 3.963 ms
+{Mon Mar 09 2026 11:25:58} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/admin/requests/69ae580388e877a3dafa564c/approve 400 - 37.922 ms
+{Mon Mar 09 2026 11:39:32} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/admin/requests/69ae580388e877a3dafa564c/approve 400 - 28.812 ms
+{Mon Mar 09 2026 11:50:36} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/service 400 - 18.581 ms

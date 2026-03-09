@@ -10,12 +10,10 @@ import { IUser } from "../user/user.interface";
 import { USER_STATUS, VERIFICATION_STATUS } from "../../../enum/user";
 import { IService } from "../service/service.interface";
 import { IPaginationOptions } from "../../../interfaces/pagination";
-import { Notification } from "../notification/notification.model";
+import { NotificationService } from "../notification/notification.service";
 import { BOOKING_STATUS } from "../../../enum/booking";
-import { PushNotificationService } from "../notification/pushNotification.service";
 import { PAYMENT_STATUS } from "../../../enum/payment";
 import { transfers, accounts, accountLinks } from "../../../helpers/stripeHelper";
-import { sendNotification } from "../../../helpers/SocketUtils";
 import { Verification } from "../verification/verification.model";
 import { Service } from "../service/service.model";
 import { User } from "../user/user.model";
@@ -122,13 +120,10 @@ export const sendVerificaitonRequest = async (payload: JwtPayload, data: any) =>
     const admins = await User.find({ role: "ADMIN" }).lean().exec();
 
     admins.forEach(async (admin) => {
-        const notification = await Notification.create({
-            receiver: admin._id,
+        await NotificationService.insertNotification({
+            for: admin._id,
             message: "A new verification request has been sent",
-            type: "ADMIN"
         });
-        const socket = (global as any).io;
-        await sendNotification(socket, notification);
     });
 
     return data;
@@ -252,48 +247,18 @@ export const actionBooking = async (user: JwtPayload, data: { bookId: string, ac
     if (data.action == "accept") {
         await Booking.findByIdAndUpdate(data.bookId, { bookingStatus: BOOKING_STATUS.ACCEPTED }).lean().exec();
 
-        const notification = await Notification.create({
-            receiver: booking[0].customer,
-            message: "Your Booking accepted",
-            type: "USER"
+        await NotificationService.insertNotification({
+            for: booking[0].customer,
+            message: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been accepted.`,
         });
-
-        const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
-        if (customer && customer.fcmToken) {
-            await PushNotificationService.sendPushNotification(
-                customer.fcmToken,
-                "Booking Accepted",
-                "Your Booking accepted"
-            );
-        }
-
-        const socket = (global as any).io;
-        if (socket) {
-            await sendNotification(socket, notification);
-        }
 
     } else if (data.action == "reject") {
         await Booking.findByIdAndUpdate(data.bookId, { bookingStatus: BOOKING_STATUS.REJECTED, rejectReason: data.reason }).lean().exec();
 
-        const notification = await Notification.create({
-            receiver: booking[0].customer,
-            message: "Your Booking rejected " + data.reason,
-            type: "USER"
+        await NotificationService.insertNotification({
+            for: booking[0].customer,
+            message: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been rejected.`,
         });
-
-        const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
-        if (customer && customer.fcmToken) {
-            await PushNotificationService.sendPushNotification(
-                customer.fcmToken,
-                "Booking Rejected",
-                "Your Booking rejected " + data.reason
-            );
-        }
-
-        const socket = (global as any).io;
-        if (socket) {
-            await sendNotification(socket, notification);
-        }
     }
 };
 
@@ -364,25 +329,10 @@ export const cancelBooking = async (user: JwtPayload, id: string) => {
         paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED
     });
 
-    const notification = await Notification.create({
-        receiver: booking[0].customer,
-        message: "Your Booking cancelled",
-        type: "USER"
+    await NotificationService.insertNotification({
+        for: booking[0].customer,
+        message: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been cancelled.`,
     });
-
-    const customer = await User.findById(booking[0].customer).lean().exec() as IUser;
-    if (customer && customer.fcmToken) {
-        await PushNotificationService.sendPushNotification(
-            customer.fcmToken,
-            "Booking Cancelled",
-            "Your Booking cancelled"
-        );
-    }
-
-    const socket = (global as any).io;
-    if (socket) {
-        await sendNotification(socket, notification);
-    }
 
     return providerUpdated?.wallet;
 };

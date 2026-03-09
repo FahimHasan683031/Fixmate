@@ -3,7 +3,7 @@ import { SupportControllers } from "./support.controller";
 import auth from "../../middleware/auth";
 import { USER_ROLES } from "../../../enum/user";
 import validateRequest from "../../middleware/validateRequest";
-import fileUploadHandler from "../../middleware/fileUploadHandler";
+import { fileAndBodyProcessorUsingDiskStorage } from "../../middleware/processReqBody";
 import { supportValidation } from "./support.validation";
 
 const router = Router();
@@ -17,7 +17,7 @@ router
     )
     .post(
         auth(USER_ROLES.CLIENT, USER_ROLES.ADMIN, USER_ROLES.PROVIDER),
-        fileUploadHandler(),
+        fileAndBodyProcessorUsingDiskStorage(),
         validateRequest(supportValidation.supportSchema),
         SupportControllers.createSupport
     );

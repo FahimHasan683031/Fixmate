@@ -1,4 +1,5 @@
 import { JwtPayload } from 'jsonwebtoken';
+import { createCheckoutSession, refunds } from '../../../helpers/stripeHelper';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import unlinkFile from '../../../shared/unlinkFile';
@@ -7,18 +8,15 @@ import { USER_STATUS } from '../../../enum/user';
 import { Types, PopulateOptions, FilterQuery } from 'mongoose';
 import { IBooking } from '../booking/booking.interface';
 import { BOOKING_STATUS } from '../../../enum/booking';
-import { createCheckoutSession, refunds } from '../../../helpers/stripeHelper';
+import { PAYMENT_STATUS } from '../../../enum/payment';
+import { calculateDistanceInKm } from '../../../helpers/calculateDistance';
+import bcrypt from "bcrypt";
 import { Request } from 'express';
 import { Service } from '../service/service.model';
 import { CustomerFavorite } from '../favorites/customer.favorite.model';
 import { Review } from '../review/review.model';
 import { User } from '../user/user.model';
-import { Notification } from '../notification/notification.model';
-import { PushNotificationService } from '../notification/pushNotification.service';
-import { PAYMENT_STATUS } from '../../../enum/payment';
-import { calculateDistanceInKm } from '../../../helpers/calculateDistance';
-import bcrypt from "bcrypt";
-import { sendNotification } from '../../../helpers/SocketUtils';
+import { NotificationService } from '../notification/notification.service';
 import { paginationHelper } from '../../../helpers/paginationHelper';
 import { Booking } from '../booking/booking.model';
 import { Category } from '../category/category.model';
@@ -295,31 +293,10 @@ export const cancelBooking = async (user: JwtPayload, id: Types.ObjectId) => {
 
     await Payment.findOneAndUpdate({ booking: new Types.ObjectId(booking._id) }, { paymentStatus: PAYMENT_STATUS.REFUNDED }, { new: true }).lean().exec();
 
-    const notification = await Notification.create({
+    await NotificationService.insertNotification({
         for: booking.provider,
         message: `Your booking for ${booking.service.subCategory} on ${booking.date} has been cancelled.`,
     });
-
-    const refundAmount = (booking.service.price * 0.20) * 100;
-
-    await refunds.create({
-        payment_intent: booking.paymentId,
-        amount: refundAmount,
-    });
-
-    const provider = await User.findById(booking.provider).lean().exec() as IUser;
-    if (provider && provider.fcmToken) {
-        await PushNotificationService.sendPushNotification(
-            provider.fcmToken,
-            `Booking Cancelled`,
-            `Your booking for ${booking.service.subCategory} on ${booking.date} has been cancelled.`
-        );
-    }
-
-    const socket = (global as any).io;
-    if (socket) {
-        sendNotification(socket, notification);
-    }
 
     return booking;
 };
@@ -412,24 +389,10 @@ export const acceptBooking = async (user: JwtPayload, id: string) => {
 
     await User.findByIdAndUpdate(booking[0].provider, { wallet: (findProvider.wallet || 0) + (booking[0].service?.price || 0) }, { new: true }).lean().exec();
 
-    const notification = await Notification.create({
+    await NotificationService.insertNotification({
         for: booking[0].provider,
-        message: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been accepted.`
+        message: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been accepted.`,
     });
-
-    const provider = await User.findById(booking[0].provider).lean().exec() as IUser;
-    if (provider && provider.fcmToken) {
-        await PushNotificationService.sendPushNotification(
-            provider.fcmToken,
-            "Booking Accepted",
-            `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been accepted.`
-        );
-    }
-
-    const socket = (global as any).io;
-    if (socket) {
-        sendNotification(socket, notification);
-    }
     return;
 };
 

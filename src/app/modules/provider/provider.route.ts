@@ -4,7 +4,7 @@ import { ProviderValidation } from "./provider.validation";
 import validateRequest from "../../middleware/validateRequest";
 import auth from "../../middleware/auth";
 import { USER_ROLES } from "../../../enum/user";
-import fileUploadHandler from "../../middleware/fileUploadHandler";
+import { fileAndBodyProcessorUsingDiskStorage } from "../../middleware/processReqBody";
 
 const router = Router();
 
@@ -15,7 +15,7 @@ router.route("/")
     )
     .patch(
         auth(USER_ROLES.PROVIDER),
-        fileUploadHandler(),
+        fileAndBodyProcessorUsingDiskStorage(),
         (req: Request, res: Response, next: NextFunction) => {
             if (req.body?.data) {
                 req.body = ProviderValidation.updateProviderProfileSchema.parse(JSON.parse(req.body.data));
@@ -41,7 +41,7 @@ router.route("/verification")
     )
     .post(
         auth(USER_ROLES.PROVIDER),
-        fileUploadHandler(),
+        fileAndBodyProcessorUsingDiskStorage(),
         ProviderControllers.sendVerification
     );
 
@@ -52,7 +52,7 @@ router.route("/service")
     )
     .post(
         auth(USER_ROLES.PROVIDER),
-        fileUploadHandler(),
+        fileAndBodyProcessorUsingDiskStorage(),
         validateRequest(ProviderValidation.createServiceSchema),
         ProviderControllers.addService
     );
@@ -65,7 +65,7 @@ router.route("/service/:id")
     )
     .patch(
         auth(USER_ROLES.PROVIDER),
-        fileUploadHandler(),
+        fileAndBodyProcessorUsingDiskStorage(),
         validateRequest(ProviderValidation.updateServiceSchema),
         ProviderControllers.updateService
     )

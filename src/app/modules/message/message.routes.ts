@@ -1,17 +1,17 @@
-import { Router } from "express";
+import express, { Router } from "express";
 import { MessageControllers } from "./message.controller";
 import auth from "../../middleware/auth";
 import { USER_ROLES } from "../../../enum/user";
-import fileUploadHandler from "../../middleware/fileUploadHandler";
 import validateRequest from "../../middleware/validateRequest";
+import { fileAndBodyProcessorUsingDiskStorage } from "../../middleware/processReqBody";
 import { MessageValidations } from "./message.validation";
 
-const router = Router();
+const router = express.Router();
 
 router.route("/")
   .post(
     auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT, USER_ROLES.ADMIN),
-    fileUploadHandler(),
+    fileAndBodyProcessorUsingDiskStorage(),
     validateRequest(MessageValidations.sendMessageValidator),
     MessageControllers.create
   );
@@ -24,7 +24,7 @@ router.route("/:id")
   )
   .patch(
     auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT, USER_ROLES.ADMIN),
-    fileUploadHandler(),
+    fileAndBodyProcessorUsingDiskStorage(),
     validateRequest(MessageValidations.updateMessage),
     MessageControllers.updateMessage
   )

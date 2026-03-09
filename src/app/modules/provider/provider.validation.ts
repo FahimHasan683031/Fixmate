@@ -30,7 +30,8 @@ const createServiceSchema = z.object({
         category: z.string({ required_error: "Category is required" }),
         subCategory: z.string({ required_error: "SubCategory is required" }),
         price: z.coerce.number({ required_error: "Price is required" }),
-        expertise: z.string({ required_error: "Expertise is required!" })
+        expertise: z.string({ required_error: "Expertise is required!" }),
+        image: z.string().optional(),
     }).strict()
 });
 

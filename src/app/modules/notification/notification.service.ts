@@ -12,37 +12,29 @@ const insertNotification = async (payload: Partial<INotification>): Promise<INot
     const result = await Notification.create(payload);
 
     // --- PUSH NOTIFICATION ---
-    if (result.title && result.message) {
-        console.log(`[NotificationService] Processing push for: ${result.title}. Type: ${result.type}`);
-
-        const receiverId = result.receiver.toString();
-        console.log(`[NotificationService] Fetching token for receiver: ${receiverId}`);
-
+    if (result.message) {
+        const receiverId = result.for.toString();
         const receiverUser = await User.findById(receiverId).select('fcmToken fullName');
 
-        if (receiverUser) {
-            if (receiverUser.fcmToken) {
-                console.log(`[NotificationService] Sending push to ${receiverUser.fullName || 'User'} (Token found)`);
-                await PushNotificationService.sendPushNotification(
-                    receiverUser.fcmToken,
-                    result.title,
-                    result.message,
-                    { referenceId: result.referenceId, screen: result.screen }
-                );
-            } else {
-                console.warn(`[NotificationService] Push skipped: No fcmToken found for user ${receiverId}`);
-            }
-        } else {
-            console.error(`[NotificationService] Push error: Receiver user not found in DB: ${receiverId}`);
+        if (receiverUser && receiverUser.fcmToken) {
+            await PushNotificationService.sendPushNotification(
+                receiverUser.fcmToken,
+                "New Notification",
+                result.message
+            );
         }
     }
 
     // --- SOCKET NOTIFICATION ---
     //@ts-ignore
     const io = global.io;
-    if (io) {
-        if (result.receiver) {
-            io.emit(`notification::${result.receiver.toString()}`, result);
+    if (io && result.for) {
+        io.emit(`notification::${result.for.toString()}`, result);
+        try {
+            const { sendNotification } = require('../../../helpers/SocketUtils');
+            sendNotification(io, result);
+        } catch (err) {
+            // Ignore
         }
     }
 
@@ -51,19 +43,24 @@ const insertNotification = async (payload: Partial<INotification>): Promise<INot
 
 // get notifications
 const getNotificationFromDB = async (user: JwtPayload, query: FilterQuery<any>): Promise<Object> => {
-    const result = new QueryBuilder(Notification.find({ receiver: user.id }), query).paginate();
+    const result = new QueryBuilder(Notification.find({ for: user.id }), query).paginate();
     const notifications = await result.modelQuery;
     const pagination = await result.getPaginationInfo();
 
     const unreadCount = await Notification.countDocuments({
-        receiver: user.id,
-        read: false,
+        for: user.id,
+        isRead: false,
     });
 
     // Mark all unread notifications for this user as read
     await Notification.updateMany(
-        { receiver: user.id, read: false },
-        { $set: { read: true } }
+        { for: user.id, isRead: false },
+        {
+            $set: {
+                isRead: true,
+                readAt: new Date()
+            }
+        }
     );
 
     const data: Record<string, any> = {
@@ -78,8 +75,8 @@ const getNotificationFromDB = async (user: JwtPayload, query: FilterQuery<any>):
 // get unread notification count
 const getUnreadCountFromDB = async (user: JwtPayload): Promise<number> => {
     const count = await Notification.countDocuments({
-        receiver: user.id,
-        read: false,
+        for: user.id,
+        isRead: false,
     });
     return count;
 };

@@ -4,3 +4,16 @@
 {Mon Mar 09 2026 09:21:57} [APP 🐞] error: [31mServer Failed to connect Database[39m
 {Mon Mar 09 2026 09:22:49} [APP 🐞] error: [31mServer Failed to connect Database[39m
 {Mon Mar 09 2026 09:24:17} [APP 🐞] error: [31mServer Failed to connect Database[39m
+{Mon Mar 09 2026 09:32:15} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/admin/categories 400 - 35.799 ms
+{Mon Mar 09 2026 09:34:42} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/webhook/stripe 404 - 1.517 ms
+{Mon Mar 09 2026 09:34:42} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/webhook/stripe 404 - 0.680 ms
+{Mon Mar 09 2026 09:34:42} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/webhook/stripe 404 - 0.325 ms
+{Mon Mar 09 2026 09:34:48} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/webhook/stripe 404 - 0.902 ms
+{Mon Mar 09 2026 09:35:11} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/admin/categories 500 - 8.924 ms
+{Mon Mar 09 2026 09:35:56} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/webhook/stripe 404 - 0.533 ms
+{Mon Mar 09 2026 09:35:57} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/webhook/stripe 404 - 0.532 ms
+{Mon Mar 09 2026 09:35:57} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/webhook/stripe 404 - 0.909 ms
+{Mon Mar 09 2026 09:38:53} [APP 🐞] error: ::ffff:10.10.7.50 - PATCH /api/v1/admin/categories 400 - 10.195 ms
+{Mon Mar 09 2026 09:39:24} [APP 🐞] error: ::ffff:10.10.7.50 - PATCH /api/v1/admin/categories 400 - 1.852 ms
+{Mon Mar 09 2026 09:40:06} [APP 🐞] error: ::ffff:10.10.7.50 - PATCH /api/v1/admin/categories 400 - 26.728 ms
+{Mon Mar 09 2026 09:48:18} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/admin/policy 404 - 3.530 ms
