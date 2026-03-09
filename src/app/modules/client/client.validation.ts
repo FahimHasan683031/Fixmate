@@ -11,6 +11,7 @@ const updateUserZodSchema = z.object({
         contact: z.string().optional(),
         longitude: z.string().optional(),
         latitude: z.string().optional(),
+        image: z.string().optional(),
     }).strict()
 });
 

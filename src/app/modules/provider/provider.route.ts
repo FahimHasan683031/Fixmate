@@ -118,7 +118,6 @@ router.route("/book/cancel/:id")
 router.route("/payment-history")
     .get(
         auth(USER_ROLES.PROVIDER),
-        validateRequest(ProviderValidation.getPaginationZodSchema),
         ProviderControllers.getPaymentHistory
     );
 
@@ -130,14 +129,12 @@ router.route("/wallet")
     )
     .get(
         auth(USER_ROLES.PROVIDER),
-        validateRequest(ProviderValidation.getPaginationZodSchema),
         ProviderControllers.wallet
     );
 
 router.route("/reviews")
     .get(
         auth(USER_ROLES.PROVIDER),
-        validateRequest(ProviderValidation.getPaginationZodSchema),
         ProviderControllers.ratings
     );
 

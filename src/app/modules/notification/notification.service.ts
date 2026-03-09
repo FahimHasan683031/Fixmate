@@ -63,13 +63,13 @@ const getNotificationFromDB = async (user: JwtPayload, query: FilterQuery<any>):
         }
     );
 
-    const data: Record<string, any> = {
-        notifications,
-        pagination,
+    const resultData: Record<string, any> = {
+        meta: pagination,
+        data: notifications,
         unreadCount
     };
 
-    return data;
+    return resultData;
 };
 
 // get unread notification count

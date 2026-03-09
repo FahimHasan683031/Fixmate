@@ -43,6 +43,7 @@ const updateServiceSchema = z.object({
         category: z.string({ invalid_type_error: "Category is required" }).optional(),
         subCategory: z.string({ invalid_type_error: "SubCategory is required" }).optional(),
         price: z.coerce.number({ invalid_type_error: "Price is required" }).optional(),
+        image: z.string().optional(),
     }).strict()
 });
 
