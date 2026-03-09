@@ -35,12 +35,6 @@ router.post(
 )
 
 router.post(
-  '/custom-login',
-  validateRequest(AuthValidations.loginZodSchema),
-  AuthController.login,
-)
-
-router.post(
   '/forget-password',
   validateRequest(AuthValidations.forgetPasswordZodSchema),
   AuthController.forgetPassword,

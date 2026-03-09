@@ -19,6 +19,16 @@
             "date": 1772964065638,
             "name": "D:\\Fahim\\Projects\\Fixmate-server\\logs\\winston\\errors\\sg-2026-03-08-16-error.log",
             "hash": "1f000edddb9ba56ba2366cf985d7070b16ecee5fe114a9111afcf798cdc997f8"
+        },
+        {
+            "date": 1773022617019,
+            "name": "D:\\Fahim\\Projects\\Fixmate-server\\logs\\winston\\errors\\sg-2026-03-09-08-error.log",
+            "hash": "6360c5a5dc0598e0fef07a3475d135e40dd697d8a3c0f1b3467ddf6cf1d4d8fa"
+        },
+        {
+            "date": 1773025202775,
+            "name": "D:\\Fahim\\Projects\\Fixmate-server\\logs\\winston\\errors\\sg-2026-03-09-09-error.log",
+            "hash": "af521b70be83315b87da734cd4d7f078da7bdf4363f5339f17a779045d8d9e00"
         }
     ],
     "hashType": "sha256"

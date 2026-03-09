@@ -1,0 +1,16 @@
+{Mon Mar 09 2026 08:16:58} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Mon Mar 09 2026 08:16:58} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Mon Mar 09 2026 08:16:58} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Mon Mar 09 2026 08:47:47} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/forget-password 200 - 75.316 ms
+{Mon Mar 09 2026 08:47:52} [APP 🚀] info: Mail send successfully
+{Mon Mar 09 2026 08:50:08} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/verify-account 200 - 26.463 ms
+{Mon Mar 09 2026 08:50:42} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/reset-password?token=122b80eb336ddaadbb929ca10e7c4658b55de9cfb42cb501ee1b04b89f494966 200 - 231.557 ms
+{Mon Mar 09 2026 08:51:38} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/login 200 - 234.382 ms
+{Mon Mar 09 2026 08:53:31} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/change-password 200 - 442.353 ms
+{Mon Mar 09 2026 08:53:44} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/login 200 - 232.065 ms
+{Mon Mar 09 2026 08:57:44} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Mon Mar 09 2026 08:57:44} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Mon Mar 09 2026 08:57:44} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Mon Mar 09 2026 08:57:45} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Mon Mar 09 2026 08:57:45} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Mon Mar 09 2026 08:57:45} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m

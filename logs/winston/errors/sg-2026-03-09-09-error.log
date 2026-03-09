@@ -1,0 +1,6 @@
+{Mon Mar 09 2026 09:00:02} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/webhook/stripe 404 - 3.408 ms
+{Mon Mar 09 2026 09:00:17} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/webhook/stripe 404 - 1.113 ms
+{Mon Mar 09 2026 09:00:54} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/webhook/stripe 404 - 1.254 ms
+{Mon Mar 09 2026 09:21:57} [APP 🐞] error: [31mServer Failed to connect Database[39m
+{Mon Mar 09 2026 09:22:49} [APP 🐞] error: [31mServer Failed to connect Database[39m
+{Mon Mar 09 2026 09:24:17} [APP 🐞] error: [31mServer Failed to connect Database[39m
