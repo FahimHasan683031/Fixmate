@@ -415,18 +415,21 @@ export const acceptBooking = async (user: JwtPayload, id: string) => {
     if (booking[0].bookingStatus == BOOKING_STATUS.CANCELLED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already cancelled");
     if (booking[0].bookingStatus == BOOKING_STATUS.REJECTED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already rejected");
 
+    const payment = await Payment.findOne({ booking: new Types.ObjectId(id) }).lean().exec();
+    if (!payment) throw new ApiError(StatusCodes.NOT_FOUND, "Payment record not found!");
+
     await Booking.findByIdAndUpdate(id, { bookingStatus: BOOKING_STATUS.COMPLETED }).lean().exec();
 
-    await Payment.findOneAndUpdate({ booking: new Types.ObjectId(id) }, { paymentStatus: PAYMENT_STATUS.PAID }, { new: true }).lean().exec();
+    await Payment.findByIdAndUpdate(payment._id, { paymentStatus: PAYMENT_STATUS.PAID }, { new: true }).lean().exec();
 
     const findProvider = await User.findById(booking[0].provider).lean().exec() as IUser;
     if (!findProvider) throw new ApiError(StatusCodes.NOT_FOUND, "Provider not found!");
 
-    await User.findByIdAndUpdate(booking[0].provider, { wallet: (findProvider.wallet || 0) + (booking[0].service?.price || 0) }, { new: true }).lean().exec();
+    await User.findByIdAndUpdate(booking[0].provider, { wallet: (findProvider.wallet || 0) + (payment.providerAmount || 0) }, { new: true }).lean().exec();
 
     await NotificationService.insertNotification({
         for: booking[0].provider,
-        message: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been accepted.`,
+        message: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been completed.`,
     });
     return;
 };
@@ -516,7 +519,10 @@ export const paymentHistoryPage = async (id?: string) => {
             email: data.customer?.email
         },
         paymentDetails: {
-            serviceFee: data.amount,
+            totalAmount: data.amount,
+            platformFee: data.platformFee,
+            stripeFee: data.stripeFee,
+            providerAmount: data.providerAmount,
             dateAndTime: data.createdAt
         }
     };

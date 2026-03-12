@@ -5,12 +5,12 @@ import { NotificationController } from './notification.controller';
 const router = express.Router();
 
 router.get('/',
-    auth(USER_ROLES.CLIENT, USER_ROLES.ADMIN),
+    auth(USER_ROLES.CLIENT, USER_ROLES.PROVIDER, USER_ROLES.ADMIN),
     NotificationController.getNotificationFromDB
 );
 
 router.get('/unread-count',
-    auth(USER_ROLES.CLIENT, USER_ROLES.ADMIN),
+    auth(USER_ROLES.CLIENT, USER_ROLES.PROVIDER, USER_ROLES.ADMIN),
     NotificationController.getUnreadCount
 );
 

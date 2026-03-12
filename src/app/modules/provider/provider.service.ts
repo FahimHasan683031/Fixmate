@@ -345,12 +345,13 @@ export const cancelBooking = async (user: JwtPayload, id: string) => {
 
     await Booking.findByIdAndUpdate(id, { bookingStatus: BOOKING_STATUS.CANCELLED }).lean().exec();
 
-    const findProvider = await User.findById(booking[0].provider).lean().exec() as any;
+    const findProvider = await User.findById(booking[0].provider).lean().exec() as IUser;
     if (!findProvider) throw new ApiError(StatusCodes.NOT_FOUND, "Provider not found!");
 
     const service = await Service.findById(booking[0].service).lean().exec();
+    const penaltyAmount = Number(((service?.price || 0) * 0.05).toFixed(2));
 
-    const providerWallet = findProvider.wallet - ((service?.price || 0) * 0.05);
+    const providerWallet = (findProvider.wallet || 0) - penaltyAmount;
 
     const providerUpdated = await User.findByIdAndUpdate(booking[0].provider, { wallet: providerWallet }, { new: true }).lean().exec();
 
@@ -359,13 +360,13 @@ export const cancelBooking = async (user: JwtPayload, id: string) => {
         provider: booking[0].provider,
         customer: booking[0].customer,
         service: booking[0].service,
-        amount: (service?.price || 0) * 0.05,
+        amount: -penaltyAmount,
         paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED
     });
 
     await NotificationService.insertNotification({
         for: booking[0].customer,
-        message: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been cancelled.`,
+        message: `Your booking for ${service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been cancelled by the provider.`,
     });
 
     return providerUpdated?.wallet;
@@ -377,7 +378,11 @@ export const wallet = async (user: JwtPayload, query: any) => {
     const walletQuery = new QueryBuilder(
         Payment.find({
             provider: new Types.ObjectId(user.id || user.authId),
-            $or: [{ paymentStatus: PAYMENT_STATUS.PAID }, { paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED }]
+            $or: [
+                { paymentStatus: PAYMENT_STATUS.PAID },
+                { paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED },
+                { paymentStatus: PAYMENT_STATUS.WITHDRAWN }
+            ]
         }),
         query
     )
@@ -391,18 +396,14 @@ export const wallet = async (user: JwtPayload, query: any) => {
         .lean()
         .exec();
 
-    const historyWithDeduction = walletItems.map((item: any) => ({
-        ...item,
-        amount: Number((item.amount * 0.9).toFixed(2)),
-    }));
-
-    const deductedBalance = historyWithDeduction
-        .filter((item: any) => item.paymentStatus === PAYMENT_STATUS.PAID)
-        .reduce((sum: number, item: any) => sum + item.amount, 0);
-
     const meta = await walletQuery.getPaginationInfo();
 
-    return { meta, balance: Number(deductedBalance.toFixed(2)), data: historyWithDeduction };
+    const data = walletItems.map((item: any) => ({
+        ...item,
+        amount: item.providerAmount || item.amount, // Show provider earnings for list view
+    }));
+
+    return { meta, balance: provider.wallet || 0, data };
 };
 
 // withdrawal
@@ -448,7 +449,7 @@ export const whitdrawal = async (user: JwtPayload, data: { amount: number }, req
 
     await Payment.create({
         amount: -data.amount,
-        paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED,
+        paymentStatus: PAYMENT_STATUS.WITHDRAWN,
         provider: provider._id
     });
     return;
@@ -502,7 +503,11 @@ export const walletHistory = async (user: JwtPayload, query: any) => {
 
     const filterOptionsQuery: FilterQuery<any> = {
         provider: new Types.ObjectId(user.id || user.authId),
-        $or: [{ paymentStatus: PAYMENT_STATUS.PAID }, { paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED }]
+        $or: [
+            { paymentStatus: PAYMENT_STATUS.PAID },
+            { paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED },
+            { paymentStatus: PAYMENT_STATUS.WITHDRAWN }
+        ]
     };
 
     if (startTime && endTime) {
@@ -522,10 +527,15 @@ export const walletHistory = async (user: JwtPayload, query: any) => {
 
     const meta = await walletHistoryQuery.getPaginationInfo();
 
+    const data = walletItems.map((item: any) => ({
+        ...item,
+        amount: item.providerAmount || item.amount,
+    }));
+
     return {
         meta,
         balance: provider.wallet,
-        data: walletItems
+        data: data
     };
 };
 

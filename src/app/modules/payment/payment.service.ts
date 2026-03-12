@@ -54,12 +54,20 @@ const success = async (query: any) => {
   }
 
   // Create Payment record
+  const amount = serviceData.price;
+  const stripeFee = Number((amount * 0.029 + 0.30).toFixed(2));
+  const platformFee = Number((amount * 0.1).toFixed(2));
+  const providerAmount = Number((amount - stripeFee - platformFee).toFixed(2));
+
   await Payment.create({
     service: serviceId,
     provider: providerId,
     customer: customerId,
     booking: booking._id,
-    amount: serviceData.price,
+    amount,
+    stripeFee,
+    platformFee,
+    providerAmount,
     paymentId: session.id,
     paymentStatus: PAYMENT_STATUS.COMPLETED,
   });

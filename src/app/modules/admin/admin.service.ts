@@ -92,17 +92,8 @@ const overview = async (yearChart: string) => {
     const [{ totalRevenue = 0 } = {}] = await Payment.aggregate([
         { $match: { paymentStatus: PAYMENT_STATUS.PAID } },
         {
-            $addFields: {
-                amountNum: {
-                    $cond: [
-                        { $isNumber: "$amount" },
-                        "$amount",
-                        { $toDouble: "$amount" },
-                    ],
-                },
-            },
+            $group: { _id: null, totalRevenue: { $sum: "$platformFee" } }
         },
-        { $group: { _id: null, totalRevenue: { $sum: "$amountNum" } } },
     ]);
 
     const year = Number(yearChart) || new Date().getFullYear();
@@ -120,7 +111,7 @@ const overview = async (yearChart: string) => {
         {
             $group: {
                 _id: { $month: "$createdAt" },
-                totalProfit: { $sum: "$amount" },
+                totalProfit: { $sum: "$platformFee" },
             },
         },
         { $sort: { "_id": 1 } },
@@ -438,7 +429,7 @@ const bookingData = async (query: Record<string, unknown>) => {
 
     const payments = await Payment.find({
         booking: { $in: data.map((b: any) => b._id) }
-    }).select("booking paymentId paymentStatus");
+    }).select("booking paymentId paymentStatus stripeFee platformFee providerAmount amount");
 
     const enhancedData = data.map((booking: any) => {
         const payment = payments.find(p => p.booking.toString() === booking._id.toString());
@@ -446,6 +437,10 @@ const bookingData = async (query: Record<string, unknown>) => {
             ...booking,
             paymentId: payment ? payment._id : null,
             paymentStatus: payment ? payment.paymentStatus : null,
+            stripeFee: payment ? payment.stripeFee : 0,
+            platformFee: payment ? payment.platformFee : 0,
+            providerAmount: payment ? payment.providerAmount : 0,
+            totalAmount: payment ? payment.amount : (booking.service?.price || 0),
         };
     });
 

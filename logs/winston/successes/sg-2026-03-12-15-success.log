@@ -1,0 +1,12 @@
+{Thu Mar 12 2026 15:01:26} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/provider/book?page=1&limit=10 200 - 13.709 ms
+{Thu Mar 12 2026 15:01:45} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/provider/book 200 - 106.780 ms
+{Thu Mar 12 2026 15:01:59} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/client/book/accept/69b27f3667003a47c04e27ce 200 - 25.733 ms
+{Thu Mar 12 2026 15:02:21} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment-history 200 - 6.510 ms
+{Thu Mar 12 2026 15:02:35} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/provider/wallet 200 - 6.749 ms
+{Thu Mar 12 2026 15:03:05} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/client/book 200 - 1745.327 ms
+{Thu Mar 12 2026 15:04:05} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/payment/success?sessionId=cs_test_a160n3yH3ZdBwrXSzIm6AqXF8KDHoUfAirNXXCiXMi5LTLmRZWtNDO3GWx 200 - 325.550 ms
+{Thu Mar 12 2026 15:04:28} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/provider/book?page=1&limit=10 200 - 7.370 ms
+{Thu Mar 12 2026 15:04:39} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/provider/book 200 - 9.017 ms
+{Thu Mar 12 2026 15:05:09} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/provider/wallet 200 - 6.821 ms
+{Thu Mar 12 2026 15:05:28} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/provider/book/cancel/69b2814767003a47c04e27fa 200 - 18.567 ms
+{Thu Mar 12 2026 15:05:46} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/provider/wallet 200 - 6.162 ms
