@@ -86,10 +86,18 @@ const markAsResolve = async (user: JwtPayload, supportId: string) => {
     support.status = SupportStatus.COMPLETED;
     await support.save();
 
-    const dataEmail = "<div><h1>Your support ticket has been resolved.</h1><p>Thank you for reaching out.</p></div>";
+    const dataEmail = `
+        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px; max-width: 600px; margin: auto;">
+            <h1 style="color: #0062EB;">Fixmate Support</h1>
+            <p style="font-size: 16px; color: #333;">Your support ticket has been resolved.</p>
+            <p style="font-size: 14px; color: #666;">Thank you for choosing Fixmate. We are glad to have helped you.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="font-size: 12px; color: #999;">This is an automated message from Fixmate Support System.</p>
+        </div>
+    `;
     await emailHelper.sendEmail({
         to: user.email,
-        subject: "Support Gived",
+        subject: "Support Ticket Resolved - Fixmate",
         html: dataEmail,
     });
 

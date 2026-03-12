@@ -295,6 +295,10 @@ export const cancelBooking = async (user: JwtPayload, id: Types.ObjectId) => {
     if (booking.bookingStatus == BOOKING_STATUS.COMPLETED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already completed");
     if (booking.bookingStatus == BOOKING_STATUS.REJECTED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already rejected");
 
+    if (booking.isPaid && booking.transactionId) {
+        await refunds.create({ payment_intent: booking.transactionId });
+    }
+
     await Payment.findOneAndUpdate({ booking: new Types.ObjectId(booking._id) }, { paymentStatus: PAYMENT_STATUS.REFUNDED }, { new: true }).lean().exec();
 
     await NotificationService.insertNotification({

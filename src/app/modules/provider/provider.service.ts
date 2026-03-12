@@ -12,7 +12,7 @@ import { IPaginationOptions } from "../../../interfaces/pagination";
 import { NotificationService } from "../notification/notification.service";
 import { BOOKING_STATUS } from "../../../enum/booking";
 import { PAYMENT_STATUS } from "../../../enum/payment";
-import { transfers, accounts, accountLinks } from "../../../helpers/stripeHelper";
+import { transfers, accounts, accountLinks, refunds } from "../../../helpers/stripeHelper";
 import { Verification } from "../verification/verification.model";
 import { Service } from "../service/service.model";
 import { User } from "../user/user.model";
@@ -275,6 +275,12 @@ export const actionBooking = async (user: JwtPayload, data: { bookId: string, ac
     } else if (data.action == "reject") {
         await Booking.findByIdAndUpdate(data.bookId, { bookingStatus: BOOKING_STATUS.REJECTED, rejectReason: data.reason }).lean().exec();
 
+        if (booking[0].isPaid && booking[0].transactionId) {
+            await refunds.create({ payment_intent: booking[0].transactionId });
+        }
+
+        await Payment.findOneAndUpdate({ booking: new Types.ObjectId(data.bookId) }, { paymentStatus: PAYMENT_STATUS.REFUNDED }, { new: true }).lean().exec();
+
         await NotificationService.insertNotification({
             for: booking[0].customer,
             message: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been rejected.`,
@@ -344,6 +350,12 @@ export const cancelBooking = async (user: JwtPayload, id: string) => {
     if (booking[0].bookingStatus == BOOKING_STATUS.REJECTED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already rejected");
 
     await Booking.findByIdAndUpdate(id, { bookingStatus: BOOKING_STATUS.CANCELLED }).lean().exec();
+
+    if (booking[0].isPaid && booking[0].transactionId) {
+        await refunds.create({ payment_intent: booking[0].transactionId });
+    }
+
+    await Payment.findOneAndUpdate({ booking: new Types.ObjectId(id) }, { paymentStatus: PAYMENT_STATUS.REFUNDED }, { new: true }).lean().exec();
 
     const findProvider = await User.findById(booking[0].provider).lean().exec() as IUser;
     if (!findProvider) throw new ApiError(StatusCodes.NOT_FOUND, "Provider not found!");
