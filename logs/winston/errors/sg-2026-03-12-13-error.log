@@ -1,0 +1,2 @@
+{Thu Mar 12 2026 13:56:14} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/support?page=1&limit=10 403 - 3.112 ms
+{Thu Mar 12 2026 13:58:24} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/support 400 - 114.064 ms

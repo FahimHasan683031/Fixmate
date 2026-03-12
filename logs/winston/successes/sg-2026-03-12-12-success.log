@@ -1,0 +1,23 @@
+{Thu Mar 12 2026 12:22:02} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Thu Mar 12 2026 12:22:02} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Thu Mar 12 2026 12:22:02} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Thu Mar 12 2026 12:22:02} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Thu Mar 12 2026 12:30:34} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Thu Mar 12 2026 12:30:34} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Thu Mar 12 2026 12:30:34} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Thu Mar 12 2026 12:30:34} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Thu Mar 12 2026 12:32:40} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment-history 200 - 31.818 ms
+{Thu Mar 12 2026 12:34:34} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment/69b23d646c462e735636ed0c 200 - 6.153 ms
+{Thu Mar 12 2026 12:35:01} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/download-pdf/69b23d646c462e735636ed0c 200 - 41.512 ms
+{Thu Mar 12 2026 12:41:41} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Thu Mar 12 2026 12:41:41} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Thu Mar 12 2026 12:41:41} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Thu Mar 12 2026 12:41:41} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Thu Mar 12 2026 12:41:43} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Thu Mar 12 2026 12:41:43} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Thu Mar 12 2026 12:41:43} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Thu Mar 12 2026 12:41:43} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Thu Mar 12 2026 12:43:34} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Thu Mar 12 2026 12:43:34} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Thu Mar 12 2026 12:43:34} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Thu Mar 12 2026 12:43:34} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m

@@ -310,10 +310,20 @@ export const seeBooking = async (user: JwtPayload, id: string) => {
 };
 
 // Get categories
-export const getCategories = async (query: any) => {
-    const page = Number(query.page || 1);
-    const limit = Number(query.limit || 10);
-    return Category.find({ isDeleted: false }).select("-createdAt -updatedAt -__v -isDeleted").skip((page - 1) * limit).limit(limit).lean().exec();
+export const getCategories = async (query: Record<string, unknown>) => {
+    const categoryQuery = new QueryBuilder(
+        Category.find({ isDeleted: false }).select("-createdAt -updatedAt -__v -isDeleted"),
+        query
+    )
+        .filter()
+        .sort()
+        .paginate()
+        .fields();
+
+    const data = await categoryQuery.modelQuery.lean().exec();
+    const meta = await categoryQuery.getPaginationInfo();
+
+    return { meta, data };
 };
 
 // Get Customer

@@ -67,7 +67,7 @@ const getProviderById = catchAsync(async (req: Request | any, res: Response) => 
 });
 
 const getFavorites = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.getFavorites(req.user);
+    const result = await ClientServices.getFavorites(req.user, req.query);
 
     sendResponse(res, {
         success: true,

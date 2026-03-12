@@ -30,12 +30,7 @@ const insertNotification = async (payload: Partial<INotification>): Promise<INot
     const io = global.io;
     if (io && result.for) {
         io.emit(`notification::${result.for.toString()}`, result);
-        try {
-            const { sendNotification } = require('../../../helpers/SocketUtils');
-            sendNotification(io, result);
-        } catch (err) {
-            // Ignore
-        }
+
     }
 
     return result;

@@ -18,8 +18,8 @@ export const createCheckoutSession = async (req: Request, amount: number, metada
     mode: "payment",
     // success_url: `${req.protocol}://${req.headers.host}/api/v1/payment/success?sessionId={CHECKOUT_SESSION_ID}`,
     // cancel_url: `${req.protocol}://${req.headers.host}/api/v1/payment/failure`,
-    success_url: `${process.env.SERVER_DOMAIN}/api/v1/payment/success?sessionId={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.SERVER_DOMAIN}/api/v1/payment/failure`,
+    success_url: `${config.backend_url}/api/v1/payment/success?sessionId={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${config.backend_url}/api/v1/payment/failure`,
     metadata: {
       bookingId: metadata.bookingId,
       providerId: metadata.providerId,

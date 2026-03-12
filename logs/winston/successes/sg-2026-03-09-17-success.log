@@ -1,0 +1,5 @@
+{Mon Mar 09 2026 17:09:21} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Mon Mar 09 2026 17:09:21} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Mon Mar 09 2026 17:09:21} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Mon Mar 09 2026 17:09:21} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Mon Mar 09 2026 17:09:39} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/client/book 200 - 1021.634 ms

@@ -6,15 +6,16 @@ import ApiError from "../../../errors/ApiError";
 import { Chat } from "./chat.model";
 import { Message } from "../message/message.model";
 import { IPaginationOptions } from "../../../interfaces/pagination";
+import QueryBuilder from "../../builder/QueryBuilder";
 
 const create = async (payload: JwtPayload, data: { user: string }) => {
     const chat = await Chat.findOne({
-        participants: { $all: [new Types.ObjectId(payload.id), new Types.ObjectId(data.user)] }
+        participants: { $all: [new Types.ObjectId(payload.authId), new Types.ObjectId(data.user)] }
     }).lean().exec();
 
     if (chat) return chat;
 
-    return Chat.create({ participants: [payload.id, data.user] });
+    return Chat.create({ participants: [payload.authId, data.user] });
 };
 
 const getById = async (id: string, payload: JwtPayload) => {
@@ -27,45 +28,48 @@ const getById = async (id: string, payload: JwtPayload) => {
 
     return {
         _id: result._id,
-        chatWith: result.participants.find((participant: any) => participant._id.toString() !== payload.id),
+        chatWith: result.participants.find((participant: any) => participant._id.toString() !== payload.authId),
     };
 };
 
 const allChats = async (payload: JwtPayload, query: Partial<IPaginationOptions>) => {
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 10;
-    const sortBy = query.sortBy ?? 'createdAt';
-    const sortOrder = query.sortOrder === 'desc' ? -1 : 1;
-    const id = new Types.ObjectId(payload.id);
+    const id = new Types.ObjectId(payload.authId);
 
-    const chats = await Chat.find({ participants: id })
-        .populate("participants", "name image whatsApp")
-        .populate({
-            path: "lastMessage",
-            select: "sender message isSeen createdAt",
-            populate: {
-                path: "sender",
-                select: "name image"
-            }
-        })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .sort({ [sortBy as string]: sortOrder })
-        .select("-createdAt -updatedAt -__v")
-        .lean()
-        .exec();
+    const chatQuery = new QueryBuilder(
+        Chat.find({ participants: id })
+            .populate("participants", "name image whatsApp")
+            .populate({
+                path: "lastMessage",
+                select: "sender message isSeen createdAt",
+                populate: {
+                    path: "sender",
+                    select: "name image"
+                }
+            })
+            .select("-createdAt -updatedAt -__v"),
+        query as Record<string, unknown>
+    )
+        .filter()
+        .sort()
+        .paginate()
+        .fields();
 
-    return chats.map(c => ({
+    const result = await chatQuery.modelQuery.lean().exec();
+    const meta = await chatQuery.getPaginationInfo();
+
+    const data = result.map((c: any) => ({
         ...c,
         participants: c.participants.filter((u: any) => u._id.toString() !== id.toString())
     }));
+
+    return { meta, data };
 };
 
 const deleteOneChat = async (payload: JwtPayload, id: string) => {
     const chat = await Chat.findById(new Types.ObjectId(id)).lean().exec();
     if (!chat) throw new ApiError(StatusCodes.NOT_FOUND, "Chat not found!");
 
-    const isParticipant = chat.participants.some((participant) => participant.toString() === payload.id);
+    const isParticipant = chat.participants.some((participant) => participant.toString() === payload.authId);
     if (!isParticipant) throw new ApiError(StatusCodes.UNAUTHORIZED, "You are not a participant of this chat!");
 
     const deletedChat = await Chat.findByIdAndDelete(id).lean().exec();
@@ -77,7 +81,7 @@ const deleteOneChat = async (payload: JwtPayload, id: string) => {
 };
 
 const findChat = async (user: JwtPayload, name: string) => {
-    const userId = new Types.ObjectId(user.id);
+    const userId = new Types.ObjectId(user.authId);
     const chats = await Chat.aggregate([
         {
             $lookup: {

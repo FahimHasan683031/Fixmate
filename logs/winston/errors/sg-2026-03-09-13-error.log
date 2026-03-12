@@ -1,2 +1,0 @@
-{Mon Mar 09 2026 13:50:36} [APP 🐞] error: ::ffff:10.10.7.50 - PATCH /api/v1/client 500 - 60.878 ms
-{Mon Mar 09 2026 13:50:44} [APP 🐞] error: ::ffff:10.10.7.50 - PATCH /api/v1/client 400 - 138.266 ms

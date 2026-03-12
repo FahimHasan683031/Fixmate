@@ -22,6 +22,7 @@ import { Booking } from '../booking/booking.model';
 import { Category } from '../category/category.model';
 import { Payment } from '../payment/payment.model';
 import { IReview } from '../review/review.interface';
+import QueryBuilder from '../../builder/QueryBuilder';
 
 export const getUserProfile = async (user: JwtPayload) => {
     const existingUser = await User.findById(user.id || user.authId).select("name image gender email address dateOfBirth nationality whatsApp contact role").lean().exec();
@@ -52,34 +53,32 @@ export const deleteProfile = async (user: JwtPayload, password: string) => {
     await User.findByIdAndUpdate(existingUser._id, { status: USER_STATUS.DELETED }).lean().exec();
 };
 
-export const getServices = async (user: JwtPayload, pagination: any) => {
-    const { category, subCategory, price, distance, search, rating, sortBy = "createdAt", sortOrder = "desc", limit = 10, page = 1 } = pagination;
+export const getServices = async (user: JwtPayload, query: any) => {
+    const { category, subCategory, price, distance, search, rating, ...rest } = query;
 
     try {
-        const skip = (Number(page) - 1) * Number(limit);
-        const sortOption: any = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
+        let filter: any = { isDeleted: { $ne: true } };
 
-        let query: any = { isDeleted: { $ne: true } };
+        if (category) filter.category = category;
+        if (subCategory) filter.subCategory = subCategory;
+        if (price) filter.price = { $lte: Number(price) };
+        if (rating) filter.rating = { $gte: Number(rating) };
 
-        if (search) {
-            query.$or = [
-                { category: { $regex: search, $options: "i" } },
-                { subCategory: { $regex: search, $options: "i" } }
-            ];
-        }
+        const serviceQuery = new QueryBuilder(
+            Service.find(filter).populate('creator', '_id name image contact address location category experience'),
+            { ...rest, searchTerm: search }
+        )
+            .search(['category', 'subCategory'])
+            .filter()
+            .sort()
+            .paginate()
+            .fields();
 
-        if (category) query.category = category;
-        if (subCategory) query.subCategory = subCategory;
-        if (price) query.price = { $lte: Number(price) };
-        if (rating) query.rating = { $gte: Number(rating) };
+        const services = await serviceQuery.modelQuery.lean().exec();
+        const meta = await serviceQuery.getPaginationInfo();
 
         const favoriteProviders = await CustomerFavorite.find({ customer: new Types.ObjectId(user.id || user.authId) }).select('provider').lean();
         const favoriteProviderIds = favoriteProviders.map(fav => fav.provider.toString());
-
-        const [services, total] = await Promise.all([
-            Service.find(query).populate('creator', '_id name image contact address location category experience').sort(sortOption).limit(Number(limit)).skip(skip).lean().exec(),
-            Service.countDocuments(query)
-        ]);
 
         const servicesWithStats = await Promise.all(
             services.map(async (service: any) => {
@@ -132,10 +131,11 @@ export const getServices = async (user: JwtPayload, pagination: any) => {
                 ...e,
                 distance: Math.round(calculateDistanceInKm(currentUser[1]!, currentUser[0]!, e.provider.coordinates[1], e.provider.coordinates[0]))
             }));
-            return allCountedDistance.filter(e => e.provider.averageRating >= rating).filter(e => e.distance <= distance);
+            const filteredData = allCountedDistance.filter(e => e.provider.averageRating >= rating).filter(e => e.distance <= distance);
+            return { meta, data: filteredData };
         }
 
-        return formetedData;
+        return { meta, data: formetedData };
 
     } catch (error: any) {
         console.log(error);
@@ -250,26 +250,28 @@ export const updateBooking = async (user: JwtPayload, id: Types.ObjectId, data: 
 };
 
 export const getBookings = async (user: JwtPayload, query: any, body: { status: "pending" | "upcoming" | "history" | "completed" | "cancelled" }) => {
-    const { page, limit, sortBy, sortOrder } = paginationHelper.calculatePagination(query);
-
     const statusFilter = body.status == "pending" ? BOOKING_STATUS.PENDING : body.status == "upcoming" ? BOOKING_STATUS.ACCEPTED : body.status == "completed" ? BOOKING_STATUS.COMPLETED : body.status == "cancelled" ? BOOKING_STATUS.REJECTED : { $ne: BOOKING_STATUS.ACCEPTED };
 
-    const bookings = await Booking.find({
-        customer: user.id || user.authId,
-        isDeleted: { $ne: true },
-        isPaid: true,
-        bookingStatus: statusFilter
-    })
-        .select("provider service createdAt date bookingStatus")
-        .populate([{ path: "provider", select: "name image contact whatsApp" }, { path: "service", select: "name image price category subCategory" }])
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
-        .lean().exec();
+    const bookingQuery = new QueryBuilder(
+        Booking.find({
+            customer: user.id || user.authId,
+            isDeleted: { $ne: true },
+            isPaid: true,
+            bookingStatus: statusFilter
+        })
+            .select("provider service createdAt date bookingStatus")
+            .populate([{ path: "provider", select: "name image contact whatsApp" }, { path: "service", select: "name image price category subCategory" }]),
+        query
+    )
+        .filter()
+        .sort()
+        .paginate()
+        .fields();
 
-    if (!bookings?.length) return [];
+    const result = await bookingQuery.modelQuery.lean().exec();
+    const meta = await bookingQuery.getPaginationInfo();
 
-    return bookings.map((booking: any) => {
+    const data = result.map((booking: any) => {
         return {
             _id: booking._id,
             image: booking.service?.image,
@@ -281,6 +283,8 @@ export const getBookings = async (user: JwtPayload, query: any, body: { status: 
             status: booking.bookingStatus,
         };
     });
+
+    return { meta, data };
 };
 
 export const cancelBooking = async (user: JwtPayload, id: Types.ObjectId) => {
@@ -322,22 +326,41 @@ export const removeFavorite = async (user: JwtPayload, id: Types.ObjectId) => {
     return provider.provider;
 };
 
-export const getFavorites = async (user: JwtPayload) => {
+export const getFavorites = async (user: JwtPayload, query: Record<string, unknown>) => {
     const userId = user.id || user.authId;
-    const favorites = await CustomerFavorite.find({ customer: new Types.ObjectId(userId) }).populate("provider", "name image overView").select("provider").lean().exec();
-    if (!favorites) throw new ApiError(StatusCodes.NOT_FOUND, "Favorites not found!");
-    return favorites;
+    const favoriteQuery = new QueryBuilder(
+        CustomerFavorite.find({ customer: new Types.ObjectId(userId) })
+            .populate("provider", "name image overView")
+            .select("provider"),
+        query
+    )
+        .filter()
+        .sort()
+        .paginate()
+        .fields();
+
+    const data = await favoriteQuery.modelQuery.lean().exec();
+    const meta = await favoriteQuery.getPaginationInfo();
+
+    return { meta, data };
 };
 
 export const bookScreen = async (id: string, query: any) => {
-    const { page, limit, sortBy, sortOrder } = paginationHelper.calculatePagination(query);
-    return await Service.find({ creator: new Types.ObjectId(id) })
-        .select("image price category subCategory")
-        .populate({ path: "creator", select: "name image" })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
-        .lean().exec();
+    const serviceQuery = new QueryBuilder(
+        Service.find({ creator: new Types.ObjectId(id) })
+            .select("image price category subCategory")
+            .populate({ path: "creator", select: "name image" }),
+        query
+    )
+        .filter()
+        .sort()
+        .paginate()
+        .fields();
+
+    const data = await serviceQuery.modelQuery.lean().exec();
+    const meta = await serviceQuery.getPaginationInfo();
+
+    return { meta, data };
 };
 
 export const seeBooking = async (user: JwtPayload, id: string) => {
@@ -364,8 +387,20 @@ export const seeBooking = async (user: JwtPayload, id: string) => {
 };
 
 export const getCategories = async (query: any) => {
-    const { page = 1, limit = 10, sortBy = "createdAt", sortOrder = "desc" } = query;
-    return Category.find({ isDeleted: false }).select("-createdAt -updatedAt -__v -isDeleted").skip((page - 1) * limit).limit(limit).sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 }).lean().exec();
+    const categoryQuery = new QueryBuilder(
+        Category.find({ isDeleted: false })
+            .select("-createdAt -updatedAt -__v -isDeleted"),
+        query
+    )
+        .filter()
+        .sort()
+        .paginate()
+        .fields();
+
+    const data = await categoryQuery.modelQuery.lean().exec();
+    const meta = await categoryQuery.getPaginationInfo();
+
+    return { meta, data };
 };
 
 export const acceptBooking = async (user: JwtPayload, id: string) => {
@@ -436,19 +471,24 @@ export const walteHistory = async (user: JwtPayload, query: any) => {
         })
     };
 
-    const { page, limit, sortBy, sortOrder } = paginationHelper.calculatePagination(rest);
+    const walletQuery = new QueryBuilder(
+        Payment.find(filterOptionsQuery)
+            .populate({ path: "service", select: "image category subCategory" })
+            .select("service amount paymentStatus"),
+        rest
+    )
+        .filter()
+        .sort()
+        .paginate()
+        .fields();
 
-    const wallet = await Payment.find(filterOptionsQuery)
-        .populate({ path: "service", select: "image category subCategory" })
-        .select("service amount paymentStatus")
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
-        .lean().exec();
+    const data = await walletQuery.modelQuery.lean().exec();
+    const meta = await walletQuery.getPaginationInfo();
 
     return {
+        meta,
         balance: provider.wallet,
-        history: wallet
+        data
     };
 };
 

@@ -1,0 +1,2 @@
+{Thu Mar 12 2026 11:42:16} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/notification 500 - 5.550 ms
+{Thu Mar 12 2026 11:42:53} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/notification 403 - 2.591 ms

@@ -10,13 +10,14 @@ import { SupportStatus } from "../../../enum/support";
 import ApiError from "../../../errors/ApiError";
 import { StatusCodes } from "http-status-codes";
 import { emailHelper } from "../../../helpers/emailHelper";
+import QueryBuilder from "../../builder/QueryBuilder";
 
 const createSupport = async (user: JwtPayload, data: Partial<ISupport>) => {
     const support = await Support.create({
         attachment: data.attachment,
         description: data.description,
         title: data.title,
-        user: user.id || user.authId
+        user: new Types.ObjectId(user.id || user.authId)
     });
 
     const [getAdmins, getUser] = await Promise.all([
@@ -34,24 +35,15 @@ const createSupport = async (user: JwtPayload, data: Partial<ISupport>) => {
     return support;
 };
 
-const getSupports = async (pagination: IPaginationOptions & { status?: string; search?: string }) => {
-    const {
-        page = 1,
-        limit = 10,
-        sortOrder = "desc",
-        sortBy = "createdAt",
-        status,
-        search,
-    } = pagination;
-
-    const skip = (page - 1) * limit;
+const getSupports = async (query: Record<string, unknown>) => {
+    const { status, search, ...queryObj } = query;
     const queryFilter: any = {};
 
-    if (status && status.trim() !== "") {
-        queryFilter.status = status.toUpperCase() === "PENDING" ? SupportStatus.PENDING : SupportStatus.COMPLETED;
+    if (status && String(status).trim() !== "") {
+        queryFilter.status = String(status).toUpperCase() === "PENDING" ? SupportStatus.PENDING : SupportStatus.COMPLETED;
     }
 
-    if (search && search.trim() !== "") {
+    if (search && String(search).trim() !== "") {
         const userFilter: any = {
             $or: [
                 { name: { $regex: search, $options: "i" } },
@@ -64,25 +56,23 @@ const getSupports = async (pagination: IPaginationOptions & { status?: string; s
         queryFilter.user = { $in: userIds };
     }
 
-    const [data, total] = await Promise.all([
+    const supportQuery = new QueryBuilder<ISupport>(
         Support.find(queryFilter)
-            .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
-            .select("-updatedAt -__v")
             .populate("user", "name email role category contact")
-            .skip(skip)
-            .limit(limit)
-            .lean()
-            .exec(),
-        Support.countDocuments(queryFilter),
-    ]);
+            .select("-updatedAt -__v") as any,
+        queryObj as Record<string, unknown>
+    )
+        .search(["title", "description"])
+        .filter()
+        .sort()
+        .paginate()
+        .fields();
+
+    const data = await supportQuery.modelQuery.lean().exec();
+    const meta = await supportQuery.getPaginationInfo();
 
     return {
-        meta: {
-            page: Number(page),
-            limit: Number(limit),
-            total,
-            totalPage: Math.ceil(total / limit)
-        },
+        meta,
         data
     };
 };

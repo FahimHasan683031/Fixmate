@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
 export interface ISupport {
-    _id?: string;
+    _id?: Types.ObjectId;
     title: string;
     description: string;
     attachment: string;
