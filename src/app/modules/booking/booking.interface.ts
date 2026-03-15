@@ -6,7 +6,8 @@ export interface IBooking {
     customer: Types.ObjectId;
     provider: Types.ObjectId;
     service: Types.ObjectId;
-    status: string[];
+    bookingStatus: BOOKING_STATUS;
+    currentStats: Record<string, boolean>;
     date: Date;
     location: {
         type: "Point";
@@ -14,7 +15,7 @@ export interface IBooking {
     };
     address: string;
     specialNote: string;
-    bookingStatus: BOOKING_STATUS;
+
     isPaid: boolean;
     rejectReason: string;
     paymentId: string;

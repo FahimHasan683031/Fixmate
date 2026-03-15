@@ -50,3 +50,6 @@
 {Thu Mar 12 2026 15:35:00} [APP 🚀] info: [33m✅ Admin account already exists![39m
 {Thu Mar 12 2026 15:35:00} [APP 🚀] info: [32m🍁 Server connected successfully[39m
 {Thu Mar 12 2026 15:35:00} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Thu Mar 12 2026 15:41:24} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/signup 200 - 300.607 ms
+{Thu Mar 12 2026 15:41:30} [APP 🚀] info: Mail send successfully
+{Thu Mar 12 2026 15:42:41} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/verify-account 200 - 30.129 ms

@@ -23,6 +23,7 @@ import { Category } from '../category/category.model';
 import { Payment } from '../payment/payment.model';
 import { IReview } from '../review/review.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { BookingStateMachine } from '../booking/bookingStateMachine';
 
 export const getUserProfile = async (user: JwtPayload) => {
     const existingUser = await User.findById(user.id || user.authId).select("name image gender email address dateOfBirth nationality whatsApp contact role").lean().exec();
@@ -155,7 +156,7 @@ export const getProviderById = async (user: JwtPayload, id: Types.ObjectId, quer
         .skip((page - 1) * limit).limit(limit).sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
         .lean().exec();
 
-    const completedTask = await Booking.find({ provider: provider._id, bookingStatus: BOOKING_STATUS.COMPLETED }).lean().exec();
+    const completedTask = await Booking.find({ provider: provider._id, bookingStatus: { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED] } }).lean().exec();
 
     const reviewPagination = paginationHelper.calculatePagination({ limit: query.reviewLimit, page: query.reviewPage, sortOrder: query.reviewSortOrder });
     const reviews = await Review.find({ provider: provider._id })
@@ -233,7 +234,7 @@ export const sendBooking = async (payload: JwtPayload, data: IBooking, req: Requ
         location: data.location,
         address: data.address,
         specialNote: data.specialNote,
-        bookingStatus: data.bookingStatus
+        bookingStatus: data.bookingStatus || BOOKING_STATUS.CREATED
     });
 
     const url = await createCheckoutSession(req, service[0].price, { bookingId: booking._id.toString(), providerId: provider._id.toString(), serviceId: service[0]._id.toString(), customerId: customer._id.toString() }, service[0].category || 'Service');
@@ -250,13 +251,12 @@ export const updateBooking = async (user: JwtPayload, id: Types.ObjectId, data: 
 };
 
 export const getBookings = async (user: JwtPayload, query: any, body: { status: "pending" | "upcoming" | "history" | "completed" | "cancelled" }) => {
-    const statusFilter = body.status == "pending" ? BOOKING_STATUS.PENDING : body.status == "upcoming" ? BOOKING_STATUS.ACCEPTED : body.status == "completed" ? BOOKING_STATUS.COMPLETED : body.status == "cancelled" ? BOOKING_STATUS.REJECTED : { $ne: BOOKING_STATUS.ACCEPTED };
+    const statusFilter = body.status == "pending" ? BOOKING_STATUS.CREATED : body.status == "upcoming" ? { $in: [BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.IN_PROGRESS] } : body.status == "completed" ? { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED] } : body.status == "cancelled" ? BOOKING_STATUS.CANCELLED : { $ne: BOOKING_STATUS.ACCEPTED };
 
     const bookingQuery = new QueryBuilder(
         Booking.find({
             customer: user.id || user.authId,
             isDeleted: { $ne: true },
-            isPaid: true,
             bookingStatus: statusFilter
         })
             .select("provider service createdAt date bookingStatus")
@@ -288,12 +288,11 @@ export const getBookings = async (user: JwtPayload, query: any, body: { status: 
 };
 
 export const cancelBooking = async (user: JwtPayload, id: Types.ObjectId) => {
-    const booking: any = await Booking.findByIdAndUpdate(id, { bookingStatus: BOOKING_STATUS.CANCELLED }).populate("service").lean().exec();
-    if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
+    const bookingToCancel = await Booking.findById(id).lean().exec();
+    if (!bookingToCancel) throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
 
-    if (booking.bookingStatus == BOOKING_STATUS.CANCELLED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already cancelled");
-    if (booking.bookingStatus == BOOKING_STATUS.COMPLETED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already completed");
-    if (booking.bookingStatus == BOOKING_STATUS.REJECTED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already rejected");
+    const booking: any = await BookingStateMachine.transitionState(id, "client", BOOKING_STATUS.CANCELLED);
+    await Booking.populate(booking, "service");
 
     if (booking.isPaid && booking.transactionId) {
         await refunds.create({ payment_intent: booking.transactionId });
@@ -408,32 +407,30 @@ export const getCategories = async (query: any) => {
 };
 
 export const acceptBooking = async (user: JwtPayload, id: string) => {
-    const booking: any = await Booking.find({ _id: new Types.ObjectId(id) }).populate([
+    const bookingInfo: any = await Booking.find({ _id: new Types.ObjectId(id) }).populate([
         { path: "service", select: "image price category subCategory" },
         { path: "provider", select: "name image address category" }
     ]).lean().exec();
 
-    if (!booking.length) throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
-    if (booking[0].bookingStatus == BOOKING_STATUS.PENDING) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already pending");
-    if (booking[0].bookingStatus == BOOKING_STATUS.COMPLETED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already completed");
-    if (booking[0].bookingStatus == BOOKING_STATUS.CANCELLED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already cancelled");
-    if (booking[0].bookingStatus == BOOKING_STATUS.REJECTED) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already rejected");
+    if (!bookingInfo.length) throw new ApiError(StatusCodes.NOT_FOUND, "Booking not found!");
 
     const payment = await Payment.findOne({ booking: new Types.ObjectId(id) }).lean().exec();
     if (!payment) throw new ApiError(StatusCodes.NOT_FOUND, "Payment record not found!");
 
-    await Booking.findByIdAndUpdate(id, { bookingStatus: BOOKING_STATUS.COMPLETED }).lean().exec();
+    // Transition state
+    await BookingStateMachine.transitionState(id, "client", BOOKING_STATUS.CONFIRMED_BY_CLIENT);
+    const booking = await BookingStateMachine.transitionState(id, "system", BOOKING_STATUS.SETTLED);
 
     await Payment.findByIdAndUpdate(payment._id, { paymentStatus: PAYMENT_STATUS.PAID }, { new: true }).lean().exec();
 
-    const findProvider = await User.findById(booking[0].provider).lean().exec() as IUser;
+    const findProvider = await User.findById(bookingInfo[0].provider).lean().exec() as IUser;
     if (!findProvider) throw new ApiError(StatusCodes.NOT_FOUND, "Provider not found!");
 
-    await User.findByIdAndUpdate(booking[0].provider, { wallet: (findProvider.wallet || 0) + (payment.providerAmount || 0) }, { new: true }).lean().exec();
+    await User.findByIdAndUpdate(bookingInfo[0].provider, { wallet: (findProvider.wallet || 0) + (payment.providerAmount || 0) }, { new: true }).lean().exec();
 
     await NotificationService.insertNotification({
-        for: booking[0].provider,
-        message: `Your booking for ${booking[0].service?.subCategory} on ${new Date(booking[0].date).toLocaleDateString()} has been completed.`,
+        for: bookingInfo[0].provider,
+        message: `Your booking for ${bookingInfo[0].service?.subCategory} on ${new Date(bookingInfo[0].date).toLocaleDateString()} has been completed.`,
     });
     return;
 };

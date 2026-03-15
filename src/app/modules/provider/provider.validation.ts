@@ -75,7 +75,7 @@ const getPaginationZodSchema = z.object({
 
 const bookingsActionZodSchema = z.object({
     body: z.object({
-        action: z.enum(["accept", "reject"]).optional().default("accept"),
+        action: z.enum(["accept", "reject", "start", "complete"]).optional().default("accept"),
         bookId: z.string({ required_error: "Booking id is required" }),
         reason: z.string().optional(),
     }).strict(),

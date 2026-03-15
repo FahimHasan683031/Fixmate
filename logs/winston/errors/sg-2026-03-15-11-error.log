@@ -1,0 +1,4 @@
+{Sun Mar 15 2026 11:12:33} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/book 400 - 8.040 ms
+{Sun Mar 15 2026 11:14:32} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/book 400 - 27.264 ms
+{Sun Mar 15 2026 11:14:33} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/book 400 - 4.618 ms
+{Sun Mar 15 2026 11:55:16} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/book 400 - 3.100 ms

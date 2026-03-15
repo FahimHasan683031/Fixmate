@@ -1,0 +1,5 @@
+{Sun Mar 15 2026 12:02:31} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/client/book/accept/69b63ea39757be980a031d3c 200 - 85.300 ms
+{Sun Mar 15 2026 12:05:27} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 12:05:27} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 12:05:27} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 12:05:27} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m

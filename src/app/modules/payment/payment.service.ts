@@ -9,6 +9,8 @@ import { Booking } from "../booking/booking.model";
 import { Payment } from "./payment.model";
 import { Service } from "../service/service.model";
 import { User } from "../user/user.model";
+import { BookingStateMachine } from "../booking/bookingStateMachine";
+import { BOOKING_STATUS } from "../../../enum/booking";
 
 const success = async (query: any) => {
   const sessionId = query.sessionId;
@@ -37,6 +39,8 @@ const success = async (query: any) => {
   if (booking.isPaid) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "Booking already paid");
   }
+
+  await BookingStateMachine.transitionState(bookingID.toString(), "system", BOOKING_STATUS.REQUESTED, "Booking automatically requested to provider after successful payment");
 
   // Update booking
   await Booking.findByIdAndUpdate(bookingID, {

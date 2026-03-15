@@ -1,0 +1,13 @@
+{Sat Mar 14 2026 21:10:29} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sat Mar 14 2026 21:10:29} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sat Mar 14 2026 21:10:29} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sat Mar 14 2026 21:10:29} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sat Mar 14 2026 21:10:30} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/download-pdf/69b23d646c462e735636ed0c 200 - 112.654 ms
+{Sat Mar 14 2026 21:25:12} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sat Mar 14 2026 21:25:12} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sat Mar 14 2026 21:25:12} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sat Mar 14 2026 21:25:12} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sat Mar 14 2026 21:25:35} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sat Mar 14 2026 21:25:35} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sat Mar 14 2026 21:25:35} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sat Mar 14 2026 21:25:35} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m

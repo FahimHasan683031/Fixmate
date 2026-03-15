@@ -430,7 +430,6 @@ const userContactConfirmationEmail = (payload: {
   }
 }
 
-
 const sendPaymentConfirmationEmail = (data: any) => {
   const parcelsHtml = data.parcel
     .map(
@@ -914,7 +913,6 @@ const guestLostItemNotificationEmail = (data: any) => {
     `,
   };
 };
-
 
 
 const businessShippingDetailsUpdateEmail = (data: any) => {

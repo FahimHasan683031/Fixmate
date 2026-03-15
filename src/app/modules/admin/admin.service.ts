@@ -24,7 +24,7 @@ import { NotificationService } from "../notification/notification.service";
 const overview = async (yearChart: string) => {
     const totalProviders = await User.countDocuments({ role: USER_ROLES.PROVIDER });
     const totalUsers = await User.countDocuments({ role: { $ne: USER_ROLES.ADMIN } });
-    const upCommingOrders = await Booking.countDocuments({ bookingStatus: BOOKING_STATUS.ACCEPTED });
+    const upCommingOrders = await Booking.countDocuments({ bookingStatus: { $in: [BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.IN_PROGRESS] } });
 
     const topProviders = await Review.aggregate([
         {
@@ -66,7 +66,7 @@ const overview = async (yearChart: string) => {
     ]);
 
     const recentServices = await Booking.find({
-        bookingStatus: BOOKING_STATUS.COMPLETED
+        bookingStatus: { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED] }
     })
         .select("provider bookingStatus customer date")
         .populate("provider", "name contact address category")
@@ -382,19 +382,19 @@ const bookingData = async (query: Record<string, unknown>) => {
     if (status) {
         switch (String(status).toLowerCase()) {
             case "accepted":
-                queryDB.bookingStatus = BOOKING_STATUS.ACCEPTED;
+                queryDB.bookingStatus = { $in: [BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.IN_PROGRESS] };
                 break;
             case "cancelled":
                 queryDB.bookingStatus = BOOKING_STATUS.CANCELLED;
                 break;
             case "rejected":
-                queryDB.bookingStatus = BOOKING_STATUS.REJECTED;
+                queryDB.bookingStatus = BOOKING_STATUS.DECLINED;
                 break;
             case "pending":
-                queryDB.bookingStatus = BOOKING_STATUS.PENDING;
+                queryDB.bookingStatus = { $in: [BOOKING_STATUS.CREATED, BOOKING_STATUS.PAID, BOOKING_STATUS.REQUESTED] };
                 break;
             case "completed":
-                queryDB.bookingStatus = BOOKING_STATUS.COMPLETED;
+                queryDB.bookingStatus = { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED] };
                 break;
         }
     }
@@ -491,7 +491,7 @@ const generateMultiInvoices = async (data: { bookingIds: string[] }) => {
             name: item.provider?.name || "N/A",
         },
         amount: paymentByBooking[item._id.toString()]?.amount ?? item.service?.price ?? 0,
-        paymentStatus: paymentByBooking[item._id.toString()]?.paymentStatus ?? item.bookingStatus ?? "PENDING",
+        paymentStatus: paymentByBooking[item._id.toString()]?.paymentStatus ?? item.bookingStatus ?? BOOKING_STATUS.CREATED,
         createdAt: paymentByBooking[item._id.toString()]?.createdAt ?? item.createdAt ?? new Date(),
         id: item._id?.toString() || `inv-${Date.now()}`
     }));
