@@ -6,13 +6,14 @@ import ApiError from '../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { Payment } from '../app/modules/payment/payment.model';
 import { Types } from 'mongoose';
+import axios from 'axios';
 
 // Types
 type PaymentData = {
   service: {
     price: number;
     category: string;
-    subcategory: string;
+    subCategory: string;
   };
   customer: {
     name: string;
@@ -23,6 +24,9 @@ type PaymentData = {
     name?: string;
   };
   amount: number;
+  platformFee: number;
+  gatewayFee: number;
+  providerAmount: number;
   paymentStatus: string;
   createdAt: string | Date;
   id?: string;
@@ -33,7 +37,7 @@ export class PDFInvoiceMaker {
   private currentY: number;
   private readonly margins = 50;
   private pageWidth: number;
-  private headerHeight = 60;
+  private headerHeight = 90;
 
   constructor() {
     this.doc = new PDFDocument({
@@ -118,33 +122,22 @@ export class PDFInvoiceMaker {
     return this;
   }
 
-  private drawHeader() {
+  private async drawHeader() {
     const headerY = this.currentY;
     const now = new Date();
+    const logoUrl = "https://i.ibb.co.com/Lzs2kqSn/Image20260314205009.png";
 
-    const candidates = [
-      path.join(process.cwd(), 'uploads', 'image', 'fixmate-logo.png'),
-      path.join(process.cwd(), 'uploads', 'image', 'logo.png'),
-      path.join(process.cwd(), 'src', 'assets', 'fixmate-logo.png'),
-    ];
-    let logoBuffer: Buffer | undefined;
-    for (const p of candidates) {
-      try {
-        if (fs.existsSync(p)) {
-          logoBuffer = fs.readFileSync(p);
-          break;
-        }
-      } catch { }
-    }
-
-    if (logoBuffer) {
-      this.doc.image(logoBuffer, this.margins, headerY, { fit: [120, 40] });
-    } else {
+    try {
+      const response = await axios.get(logoUrl, { responseType: 'arraybuffer' });
+      const logoBuffer = Buffer.from(response.data);
+      this.doc.image(logoBuffer, this.margins, headerY - 15, { fit: [200, 80] });
+    } catch (error) {
+      console.error("Failed to fetch logo, using text fallback:", error);
       this.doc
-        .fontSize(20)
+        .fontSize(24)
         .font('Helvetica-Bold')
-        .fillColor('#656cf7ff')
-        .text('Fixmate', this.margins, headerY, { width: 200, color: '#4d54e9ff' });
+        .fillColor('#0062EB')
+        .text('Fixmate', this.margins, headerY);
     }
 
     const generatedText = `Generated: ${this.formatDate(now)}`;
@@ -152,19 +145,18 @@ export class PDFInvoiceMaker {
       .fontSize(10)
       .font('Helvetica')
       .fillColor('#7f8c8d')
-      .text(generatedText, this.margins, headerY, {
+      .text(generatedText, this.margins, headerY + 15, {
         align: 'right',
         width: this.pageWidth,
-        lineBreak: false,
       });
 
-    this.currentY = headerY + this.headerHeight;
+    this.currentY = headerY + this.headerHeight + 10;
     this.addHorizontalLine();
   }
 
   // Generate PDF
   public async generatePDFBuffer(data: PaymentData): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
         const chunks: Buffer[] = [];
 
@@ -174,7 +166,7 @@ export class PDFInvoiceMaker {
         this.doc.on('error', reject);
 
         // Generate PDF content
-        this.generatePDFContent(data);
+        await this.generatePDFContent(data);
 
         // Finalize PDF
         this.doc.end();
@@ -197,68 +189,83 @@ export class PDFInvoiceMaker {
     // Pipe PDF directly to response
     this.doc.pipe(res);
 
-    // Generate PDF content
-    this.generatePDFContent(data);
-
-    // Finalize PDF
-    this.doc.end();
+    // Generate PDF content (must be awaited if it interacts with async headers)
+    this.generatePDFContent(data).then(() => {
+      this.doc.end();
+    });
   }
 
-  private generatePDFContent(data: PaymentData) {
-    this.drawHeader();
+  private async generatePDFContent(data: PaymentData) {
+    await this.drawHeader();
     this.addText('PAYMENT RECEIPT', {
-      fontSize: 24,
+      fontSize: 22,
       bold: true,
       align: 'center',
-      color: '#2c3e50',
+      color: '#0062EB',
     });
-    this.addSpacing(5);
-    this.addText('Thank you for your payment', {
-      fontSize: 14,
+    this.addSpacing(2);
+    this.addText('Thank you for choosing Fixmate', {
+      fontSize: 12,
       align: 'center',
       color: '#7f8c8d',
     });
-    this.addSpacing(20);
+    this.addSpacing(15);
     this.addHorizontalLine();
 
-    // Service Information Section
-    this.addSectionHeader('SERVICE INFORMATION');
-    this.addText(`Category: ${data.service.category || 'N/A'}`);
-    this.addText(`Subcategory: ${data.service.subcategory || 'N/A'}`);
-    this.addText(`Status: ${data.paymentStatus || 'N/A'}`);
-    this.addText(`Amount: ${this.formatCurrency(data.service.price)}`);
+    // Two column layout for info
+    const leftColX = this.margins;
+    const rightColX = this.margins + (this.pageWidth / 2);
+    const startY = this.currentY;
+
+    // Service Information (Left)
+    this.doc.fontSize(14).font('Helvetica-Bold').fillColor('#0062EB').text('SERVICE INFORMATION', leftColX, startY);
+    this.doc.fontSize(12).font('Helvetica').fillColor('#2c3e50');
+    this.doc.text(`Category: ${data.service.category || 'N/A'}`, leftColX, startY + 25);
+    this.doc.text(`Sub Category: ${data.service.subCategory || 'N/A'}`, leftColX, startY + 50);
+    this.doc.text(`Booking Status: ${data.paymentStatus || 'N/A'}`, leftColX, startY + 75);
+
+    // User Information (Right)
+    this.doc.fontSize(14).font('Helvetica-Bold').fillColor('#0062EB').text('CUSTOMER INFORMATION', rightColX, startY);
+    this.doc.fontSize(12).font('Helvetica').fillColor('#2c3e50');
+    this.doc.text(`Name: ${data.customer.name || 'N/A'}`, rightColX, startY + 25);
+    this.doc.text(`Email: ${data.customer.email || 'N/A'}`, rightColX, startY + 50);
+    this.doc.text(`Address: ${data.customer.address || 'N/A'}`, rightColX, startY + 75, { width: this.pageWidth / 2 - 20 });
+
+    this.currentY = startY + 115;
     this.addSpacing(15);
+    this.addHorizontalLine();
 
-    // User Information Section
-    this.addSectionHeader('USER INFORMATION');
-    this.addText(`Name: ${data.customer.name || 'N/A'}`);
-    this.addText(`Email: ${data.customer.email || 'N/A'}`);
-    this.addText(`Location: ${data.customer.address || 'N/A'}`);
-    this.addSpacing(15);
+    // Payment breakdown
+    this.addSectionHeader('PAYMENT BREAKDOWN');
 
-    // Payment Details Section
-    this.addSectionHeader('PAYMENT DETAILS');
-    const actual = Number(data.amount || 0);
-    const appRevenue = actual * 0.1;
-    const netToProvider = actual - appRevenue;
-    this.addText(`Paid Amount: ${this.formatCurrency(actual)}`);
-    this.addText(
-      `Application Revenue (10%): ${this.formatCurrency(appRevenue)}`
-    );
-    this.addText(`Net To Provider: ${this.formatCurrency(netToProvider)}`);
-    this.addText(`Date & Time: ${this.formatDate(data.createdAt)}`);
-    this.addSpacing(20);
+    const rowY = this.currentY;
+    const col1 = leftColX;
+    const col2 = rightColX;
 
-    // Summary Box
-    this.drawSummaryBox(data);
+    const addBreakdownRow = (label: string, value: string, y: number, isTotal = false) => {
+      this.doc.fontSize(12).font(isTotal ? 'Helvetica-Bold' : 'Helvetica').fillColor('#2c3e50').text(label, col1, y);
+      this.doc.fontSize(12).font(isTotal ? 'Helvetica-Bold' : 'Helvetica').fillColor('#2c3e50').text(value, col2, y, { align: 'right', width: this.pageWidth / 2 });
+    };
+
+    addBreakdownRow('Total Service Price', this.formatCurrency(data.amount), rowY);
+    addBreakdownRow('Fixmate Commission (18%)', this.formatCurrency(data.platformFee || (data.amount * 0.18)), rowY + 28);
+    addBreakdownRow('Payment Gateway Cost (3%)', this.formatCurrency(data.gatewayFee || (data.amount * 0.03)), rowY + 56);
+    this.addSpacing(85);
+    this.addHorizontalLine();
+
+    this.doc.fontSize(16).font('Helvetica-Bold').fillColor('#27ae60').text('Net Provider Earnings', leftColX, this.currentY);
+    this.doc.fontSize(16).font('Helvetica-Bold').fillColor('#27ae60').text(this.formatCurrency(data.providerAmount || (data.amount * 0.82)), rightColX, this.currentY, { align: 'right', width: this.pageWidth / 2 });
+
+    this.currentY += 30;
+    this.addText(`Payment Date: ${this.formatDate(data.createdAt)}`, { fontSize: 9, color: '#7f8c8d', align: 'right' });
 
     // Footer
-    this.addSpacing(30);
+    this.currentY = this.doc.page.height - this.margins - 30;
     this.addHorizontalLine();
-    this.addText('Generated by Fixmate', {
+    this.addText('Fixmate - Quality Services at Your Fingertips', {
       fontSize: 10,
       align: 'center',
-      color: '#2c3e50',
+      color: '#0062EB',
     });
   }
 
@@ -330,7 +337,8 @@ export async function generateInvoiceAPI(req: Request, res: Response) {
 
     const info = await Payment.find({
       _id: new Types.ObjectId(req.params.id),
-    }).populate('customer service').select('customer provider service booking amount paymentStatus createdAt whatsApp contact').lean().exec();
+    }).populate('customer service').select('customer provider service booking amount paymentStatus createdAt whatsApp contact platformFee gatewayFee providerAmount').lean().exec();
+
 
     const data = info[0];
     if (!data)
@@ -339,20 +347,23 @@ export async function generateInvoiceAPI(req: Request, res: Response) {
     const paymentData: PaymentData = {
       service: {
         //@ts-ignore
-        price: data.service.price || 0, //@ts-ignore
-        category: data.service.category || 'N/A', //@ts-ignore
-        subcategory: data.service.subcategory || 'N/A',
+        price: data.service?.price || 0, //@ts-ignore
+        category: data.service?.category || 'N/A', //@ts-ignore
+        subCategory: data.service?.subCategory || 'N/A',
       },
       customer: {
         //@ts-ignore
-        name: data.customer.name || 'N/A', //@ts-ignore
-        address: data.customer.address || 'N/A', //@ts-ignore
-        email: data.customer.email || 'N/A',
+        name: data.customer?.name || 'N/A', //@ts-ignore
+        address: data.customer?.address || 'N/A', //@ts-ignore
+        email: data.customer?.email || 'N/A',
       }, //@ts-ignore
-      amount: data.amount || 0, //@ts-ignore
-      paymentStatus: data.paymentStatus || 'PENDING', //@ts-ignore
-      createdAt: data.createdAt || new Date(), //@ts-ignore
-      id: data._id || `inv-${Date.now()}`,
+      amount: data.amount || 0,
+      platformFee: data.platformFee || 0,
+      gatewayFee: data.gatewayFee || 0,
+      providerAmount: data.providerAmount || (data.amount - (data.platformFee || 0)),
+      paymentStatus: data.paymentStatus || 'PENDING',
+      createdAt: data.createdAt || new Date(),
+      id: data._id?.toString() || `inv-${Date.now()}`,
     };
 
     const pdfMaker = new PDFInvoiceMaker();
@@ -440,7 +451,7 @@ export async function generateInvoiceAsBuffer(req: any, res: Response) {
       service: {
         price: req.body.service?.price || 0,
         category: req.body.service?.category || 'N/A',
-        subcategory: req.body.service?.subcategory || 'N/A',
+        subCategory: req.body.service?.subCategory || 'N/A',
       },
       customer: {
         name: req.body.customer?.name || 'N/A',
@@ -448,6 +459,9 @@ export async function generateInvoiceAsBuffer(req: any, res: Response) {
         email: req.body.customer?.email || 'N/A',
       },
       amount: req.body.amount || 0,
+      platformFee: req.body.platformFee || 0,
+      gatewayFee: req.body.gatewayFee || 0,
+      providerAmount: req.body.providerAmount || 0,
       paymentStatus: req.body.paymentStatus || 'Unknown',
       createdAt: req.body.createdAt || new Date(),
       id: req.body.id || `inv-${Date.now()}`,
@@ -482,7 +496,7 @@ export function streamPaymentPDF(res: Response, data: any) {
       service: {
         price: data.service?.price || 0,
         category: data.service?.category || 'N/A',
-        subcategory: data.service?.subcategory || 'N/A',
+        subCategory: data.service?.subCategory || 'N/A',
       },
       customer: {
         name: data.customer?.name || 'N/A',
@@ -490,6 +504,9 @@ export function streamPaymentPDF(res: Response, data: any) {
         email: data.customer?.email || 'N/A',
       },
       amount: data.amount || 0,
+      platformFee: data.platformFee || 0,
+      gatewayFee: data.gatewayFee || 0,
+      providerAmount: data.providerAmount || 0,
       paymentStatus: data.paymentStatus || 'Unknown',
       createdAt: data.createdAt || new Date(),
       id: data.id || `inv-${Date.now()}`,
@@ -510,7 +527,7 @@ export class PDFMultiInvoiceMaker {
   private margins = 50;
   private pageWidth: number;
   private currentY = 50;
-  private headerHeight = 60;
+  private headerHeight = 90;
 
   constructor() {
     this.doc = new PDFDocument({
@@ -521,47 +538,33 @@ export class PDFMultiInvoiceMaker {
     this.pageWidth = 595.28 - this.margins * 2; // A4 width
   }
 
-  private drawHeader() {
+  private async drawHeader() {
     const now = new Date();
     const headerY = this.currentY;
+    const logoUrl = "https://i.ibb.co.com/Lzs2kqSn/Image20260314205009.png";
 
-    // Try to load Fixmate logo from common locations
-    const candidates = [
-      path.join(process.cwd(), 'uploads', 'image', 'fixmate-logo.png'),
-      path.join(process.cwd(), 'uploads', 'image', 'logo.png'),
-      path.join(process.cwd(), 'src', 'assets', 'fixmate-logo.png'),
-    ];
-
-    let logoBuffer: Buffer | undefined;
-    for (const p of candidates) {
-      try {
-        if (fs.existsSync(p)) {
-          logoBuffer = fs.readFileSync(p);
-          break;
-        }
-      } catch { }
-    }
-
-    if (logoBuffer) {
-      this.doc.image(logoBuffer, this.margins, headerY, { fit: [120, 40] });
-    } else {
+    try {
+      const response = await axios.get(logoUrl, { responseType: 'arraybuffer' });
+      const logoBuffer = Buffer.from(response.data);
+      this.doc.image(logoBuffer, this.margins, headerY - 15, { fit: [200, 80] });
+    } catch (error) {
       this.doc
         .fontSize(20)
         .font('Helvetica-Bold')
-        .fillColor('#2c3e50')
-        .text('Fixmate', this.margins, headerY, { width: 200 });
+        .fillColor('#0062EB')
+        .text('Fixmate', this.margins, headerY);
     }
 
     this.doc
       .fontSize(10)
       .font('Helvetica')
       .fillColor('#7f8c8d')
-      .text(`Generated: ${now.toLocaleString()}`, this.margins, headerY, {
+      .text(`Generated: ${now.toLocaleString()}`, this.margins, headerY + 15, {
         align: 'right',
         width: this.pageWidth,
       });
 
-    this.currentY = headerY + this.headerHeight;
+    this.currentY = headerY + this.headerHeight + 10;
     this.addLine();
   }
 
@@ -650,7 +653,7 @@ export class PDFMultiInvoiceMaker {
       .rect(this.margins, y, this.pageWidth, headerRowHeight)
       .fill('#f0f3f5')
       .stroke('#dfe4ea');
-    this.doc.fillColor('#2c3e50').fontSize(11).font('Helvetica-Bold');
+    this.doc.fillColor('#2c3e50').fontSize(12).font('Helvetica-Bold');
     headers.forEach(h => {
       this.doc.text(h.title, x + 6, y + 10, {
         width: h.width - 12,
@@ -671,7 +674,7 @@ export class PDFMultiInvoiceMaker {
     this.addLine();
   }
 
-  private renderOrderCard(data: PaymentData, index: number, total: number) {
+  private async renderOrderCard(data: PaymentData, index: number, total: number) {
     const actual = Number(data.amount || 0);
     const appRevenue = actual * 0.1;
     const net = actual - appRevenue;
@@ -682,17 +685,17 @@ export class PDFMultiInvoiceMaker {
 
     const leftItems = [
       { label: 'Category', value: data.service.category || 'N/A' },
-      { label: 'Subcategory', value: data.service.subcategory || 'N/A' },
+      { label: 'Sub Category', value: data.service.subCategory || 'N/A' },
       { label: 'Customer', value: data.customer.name || 'N/A' },
       { label: 'Provider', value: data.provider?.name || 'N/A' },
     ];
     const rightItems = [
-      { label: 'Paid Amount', value: this.formatCurrency(actual) },
-      { label: 'App Revenue (10%)', value: this.formatCurrency(appRevenue) },
-      { label: 'Net To Provider', value: this.formatCurrency(net) },
+      { label: 'Total Price', value: this.formatCurrency(actual) },
+      { label: 'Commission (18%)', value: this.formatCurrency(data.platformFee || (actual * 0.18)) },
+      { label: 'Gateway Fee (3%)', value: this.formatCurrency(data.gatewayFee || (actual * 0.03)) },
+      { label: 'Provider Net', value: this.formatCurrency(data.providerAmount || (actual * 0.82)) },
     ];
-
-    this.doc.fontSize(10).font('Helvetica');
+    this.doc.fontSize(12).font('Helvetica');
 
     const measureBlock = (items: { label: string; value: string }[]) => {
       let total = 0;
@@ -727,7 +730,7 @@ export class PDFMultiInvoiceMaker {
     if (this.currentY + cardHeight > maxY) {
       this.doc.addPage();
       this.currentY = this.margins;
-      this.drawHeader();
+      await this.drawHeader();
     }
 
     // Calculate cardY and contentTop AFTER potential page break to use updated currentY
@@ -748,23 +751,21 @@ export class PDFMultiInvoiceMaker {
         cardY + padding
       );
 
-    this.doc.fillColor('#7f8c8d').fontSize(9).font('Helvetica');
+    this.doc.fillColor('#7f8c8d').fontSize(11).font('Helvetica');
     let ly = contentTop;
     leftItems.forEach(i => {
       this.doc
-        .font('Helvetica-Bold')
-        .fillColor('#2c3e50')
         .text(i.label, this.margins + padding, ly, {
           width: colWidth - padding * 2,
         });
-      ly += 12;
+      ly += 16;
       this.doc
         .font('Helvetica')
         .fillColor('#2c3e50')
         .text(i.value, this.margins + padding, ly, {
           width: colWidth - padding * 2,
         });
-      ly += 18;
+      ly += 26;
     });
 
     let ry = contentTop;
@@ -775,14 +776,14 @@ export class PDFMultiInvoiceMaker {
         .text(i.label, this.margins + padding + colWidth + colGap, ry, {
           width: colWidth - padding * 2,
         });
-      ry += 12;
+      ry += 16;
       this.doc
         .font('Helvetica')
         .fillColor('#2c3e50')
         .text(i.value, this.margins + padding + colWidth + colGap, ry, {
           width: colWidth - padding * 2,
         });
-      ry += 18;
+      ry += 26;
     });
 
     const bottomY = Math.max(ly, ry) + 10;
@@ -837,7 +838,7 @@ export class PDFMultiInvoiceMaker {
     this.currentY = cardY + cardHeight + 20;
   }
 
-  private drawTableRow(data: PaymentData, index: number) {
+  private async drawTableRow(data: PaymentData, index: number) {
     const actual = Number(data.amount || 0);
     const appRevenue = actual * 0.1;
     const net = actual - appRevenue;
@@ -865,7 +866,7 @@ export class PDFMultiInvoiceMaker {
     if (this.currentY + rowHeight > 780) {
       this.doc.addPage();
       this.currentY = this.margins;
-      this.drawHeader();
+      await this.drawHeader();
       this.drawTableHeader();
     }
 
@@ -889,18 +890,24 @@ export class PDFMultiInvoiceMaker {
       this.doc.on('end', () => resolve(Buffer.concat(chunks)));
       this.doc.on('error', reject);
 
-      this.drawHeader();
-      this.drawTitle('Combined Invoices');
+      (async () => {
+        try {
+          await this.drawHeader();
+          this.drawTitle('Combined Invoices');
 
-      // Render all orders first
-      orders.forEach((order, idx) =>
-        this.renderOrderCard(order, idx, orders.length)
-      );
+          // Render all orders first
+          for (let i = 0; i < orders.length; i++) {
+            await this.renderOrderCard(orders[i], i, orders.length);
+          }
 
-      // Add summary statistics
-      this.addSummaryStatistics(orders);
+          // Add summary statistics
+          this.addSummaryStatistics(orders);
 
-      this.doc.end();
+          this.doc.end();
+        } catch (e) {
+          reject(e);
+        }
+      })();
     });
   }
 
@@ -1001,7 +1008,7 @@ export class PDFMultiInvoiceMaker {
 
     // Optional: Add a grand total row
     this.doc
-      .fontSize(12)
+      .fontSize(14)
       .font('Helvetica-Bold')
       .fillColor('#27ae60')
       .text(
@@ -1016,19 +1023,19 @@ export class PDFMultiInvoiceMaker {
 
   private addSummaryRow(label: string, value: string, x: number, y: number) {
     this.doc
-      .fontSize(11)
+      .fontSize(13)
       .font('Helvetica-Bold')
       .fillColor('#2c3e50')
       .text(label, x, y, { width: 150 });
 
     this.doc
-      .fontSize(11)
+      .fontSize(13)
       .font('Helvetica')
       .fillColor('#2c3e50')
       .text(value, x + 150, y, { width: 100 });
   }
 
-  public streamMultiPDFToResponse(
+  public async streamMultiPDFToResponse(
     res: Response,
     orders: PaymentData[],
     filename: string = 'combined-invoices.pdf'
@@ -1038,7 +1045,7 @@ export class PDFMultiInvoiceMaker {
 
     this.doc.pipe(res);
 
-    this.drawHeader();
+    await this.drawHeader();
     // this.drawTitle('Combined Invoices');
 
     // Add summary statistics
@@ -1046,11 +1053,13 @@ export class PDFMultiInvoiceMaker {
     this.currentY += 40;
 
     // Render all orders first
-    orders.forEach((order, idx) =>
-      this.renderOrderCard(order, idx, orders.length)
+    const renderAll = async () => {
+      for (let i = 0; i < orders.length; i++) {
+        await this.renderOrderCard(orders[i], i, orders.length);
+      }
+      this.doc.end();
+    };
 
-    );
-
-    this.doc.end();
+    await renderAll();
   }
 }

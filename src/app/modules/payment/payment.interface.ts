@@ -13,4 +13,6 @@ export interface IPayment {
   providerAmount: number;
   description: string;
   paymentStatus: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
