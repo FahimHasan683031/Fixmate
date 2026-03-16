@@ -21,4 +21,7 @@ export interface IBooking {
     paymentId: string;
     isDeleted: boolean;
     transactionId: string;
+    respondedAt?: Date;
+    createdAt: Date;
+    updatedAt: Date;
 }

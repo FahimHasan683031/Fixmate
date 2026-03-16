@@ -68,8 +68,13 @@ const handlePaymentSuccessLogic = async (bookingID: string, transactionId: strin
       description: "Service payment",
     });
 
-    // Update provider wallet (only once)
-    await User.findByIdAndUpdate(booking.provider, { $inc: { wallet: providerAmount } });
+    // Update provider wallet and metrics
+    await User.findByIdAndUpdate(booking.provider, { 
+      $inc: { 
+        wallet: providerAmount,
+        "metrics.totalReceivedJobs": 1
+      } 
+    });
 
     // Notify provider
     await NotificationService.insertNotification({

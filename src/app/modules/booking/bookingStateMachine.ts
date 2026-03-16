@@ -3,6 +3,7 @@ import { Booking } from "./booking.model";
 import { BOOKING_STATUS } from "../../../enum/booking";
 import ApiError from "../../../errors/ApiError";
 import { StatusCodes } from "http-status-codes";
+import { User } from "../user/user.model";
 
 // Define the valid next states for strict progression
 const VALID_TRANSITIONS: Record<string, BOOKING_STATUS[]> = {
@@ -11,9 +12,10 @@ const VALID_TRANSITIONS: Record<string, BOOKING_STATUS[]> = {
     [BOOKING_STATUS.REQUESTED]: [BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.DECLINED, BOOKING_STATUS.EXPIRED, BOOKING_STATUS.CANCELLED],
     [BOOKING_STATUS.ACCEPTED]: [BOOKING_STATUS.IN_PROGRESS, BOOKING_STATUS.CANCELLED],
     [BOOKING_STATUS.IN_PROGRESS]: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.DISPUTED, BOOKING_STATUS.CANCELLED],
-    [BOOKING_STATUS.COMPLETED_BY_PROVIDER]: [BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.DISPUTED],
+    [BOOKING_STATUS.COMPLETED_BY_PROVIDER]: [BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.DISPUTED, BOOKING_STATUS.AUTO_SETTLED],
     [BOOKING_STATUS.CONFIRMED_BY_CLIENT]: [BOOKING_STATUS.SETTLED],
     [BOOKING_STATUS.SETTLED]: [],
+    [BOOKING_STATUS.AUTO_SETTLED]: [],
     
     // exception states
     [BOOKING_STATUS.DECLINED]: [],
@@ -57,7 +59,7 @@ export class BookingStateMachine {
         const strictProgression = [
             BOOKING_STATUS.CREATED, BOOKING_STATUS.PAID, BOOKING_STATUS.REQUESTED,
             BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.IN_PROGRESS,
-            BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED
+            BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED, BOOKING_STATUS.AUTO_SETTLED
         ];
 
         const currentIndex = strictProgression.indexOf(currentState);
@@ -79,6 +81,36 @@ export class BookingStateMachine {
             for (let i = 0; i <= targetIndex; i++) booking.currentStats[strictProgression[i]] = true;
         } else {
             booking.currentStats[targetState] = true;
+        }
+
+        const now = new Date();
+        const responseTime = now.getTime() - booking.createdAt.getTime();
+
+        // Centralized Metrics Tracking
+        const metricsUpdate: any = { $inc: {}, $set: {} };
+
+        if (targetState === BOOKING_STATUS.ACCEPTED) {
+            metricsUpdate.$inc["metrics.acceptedJobs"] = 1;
+            metricsUpdate.$inc["metrics.totalResponseTime"] = responseTime;
+            metricsUpdate.$inc["metrics.totalResponseCount"] = 1;
+            booking.respondedAt = now;
+        } else if (targetState === BOOKING_STATUS.DECLINED) {
+            metricsUpdate.$inc["metrics.declinedJobs"] = 1;
+            metricsUpdate.$inc["metrics.totalResponseTime"] = responseTime;
+            metricsUpdate.$inc["metrics.totalResponseCount"] = 1;
+            booking.respondedAt = now;
+        } else if (targetState === BOOKING_STATUS.EXPIRED) {
+            metricsUpdate.$inc["metrics.declinedJobs"] = 1;
+            // No respondedAt for expired
+        } else if (targetState === BOOKING_STATUS.COMPLETED_BY_PROVIDER) {
+            metricsUpdate.$inc["metrics.completedJobs"] = 1;
+        } else if (targetState === BOOKING_STATUS.DISPUTED) {
+            metricsUpdate.$inc["metrics.disputedJobs"] = 1;
+        }
+
+        // Apply updates
+        if (Object.keys(metricsUpdate.$inc).length > 0 || Object.keys(metricsUpdate.$set).length > 0) {
+            await User.findByIdAndUpdate(booking.provider, metricsUpdate);
         }
 
         booking.markModified("currentStats");

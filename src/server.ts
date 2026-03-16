@@ -6,6 +6,9 @@ import config from './config'
 import { errorLogger, logger } from './shared/logger'
 import seedAdmin from './app/DB'
 import { socketHelper } from './helpers/socketHelper'
+import { scheduleUnverifiedAccountCleanup } from './cronjob/scheduleUnverifiedAccountCleanup'
+import { bookingSLAJob } from './cronjob/bookingSLAJob'
+import { bookingAutoSettleJob } from './cronjob/bookingAutoSettleJob'
 
 process.on('uncaughtException', error => {
     errorLogger.error('UnhandledException Detected', error)
@@ -20,6 +23,11 @@ async function main() {
 
         // seed admin
         await seedAdmin()
+
+        // cron jobs
+        scheduleUnverifiedAccountCleanup();
+        bookingSLAJob();
+        bookingAutoSettleJob();
 
         const port =
             typeof config.port === 'number' ? config.port : Number(config.port)

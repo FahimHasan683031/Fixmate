@@ -71,6 +71,9 @@ const bookingSchema = new Schema<IBooking>({
     isPaid: {
         type: Boolean,
         default: false
+    },
+    respondedAt: {
+        type: Date
     }
 }, {
     timestamps: true,

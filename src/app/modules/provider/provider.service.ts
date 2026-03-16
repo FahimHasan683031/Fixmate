@@ -230,7 +230,7 @@ export const getBookings = async (user: JwtPayload, query: any, body: { status: 
         body.status === "pending" ? { $in: [BOOKING_STATUS.CREATED, BOOKING_STATUS.PAID, BOOKING_STATUS.REQUESTED] } :
             body.status === "upcoming" ? { $in: [BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.IN_PROGRESS] } :
                 body.status === "rejected" || body.status === "cancelled" ? { $in: [BOOKING_STATUS.DECLINED, BOOKING_STATUS.CANCELLED] } :
-                    body.status === "completed" ? { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED] } :
+                body.status === "completed" ? { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED, BOOKING_STATUS.AUTO_SETTLED] } :
                         { $nin: [BOOKING_STATUS.CREATED, BOOKING_STATUS.PAID, BOOKING_STATUS.REQUESTED] };
 
     const bookingQuery = new QueryBuilder(
@@ -404,7 +404,8 @@ export const wallet = async (user: JwtPayload, query: any) => {
             $or: [
                 { paymentStatus: PAYMENT_STATUS.PAID },
                 { paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED },
-                { paymentStatus: PAYMENT_STATUS.WITHDRAWN }
+                { paymentStatus: PAYMENT_STATUS.WITHDRAWN },
+                { paymentStatus: PAYMENT_STATUS.AUTO_SETTLED }
             ]
         }),
         query

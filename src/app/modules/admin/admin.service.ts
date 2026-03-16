@@ -66,7 +66,7 @@ const overview = async (yearChart: string) => {
     ]);
 
     const recentServices = await Booking.find({
-        bookingStatus: { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED] }
+        bookingStatus: { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED, BOOKING_STATUS.AUTO_SETTLED] }
     })
         .select("provider bookingStatus customer date")
         .populate("provider", "name contact address category")
@@ -394,7 +394,7 @@ const bookingData = async (query: Record<string, unknown>) => {
                 queryDB.bookingStatus = { $in: [BOOKING_STATUS.CREATED, BOOKING_STATUS.PAID, BOOKING_STATUS.REQUESTED] };
                 break;
             case "completed":
-                queryDB.bookingStatus = { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED] };
+                queryDB.bookingStatus = { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED, BOOKING_STATUS.AUTO_SETTLED] };
                 break;
         }
     }

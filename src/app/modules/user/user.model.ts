@@ -184,6 +184,15 @@ const UserSchema = new Schema<IUser, UserModel>(
                 },
             },
             select: 0
+        },
+        metrics: {
+            acceptedJobs: { type: Number, default: 0 },
+            declinedJobs: { type: Number, default: 0 },
+            completedJobs: { type: Number, default: 0 },
+            totalReceivedJobs: { type: Number, default: 0 },
+            disputedJobs: { type: Number, default: 0 },
+            totalResponseTime: { type: Number, default: 0 },
+            totalResponseCount: { type: Number, default: 0 },
         }
     },
     {
@@ -201,6 +210,36 @@ UserSchema.index({ location: "2dsphere" });
 
 UserSchema.virtual('fullName').get(function () {
     return this.name;
+});
+
+UserSchema.virtual('metrics.acceptance_rate').get(function () {
+    return this.metrics.totalReceivedJobs > 0 
+        ? Math.round((this.metrics.acceptedJobs / this.metrics.totalReceivedJobs) * 100) 
+        : 0;
+});
+
+UserSchema.virtual('metrics.decline_rate').get(function () {
+    return this.metrics.totalReceivedJobs > 0 
+        ? Math.round((this.metrics.declinedJobs / this.metrics.totalReceivedJobs) * 100) 
+        : 0;
+});
+
+UserSchema.virtual('metrics.avg_response_time').get(function () {
+    return this.metrics.totalResponseCount > 0 
+        ? Math.round(this.metrics.totalResponseTime / this.metrics.totalResponseCount) 
+        : 0;
+});
+
+UserSchema.virtual('metrics.completion_rate').get(function () {
+    return this.metrics.acceptedJobs > 0 
+        ? Math.round((this.metrics.completedJobs / this.metrics.acceptedJobs) * 100) 
+        : 0;
+});
+
+UserSchema.virtual('metrics.dispute_rate').get(function () {
+    return this.metrics.acceptedJobs > 0 
+        ? Math.round((this.metrics.disputedJobs / this.metrics.acceptedJobs) * 100) 
+        : 0;
 });
 
 UserSchema.statics.isPasswordMatched = async function (

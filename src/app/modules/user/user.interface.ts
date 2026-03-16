@@ -57,10 +57,23 @@ export type IUser = {
 
     // Auth & Status
     status: USER_STATUS;
+    isDeleted: boolean;
+    rankingScore: number;
     verified: boolean;
     fcmToken: string;
     deviceToken?: string;
     authentication: IAuthentication;
+
+    // SLA & Metrics
+    metrics: {
+        acceptedJobs: number;
+        declinedJobs: number;
+        completedJobs: number;
+        totalReceivedJobs: number;
+        disputedJobs: number;
+        totalResponseTime: number; // in milliseconds
+        totalResponseCount: number;
+    };
 
     // Virtuals
     fullName?: string;

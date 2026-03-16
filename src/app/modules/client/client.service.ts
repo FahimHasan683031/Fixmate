@@ -252,7 +252,7 @@ export const updateBooking = async (user: JwtPayload, id: Types.ObjectId, data: 
 };
 
 export const getBookings = async (user: JwtPayload, query: any, body: { status: "pending" | "upcoming" | "history" | "completed" | "cancelled" }) => {
-    const statusFilter = body.status == "pending" ? BOOKING_STATUS.CREATED : body.status == "upcoming" ? { $in: [BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.IN_PROGRESS] } : body.status == "completed" ? { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED] } : body.status == "cancelled" ? BOOKING_STATUS.CANCELLED : { $ne: BOOKING_STATUS.ACCEPTED };
+    const statusFilter = body.status == "pending" ? BOOKING_STATUS.CREATED : body.status == "upcoming" ? { $in: [BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.IN_PROGRESS] } : body.status == "completed" ? { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED, BOOKING_STATUS.AUTO_SETTLED] } : body.status == "cancelled" ? BOOKING_STATUS.CANCELLED : { $ne: BOOKING_STATUS.ACCEPTED };
 
     const bookingQuery = new QueryBuilder(
         Booking.find({
@@ -467,7 +467,8 @@ export const walteHistory = async (user: JwtPayload, query: any) => {
         customer: new Types.ObjectId(userId),
         $or: [
             { paymentStatus: PAYMENT_STATUS.PAID },
-            { paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED }
+            { paymentStatus: PAYMENT_STATUS.PROVIDER_CANCELLED },
+            { paymentStatus: PAYMENT_STATUS.AUTO_SETTLED }
         ],
         ...((startTime && endTime) && {
             createdAt: {
