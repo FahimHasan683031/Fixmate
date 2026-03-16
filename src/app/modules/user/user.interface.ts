@@ -82,6 +82,6 @@ export type IUser = {
 export type UserModel = {
     isPasswordMatched: (givenPassword: string, savedPassword: string) => Promise<boolean>;
     isExistUserByEmail(email: string): Promise<IUser | null>;
+    updateRankingScore(providerId: string | Types.ObjectId): Promise<void>;
     isExistUserById(id: string): Promise<IUser | null>;
 } & Model<IUser>;
-

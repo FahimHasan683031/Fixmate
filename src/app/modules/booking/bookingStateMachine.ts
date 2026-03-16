@@ -111,6 +111,7 @@ export class BookingStateMachine {
         // Apply updates
         if (Object.keys(metricsUpdate.$inc).length > 0 || Object.keys(metricsUpdate.$set).length > 0) {
             await User.findByIdAndUpdate(booking.provider, metricsUpdate);
+            await (User as any).updateRankingScore(booking.provider);
         }
 
         booking.markModified("currentStats");

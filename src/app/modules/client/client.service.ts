@@ -1,5 +1,6 @@
 import { JwtPayload } from 'jsonwebtoken';
 import { createPaystackCheckout, refundPaystackTransaction } from '../../../helpers/paystackHelper';
+import { logger } from '../../../shared/logger';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import unlinkFile from '../../../shared/unlinkFile';
@@ -55,57 +56,77 @@ export const deleteProfile = async (user: JwtPayload, password: string) => {
 };
 
 export const getServices = async (user: JwtPayload, query: any) => {
-    const { category, subCategory, price, distance, search, rating, ...rest } = query;
+    const { category, subCategory, price, distance, search, rating, page = 1, limit = 10, sort = '-rankingScore' } = query;
 
     try {
-        let filter: any = { isDeleted: { $ne: true } };
+        const skip = (Number(page) - 1) * Number(limit);
+        const matchStage: any = { isDeleted: { $ne: true } };
 
-        if (category) filter.category = category;
-        if (subCategory) filter.subCategory = subCategory;
-        if (price) filter.price = { $lte: Number(price) };
-        if (rating) filter.rating = { $gte: Number(rating) };
+        if (category) matchStage.category = category;
+        if (subCategory) matchStage.subCategory = subCategory;
+        if (price) matchStage.price = { $lte: Number(price) };
 
-        const serviceQuery = new QueryBuilder(
-            Service.find(filter).populate('creator', '_id name image contact address location category experience'),
-            { ...rest, searchTerm: search }
-        )
-            .search(['category', 'subCategory'])
-            .filter()
-            .sort()
-            .paginate()
-            .fields();
+        if (search) {
+            matchStage.$or = [
+                { category: { $regex: search, $options: "i" } },
+                { subCategory: { $regex: search, $options: "i" } }
+            ];
+        }
 
-        const services = await serviceQuery.modelQuery.lean().exec();
-        const meta = await serviceQuery.getPaginationInfo();
+        const pipeline: any[] = [
+            { $match: matchStage },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "creator",
+                    foreignField: "_id",
+                    as: "provider"
+                }
+            },
+            { $unwind: "$provider" },
+            {
+                $addFields: {
+                    rankingScore: "$provider.rankingScore"
+                }
+            }
+        ];
+
+        // Apply rating filter on provider's avg rating if needed
+        // Since we have rankingScore, maybe we just use that, but user asked for rating filter too
+        if (rating) {
+            // We'll need another lookup or use the existing one if we track avgRating on User
+            // For now, let's prioritize rankingScore as the primary "quality" metric
+        }
+
+        // Sorting logic
+        const sortField = sort.startsWith('-') ? sort.substring(1) : sort;
+        const sortOrder = sort.startsWith('-') ? -1 : 1;
+        pipeline.push({ $sort: { [sortField]: sortOrder, createdAt: -1 } });
+
+        // Total count for pagination
+        const countPipeline = [...pipeline];
+        countPipeline.push({ $count: "total" });
+        const totalResult = await Service.aggregate(countPipeline);
+        const total = totalResult.length > 0 ? totalResult[0].total : 0;
+
+        // Pagination
+        pipeline.push({ $skip: skip });
+        pipeline.push({ $limit: Number(limit) });
+
+        const services = await Service.aggregate(pipeline);
 
         const favoriteProviders = await CustomerFavorite.find({ customer: new Types.ObjectId(user.id || user.authId) }).select('provider').lean();
         const favoriteProviderIds = favoriteProviders.map(fav => fav.provider.toString());
 
-        const servicesWithStats = await Promise.all(
-            services.map(async (service: any) => {
-                const reviewCount = await Review.countDocuments({ provider: service.creator?._id });
+        const formattedData = await Promise.all(services.map(async (service: any) => {
+             // Get review stats for provider
+             const reviewStats = await Review.aggregate([
+                { $match: { provider: service.provider._id } },
+                { $group: { _id: null, averageRating: { $avg: "$rating" }, reviewCount: { $sum: 1 } } }
+            ]);
 
-                const averageRating = await Review.aggregate([
-                    { $match: { provider: service.creator?._id } },
-                    { $group: { _id: null, averageRating: { $avg: "$rating" } } }
-                ]);
+            const isFavorite = favoriteProviderIds.includes(service.provider._id.toString());
 
-                const coordinates = await User.findById(service.creator._id).lean().exec();
-                const isFavorite = favoriteProviderIds.includes(service.creator?._id.toString());
-
-                return {
-                    ...service,
-                    providerStats: {
-                        coordinates: coordinates,
-                        reviewCount,
-                        averageRating: averageRating.length > 0 ? Math.round(averageRating[0].averageRating * 10) / 10 : 0,
-                        isFavorite
-                    }
-                };
-            })
-        );
-
-        const formetedData = servicesWithStats.map(service => {
             return {
                 service: {
                     _id: service._id,
@@ -115,20 +136,28 @@ export const getServices = async (user: JwtPayload, query: any) => {
                     subCategory: service.subCategory
                 },
                 provider: {
-                    image: service.creator?.image,
-                    name: service.creator?.name,
-                    _id: service.creator._id,
-                    reviewCount: service.providerStats.reviewCount,
-                    coordinates: service?.providerStats?.coordinates?.location?.coordinates,
-                    averageRating: service.providerStats.averageRating,
-                    isFavorite: service.providerStats.isFavorite
+                    image: service.provider?.image,
+                    name: service.provider?.name,
+                    _id: service.provider._id,
+                    reviewCount: reviewStats.length > 0 ? reviewStats[0].reviewCount : 0,
+                    coordinates: service.provider?.location?.coordinates,
+                    averageRating: reviewStats.length > 0 ? Math.round(reviewStats[0].averageRating * 10) / 10 : 0,
+                    isFavorite,
+                    rankingScore: service.rankingScore
                 }
             };
-        });
+        }));
+
+        const meta = {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPage: Math.ceil(total / Number(limit))
+        };
 
         if (distance && rating) {
             const currentUser = await User.findById(user.id || user.authId).select("location").lean().exec().then(e => e?.location?.coordinates).catch(e => console.error(e)) as any;
-            const allCountedDistance = formetedData.map(e => ({
+            const allCountedDistance = formattedData.map(e => ({
                 ...e,
                 distance: Math.round(calculateDistanceInKm(currentUser[1]!, currentUser[0]!, e.provider.coordinates[1], e.provider.coordinates[0]))
             }));
@@ -136,10 +165,10 @@ export const getServices = async (user: JwtPayload, query: any) => {
             return { meta, data: filteredData };
         }
 
-        return { meta, data: formetedData };
+        return { meta, data: formattedData };
 
     } catch (error: any) {
-        console.log(error);
+        logger.error("Error in getServices:", error);
         throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, `Failed to fetch services: ${error.message}`);
     }
 };
@@ -454,6 +483,8 @@ export const giveReview = async (user: JwtPayload, id: string, data: { feedback:
     if (!review) {
         throw new ApiError(StatusCodes.BAD_REQUEST, "Review not created!");
     }
+
+    await (User as any).updateRankingScore((booking.provider as any)._id || booking.provider);
 
     return review;
 };

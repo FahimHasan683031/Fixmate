@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 import bcrypt from "bcrypt";
 import { IUser, UserModel } from "./user.interface";
 import { GENDER, USER_ROLES, USER_STATUS } from "../../../enum/user";
@@ -185,6 +185,7 @@ const UserSchema = new Schema<IUser, UserModel>(
             },
             select: 0
         },
+        rankingScore: { type: Number, default: 0 },
         metrics: {
             acceptedJobs: { type: Number, default: 0 },
             declinedJobs: { type: Number, default: 0 },
@@ -255,6 +256,38 @@ UserSchema.statics.isExistUserById = async function (id: string) {
 
 UserSchema.statics.isExistUserByEmail = async function (email: string) {
     return await this.findOne({ email }).select("+password");
+};
+
+UserSchema.statics.updateRankingScore = async function (providerId: string | Types.ObjectId) {
+    const user = await this.findById(providerId).lean().exec();
+    if (!user || user.role !== USER_ROLES.PROVIDER) return;
+
+    const { metrics } = user;
+    const completionRate = metrics.acceptedJobs > 0 ? (metrics.completedJobs / metrics.acceptedJobs) * 100 : 0;
+    const acceptanceRate = metrics.totalReceivedJobs > 0 ? (metrics.acceptedJobs / metrics.totalReceivedJobs) * 100 : 0;
+    const avgResponseTime = metrics.totalResponseCount > 0 ? metrics.totalResponseTime / metrics.totalResponseCount : 0;
+
+    // Get average rating
+    const ratingResult = await mongoose.model("Review").aggregate([
+        { $match: { provider: new Types.ObjectId(providerId as string) } },
+        { $group: { _id: null, avgRating: { $avg: "$rating" } } }
+    ]);
+    const avgRating = ratingResult.length > 0 ? ratingResult[0].avgRating : 0;
+
+    // Ranking Formula weights:
+    // Completion: 40%, Acceptance: 30%, Rating: 20%, Response Time: 10%
+    
+    // Response Time Factor: 100 if < 1hr, 0 if > 24hrs, linear scale between
+    const oneDayInMs = 24 * 60 * 60 * 1000;
+    const oneHourInMs = 60 * 60 * 1000;
+    const responseTimeFactor = Math.max(0, 100 - ((Math.max(0, avgResponseTime - oneHourInMs)) / (oneDayInMs - oneHourInMs)) * 100);
+
+    const score = (completionRate * 0.4) + 
+                  (acceptanceRate * 0.3) + 
+                  ((avgRating / 5) * 100 * 0.2) + 
+                  (responseTimeFactor * 0.1);
+
+    await this.findByIdAndUpdate(providerId, { rankingScore: Math.round(score * 100) / 100 });
 };
 
 UserSchema.pre("save", async function (next) {
