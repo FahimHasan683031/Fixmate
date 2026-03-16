@@ -41,10 +41,21 @@ const refreshAccount = catchAsync(async (req: Request, res: Response) => {
   res.send(result);
 });
 
+const webhook = catchAsync(async (req: Request, res: Response) => {
+  const result = await PaymentServices.webhook(req);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Webhook processed",
+    data: result
+  });
+});
+
 export const PaymentControllers = {
   success,
   failure,
   createConnectedAccount,
   successAccount,
-  refreshAccount
+  refreshAccount,
+  webhook
 };

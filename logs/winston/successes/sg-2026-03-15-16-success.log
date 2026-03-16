@@ -1,0 +1,54 @@
+{Sun Mar 15 2026 16:00:57} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/client/book/accept/69b6827cef7bf4133ff673b9 200 - 93.276 ms
+{Sun Mar 15 2026 16:01:17} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment-history 200 - 5.856 ms
+{Sun Mar 15 2026 16:01:29} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment/69b68295ef7bf4133ff673c3 200 - 3.876 ms
+{Sun Mar 15 2026 16:08:11} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 16:08:11} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 16:08:11} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 16:08:11} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 16:10:34} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/client/book 200 - 2262.724 ms
+{Sun Mar 15 2026 16:10:55} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/payment/success?trxref=l07miu7o9v&reference=l07miu7o9v 200 - 1469.457 ms
+{Sun Mar 15 2026 16:11:09} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/provider/book?page=1&limit=10 200 - 49.145 ms
+{Sun Mar 15 2026 16:11:44} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/provider/book?page=1&limit=10 200 - 9.101 ms
+{Sun Mar 15 2026 16:12:05} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/provider/book 200 - 72.823 ms
+{Sun Mar 15 2026 16:12:15} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/provider/book 200 - 11.640 ms
+{Sun Mar 15 2026 16:12:25} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/provider/book 200 - 14.365 ms
+{Sun Mar 15 2026 16:13:02} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/client/book/accept/69b68597431f1116b2c452d3 200 - 29.027 ms
+{Sun Mar 15 2026 16:13:18} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment-history 200 - 7.784 ms
+{Sun Mar 15 2026 16:13:34} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment/69b685af431f1116b2c452de 200 - 3.629 ms
+{Sun Mar 15 2026 16:14:49} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment-history 200 - 7.195 ms
+{Sun Mar 15 2026 16:15:16} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 16:15:16} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 16:15:16} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 16:15:16} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 16:15:17} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment-history 200 - 23.573 ms
+{Sun Mar 15 2026 16:15:24} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 16:15:24} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 16:15:24} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 16:15:24} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 16:16:50} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 16:16:50} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 16:16:50} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 16:16:50} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 16:16:53} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment-history 200 - 17.150 ms
+{Sun Mar 15 2026 16:17:21} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 16:17:21} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 16:17:21} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 16:17:21} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 16:17:29} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 16:17:29} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 16:17:29} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 16:17:29} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 16:17:40} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 16:17:40} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 16:17:40} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 16:17:40} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 16:17:43} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 16:17:43} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 16:17:43} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 16:17:43} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 16:17:54} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 16:17:54} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 16:17:54} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 16:17:54} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 16:17:56} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment-history 200 - 23.448 ms
+{Sun Mar 15 2026 16:18:35} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment-history?page=2 200 - 10.975 ms

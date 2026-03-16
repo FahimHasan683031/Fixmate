@@ -1,5 +1,5 @@
 import { JwtPayload } from 'jsonwebtoken';
-import { createCheckoutSession, refunds } from '../../../helpers/stripeHelper';
+import { createPaystackCheckout, refundPaystackTransaction } from '../../../helpers/paystackHelper';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import unlinkFile from '../../../shared/unlinkFile';
@@ -237,7 +237,8 @@ export const sendBooking = async (payload: JwtPayload, data: IBooking, req: Requ
         bookingStatus: data.bookingStatus || BOOKING_STATUS.CREATED
     });
 
-    const url = await createCheckoutSession(req, service[0].price, { bookingId: booking._id.toString(), providerId: provider._id.toString(), serviceId: service[0]._id.toString(), customerId: customer._id.toString() }, service[0].category || 'Service');
+    // --- Paystack Implementation ---
+    const url = await createPaystackCheckout(req, service[0].price, { bookingId: booking._id.toString(), providerId: provider._id.toString(), serviceId: service[0]._id.toString(), customerId: customer._id.toString() }, customer.email || "customer@example.com");
 
     await Booking.findByIdAndUpdate(booking._id, { transactionId: url.id });
 
@@ -295,7 +296,8 @@ export const cancelBooking = async (user: JwtPayload, id: Types.ObjectId) => {
     await Booking.populate(booking, "service");
 
     if (booking.isPaid && booking.transactionId) {
-        await refunds.create({ payment_intent: booking.transactionId });
+        // --- Paystack Implementation ---
+        await refundPaystackTransaction(booking.transactionId);
     }
 
     await Payment.findOneAndUpdate({ booking: new Types.ObjectId(booking._id) }, { paymentStatus: PAYMENT_STATUS.REFUNDED }, { new: true }).lean().exec();
@@ -477,8 +479,8 @@ export const walteHistory = async (user: JwtPayload, query: any) => {
 
     const walletQuery = new QueryBuilder(
         Payment.find(filterOptionsQuery)
-            .populate({ path: "service", select: "image category subCategory" })
-            .select("service amount paymentStatus"),
+            .populate({ path: "service", select: "image category subCategory" }),
+            // .select("service amount paymentStatus"),
         rest
     )
         .filter()
@@ -501,7 +503,7 @@ export const paymentHistoryPage = async (id?: string) => {
 
     const info: any = await Payment.find({ _id: new Types.ObjectId(id) })
         .populate("customer service")
-        .select("customer provider service booking amount paymentStatus createdAt")
+        // .select("customer provider service booking amount paymentStatus createdAt")
         .lean().exec();
 
     const data = info[0];
@@ -522,7 +524,7 @@ export const paymentHistoryPage = async (id?: string) => {
         paymentDetails: {
             totalAmount: data.amount,
             platformFee: data.platformFee,
-            stripeFee: data.stripeFee,
+            gatewayFee: data.gatewayFee,
             providerAmount: data.providerAmount,
             dateAndTime: data.createdAt
         }

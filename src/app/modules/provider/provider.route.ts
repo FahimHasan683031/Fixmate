@@ -124,8 +124,8 @@ router.route("/payment-history")
 router.route("/wallet")
     .post(
         auth(USER_ROLES.PROVIDER),
-        validateRequest(ProviderValidation.whitdrawalSchema),
-        ProviderControllers.whitdrawal
+        validateRequest(ProviderValidation.withdrawalSchema),
+        ProviderControllers.withdrawal
     )
     .get(
         auth(USER_ROLES.PROVIDER),

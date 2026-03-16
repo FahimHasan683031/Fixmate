@@ -427,20 +427,31 @@ const bookingData = async (query: Record<string, unknown>) => {
     const data = await bookingQueryBuilder.modelQuery.lean().exec() as any;
     const meta = await bookingQueryBuilder.getPaginationInfo();
 
-    const payments = await Payment.find({
-        booking: { $in: data.map((b: any) => b._id) }
-    }).select("booking paymentId paymentStatus stripeFee platformFee providerAmount amount");
+    const payments = await Payment.aggregate([
+        { $match: { booking: { $in: data.map((b: any) => b._id) } } },
+        {
+            $group: {
+                _id: "$booking",
+                gatewayFee: { $sum: "$gatewayFee" },
+                platformFee: { $sum: "$platformFee" },
+                providerAmount: { $sum: "$providerAmount" },
+                totalAmount: { $max: "$amount" }, 
+                paymentId: { $first: "$paymentId" },
+                paymentStatus: { $first: "$paymentStatus" }
+            }
+        }
+    ]);
 
     const enhancedData = data.map((booking: any) => {
-        const payment = payments.find(p => p.booking.toString() === booking._id.toString());
+        const payment = payments.find(p => p._id.toString() === booking._id.toString());
         return {
             ...booking,
-            paymentId: payment ? payment._id : null,
+            paymentId: payment ? payment.paymentId : null,
             paymentStatus: payment ? payment.paymentStatus : null,
-            stripeFee: payment ? payment.stripeFee : 0,
+            gatewayFee: payment ? payment.gatewayFee : 0,
             platformFee: payment ? payment.platformFee : 0,
-            providerAmount: payment ? payment.providerAmount : 0,
-            totalAmount: payment ? payment.amount : (booking.service?.price || 0),
+            providerAmount: payment ? (booking.service?.price - payment.gatewayFee - payment.platformFee) : 0,
+            totalAmount: payment ? payment.totalAmount : (booking.service?.price || 0),
         };
     });
 

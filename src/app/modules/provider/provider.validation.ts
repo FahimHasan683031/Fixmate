@@ -22,6 +22,8 @@ const updateProviderProfileSchema = z.object({
     endTime: z.string({ invalid_type_error: "End time is required" }).optional(),
     longitude: z.coerce.number().optional(),
     latitude: z.coerce.number().optional(),
+    bankName: z.string().optional(),
+    accountNumber: z.string().optional(),
     // }).strict()
 });
 
@@ -90,9 +92,11 @@ const getCategoriesSchema = z.object({
     }).strict(),
 });
 
-const whitdrawalSchema = z.object({
+const withdrawalSchema = z.object({
     body: z.object({
         amount: z.coerce.number({ required_error: "Amount is required" }),
+        bankCode: z.string().optional(),
+        accountNumber: z.string().optional(),
     }).strict(),
 });
 
@@ -105,5 +109,5 @@ export const ProviderValidation = {
     getPaginationZodSchema,
     bookingsActionZodSchema,
     getCategoriesSchema,
-    whitdrawalSchema
+    withdrawalSchema
 };

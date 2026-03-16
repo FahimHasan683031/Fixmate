@@ -8,8 +8,9 @@ export interface IPayment {
   paymentId: string;
   booking: Types.ObjectId;
   amount: number;
-  stripeFee: number;
+  gatewayFee: number;
   platformFee: number;
   providerAmount: number;
+  description: string;
   paymentStatus: string;
 }

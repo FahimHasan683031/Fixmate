@@ -200,13 +200,13 @@ const wallet = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const whitdrawal = catchAsync(async (req: Request, res: Response) => {
+const withdrawal = catchAsync(async (req: Request, res: Response) => {
     const result = await ProviderServices.whitdrawal(req.user, req.body as any, req);
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,
-        message: "Wallet retrieved successfully",
-        data: result,
+        message: "Withdrawal processed successfully",
+        data: result
     });
 });
 
@@ -249,7 +249,7 @@ export const ProviderControllers = {
     getCustomer,
     cancelBooking,
     wallet,
-    whitdrawal,
+    withdrawal,
     ratings,
     getPaymentHistory
 };

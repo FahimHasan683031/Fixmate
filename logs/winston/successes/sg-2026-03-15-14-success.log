@@ -1,0 +1,88 @@
+{Sun Mar 15 2026 14:04:49} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/provider/book?page=1&limit=10 200 - 55.694 ms
+{Sun Mar 15 2026 14:05:59} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/provider/book 200 - 499.146 ms
+{Sun Mar 15 2026 14:06:29} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/provider/book 200 - 12.767 ms
+{Sun Mar 15 2026 14:06:42} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/provider/book 200 - 10.822 ms
+{Sun Mar 15 2026 14:07:19} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/client/book/accept/69b6650018f23926fa0f5169 200 - 31.597 ms
+{Sun Mar 15 2026 14:08:36} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment-history 200 - 11.550 ms
+{Sun Mar 15 2026 14:09:09} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/payment/69b6652a18f23926fa0f5173 200 - 4.279 ms
+{Sun Mar 15 2026 14:11:25} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:11:25} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:11:25} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:11:25} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:11:32} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:11:32} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:11:32} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:11:32} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:11:39} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:11:39} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:11:39} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:11:39} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:12:05} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:12:05} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:12:05} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:12:05} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:12:08} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:12:08} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:12:08} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:12:08} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:12:22} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/provider/wallet 200 - 4842.969 ms
+{Sun Mar 15 2026 14:18:09} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:18:09} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:18:09} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:18:09} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:18:12} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:18:13} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:18:13} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:18:13} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:18:16} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:18:16} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:18:16} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:18:16} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:18:29} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:18:29} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:18:29} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:18:29} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:18:57} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:18:57} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:18:57} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:18:57} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:18:58} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:18:58} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:18:58} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:18:58} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:23:39} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:23:39} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:23:39} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:23:39} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:24:09} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:24:09} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:24:09} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:24:09} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:24:15} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:24:15} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:24:15} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:24:15} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:30:45} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:30:45} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:30:45} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:30:45} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:30:55} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:30:55} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:30:55} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:30:55} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:31:02} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:31:02} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:31:02} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:31:02} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:31:24} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:31:24} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:31:24} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:31:24} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:41:11} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:41:11} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:41:11} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:41:11} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Sun Mar 15 2026 14:41:39} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Mar 15 2026 14:41:39} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Mar 15 2026 14:41:39} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Mar 15 2026 14:41:39} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m

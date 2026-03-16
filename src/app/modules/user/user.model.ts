@@ -114,8 +114,16 @@ const UserSchema = new Schema<IUser, UserModel>(
             default: "",
         },
 
-        // Stripe
-        stripeAccountId: {
+        // Payout
+        paystackRecipientCode: {
+            type: String,
+            default: "",
+        },
+        bankName: {
+            type: String,
+            default: "",
+        },
+        accountNumber: {
             type: String,
             default: "",
         },

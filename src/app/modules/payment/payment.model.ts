@@ -8,9 +8,10 @@ const paymentSchema = new Schema<IPayment>({
   service: { type: Schema.Types.ObjectId, ref: "Service" },
   booking: { type: Schema.Types.ObjectId, ref: "Booking" },
   amount: { type: Number, required: true },
-  stripeFee: { type: Number, default: 0 },
+  gatewayFee: { type: Number, default: 0 },
   platformFee: { type: Number, default: 0 },
   providerAmount: { type: Number, default: 0 },
+  description: { type: String, default: "" },
   paymentId: { type: String },
   paymentStatus: { type: String, required: true, enum: Object.values(PAYMENT_STATUS) },
 }, { timestamps: true });

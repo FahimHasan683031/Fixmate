@@ -36,4 +36,10 @@ router
         PaymentControllers.createConnectedAccount
     );
 
+router
+    .route("/webhook")
+    .post(
+        PaymentControllers.webhook
+    );
+    
 export const PaymentRoutes = router;

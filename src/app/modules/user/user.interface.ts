@@ -49,8 +49,11 @@ export type IUser = {
     startTime: string;
     endTime: string;
 
-    // Stripe
-    stripeAccountId: string;
+    // Payout details
+    paystackRecipientCode: string;
+    paystackAccountId: string;
+    bankName: string;
+    accountNumber: string;
 
     // Auth & Status
     status: USER_STATUS;

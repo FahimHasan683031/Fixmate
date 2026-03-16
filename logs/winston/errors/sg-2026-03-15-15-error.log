@@ -1,0 +1,5 @@
+{Sun Mar 15 2026 15:04:51} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/wallet 500 - 1986.855 ms
+{Sun Mar 15 2026 15:06:13} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/wallet 500 - 887.451 ms
+{Sun Mar 15 2026 15:06:36} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/wallet 500 - 1404.874 ms
+{Sun Mar 15 2026 15:21:12} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/payment/success?trxref=qry4gn41rl&reference=qry4gn41rl 500 - 1554.862 ms
+{Sun Mar 15 2026 15:31:18} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/payment/success?trxref=1i1ojfpnn5&reference=1i1ojfpnn5 500 - 1485.704 ms

@@ -12,7 +12,7 @@ import { IPaginationOptions } from "../../../interfaces/pagination";
 import { NotificationService } from "../notification/notification.service";
 import { BOOKING_STATUS } from "../../../enum/booking";
 import { PAYMENT_STATUS } from "../../../enum/payment";
-import { transfers, accounts, accountLinks, refunds } from "../../../helpers/stripeHelper";
+
 import { Verification } from "../verification/verification.model";
 import { Service } from "../service/service.model";
 import { User } from "../user/user.model";
@@ -22,13 +22,15 @@ import { Review } from "../review/review.model";
 import { Category } from "../category/category.model";
 import QueryBuilder from "../../builder/QueryBuilder";
 import { BookingStateMachine } from "../booking/bookingStateMachine";
+import config from "../../../config";
+import { createTransferRecipient, initiateTransfer, refundPaystackTransaction } from "../../../helpers/paystackHelper";
 
 
 // Get Profile
 export const profile = async (payload: JwtPayload) => {
     const provider = await User.findById(
         payload.id || payload.authId,
-        "name image overView gender dateOfBirth nationality experience language contact whatsApp nationalId email address distance availableDay startTime endTime category"
+        "name image overView gender dateOfBirth nationality experience language contact whatsApp nationalId email address distance availableDay startTime endTime category paystackRecipientCode bankName accountNumber"
     ).lean().exec();
 
     if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
@@ -276,7 +278,7 @@ export const actionBooking = async (user: JwtPayload, data: { bookId: string, ac
         await BookingStateMachine.transitionState(data.bookId, "provider", BOOKING_STATUS.DECLINED, data.reason);
 
         if (bookingInfo[0].isPaid && bookingInfo[0].transactionId) {
-            await refunds.create({ payment_intent: bookingInfo[0].transactionId });
+            await refundPaystackTransaction(bookingInfo[0].transactionId);
         }
 
         await Payment.findOneAndUpdate({ booking: new Types.ObjectId(data.bookId) }, { paymentStatus: PAYMENT_STATUS.REFUNDED }, { new: true }).lean().exec();
@@ -361,7 +363,7 @@ export const cancelBooking = async (user: JwtPayload, id: string) => {
     await BookingStateMachine.transitionState(id, "provider", BOOKING_STATUS.CANCELLED);
 
     if (bookingInfo[0].isPaid && bookingInfo[0].transactionId) {
-        await refunds.create({ payment_intent: bookingInfo[0].transactionId });
+        await refundPaystackTransaction(bookingInfo[0].transactionId);
     }
 
     await Payment.findOneAndUpdate({ booking: new Types.ObjectId(id) }, { paymentStatus: PAYMENT_STATUS.REFUNDED }, { new: true }).lean().exec();
@@ -428,50 +430,52 @@ export const wallet = async (user: JwtPayload, query: any) => {
 };
 
 // withdrawal
-export const whitdrawal = async (user: JwtPayload, data: { amount: number }, req: Request) => {
+export const withdrawal = async (user: JwtPayload, data: { amount: number; bankCode?: string; accountNumber?: string }, req: Request) => {
     const provider = await User.findById(user.id || user.authId).lean().exec() as IUser;
     if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, "Provider not found!");
 
     const maxWithdrawable = (provider.wallet || 0) * 0.9;
     if (data.amount > maxWithdrawable) throw new ApiError(StatusCodes.BAD_REQUEST, `Insufficient balance! You can withdraw up to ${maxWithdrawable.toFixed(2)}`);
 
-    if (!provider.stripeAccountId) {
-        const account = await accounts.create({
-            type: "express",
-            email: provider.email,
-            capabilities: {
-                card_payments: { requested: true },
-                transfers: { requested: true }
-            },
-            metadata: { userId: (user.id || user.authId).toString() }
+    let recipientCode = provider.paystackRecipientCode;
+
+    // If no recipient code, create one with provided or saved bank details
+    if (!recipientCode) {
+        const bankCode = (data.bankCode || provider.bankName || "").toString().trim();
+        const accountNumber = (data.accountNumber || provider.accountNumber || "").toString().trim();
+
+        if (!bankCode || !accountNumber) {
+            console.log("Withdrawal failed: Missing bank details", { 
+                providedBankCode: data.bankCode, 
+                savedBankName: provider.bankName, 
+                providedAccountNumber: data.accountNumber, 
+                savedAccountNumber: provider.accountNumber 
+            });
+            throw new ApiError(StatusCodes.BAD_REQUEST, "Bank details (bankCode and accountNumber) are required for first-time withdrawal. Please provide them in the request or update your profile.");
+        }
+
+        const recipient = await createTransferRecipient(provider.name, accountNumber, bankCode);
+        recipientCode = recipient.recipient_code;
+
+        await User.findByIdAndUpdate(provider._id, { 
+            paystackRecipientCode: recipientCode,
+            bankName: bankCode,
+            accountNumber: accountNumber 
         });
-        const onboardLink = await accountLinks.create({
-            account: account.id,
-            refresh_url: `${process.env.SERVER_DOMAIN}/api/v1/payment/account/refresh/${account.id}`,
-            return_url: `${process.env.SERVER_DOMAIN}/api/v1/payment/account/${account.id}`,
-            type: "account_onboarding"
-        });
-        return {
-            message: "Please connect your account with stripe to withdraw money",
-            url: onboardLink.url
-        };
     }
 
     const amountAfterFee = Number((data.amount * 0.9).toFixed(2));
 
-    await transfers.create({
-        amount: amountAfterFee * 100,
-        currency: 'usd',
-        destination: provider.stripeAccountId as string,
-        transfer_group: `provider_${provider._id}`
-    });
+    // Initiate Paystack Transfer
+    await initiateTransfer(amountAfterFee, recipientCode, `Withdrawal for ${provider.name}`);
 
     await User.findByIdAndUpdate(provider._id, { wallet: (provider.wallet || 0) - data.amount }).lean().exec();
 
     await Payment.create({
         amount: -data.amount,
         paymentStatus: PAYMENT_STATUS.WITHDRAWN,
-        provider: provider._id
+        provider: provider._id,
+        gatewayFee: data.amount - amountAfterFee
     });
     return;
 };
@@ -579,7 +583,7 @@ export const ProviderServices = {
     getCustomer,
     cancelBooking,
     wallet,
-    whitdrawal,
+    whitdrawal: withdrawal,
     myReviews,
     walletHistory
 };
