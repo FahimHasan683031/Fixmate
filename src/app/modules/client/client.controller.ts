@@ -1,247 +1,116 @@
-import { Request, Response } from "express";
-import { StatusCodes } from "http-status-codes";
-import { ClientServices } from "./client.service";
-import catchAsync from "../../../shared/catchAsync";
-import sendResponse from "../../../shared/sendResponse";
-import { getSingleFilePath } from "../../../shared/getFilePath";
+// Client Controller
+import { Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import { ClientServices } from './client.service';
+import catchAsync from '../../../shared/catchAsync';
+import sendResponse from '../../../shared/sendResponse';
+import { CategoryController } from '../category/category.controller';
+import { BookingController } from '../booking/booking.controller';
+import { UserController } from '../user/user.controller';
+import { ServiceController } from '../service/service.controller';
+import { FavoritesController } from '../favorites/favorites.controller';
+import { ReviewController } from '../review/review.controller';
+import { PaymentControllers } from '../payment/payment.controller';
 
-const getUserProfile = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.getUserProfile(req.user);
+const getUserProfile = UserController.getProfile;
+const updateProfile = UserController.updateProfile;
+const deleteProfile = UserController.deleteProfile;
 
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "User profile retrieved successfully",
-        data: result,
-    });
-});
+const getServices = ServiceController.getServices;
 
-const updateProfile = catchAsync(async (req: Request | any, res: Response) => {
-    const image = getSingleFilePath(req.files, "image");
-
-    if (image) req.body.image = image;
-
-    if (req.body.longitude && req.body.latitude) req.body.location = { type: "Point", coordinates: [Number(req.body.longitude), Number(req.body.latitude)] };
-
-    const result = await ClientServices.updateProfile(req.user, req.body);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Profile updated successfully",
-        data: result,
-    });
-});
-
-const deleteProfile = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.deleteProfile(req.user, req.body.password);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Profile deleted successfully",
-        data: result,
-    });
-});
-
-const getServices = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.getServices(req.user, req.query);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Services retrieved successfully",
-        data: result,
-    });
-});
-
+// Controller to get a provider's full profile for a client
 const getProviderById = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.getProviderById(req.user, req.params.id as any, req.query as any);
+  const result = await ClientServices.getProviderById(
+    req.user,
+    req.params.id as any,
+    req.query as any,
+  );
 
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Provider retrieved successfully",
-        data: result,
-    });
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Provider retrieved successfully',
+    data: result,
+  });
 });
 
-const getFavorites = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.getFavorites(req.user, req.query);
+const createBooking = BookingController.createBooking;
 
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Favorites retrieved successfully",
-        data: result,
-    });
-});
-
-const addFavorite = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.addFavorite(req.user, req.params.id as any);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,//@ts-ignore
-        message: result?.message ? result.message : "Favorite added successfully",
-        data: result,
-    });
-});
-
-const removeFavorite = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.removeFavorite(req.user, req.params.id as any);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Favorite removed successfully",
-        data: result,
-    });
-});
-
-const createBooking = catchAsync(async (req: Request | any, res: Response) => {
-    if (req.body.longitude && req.body.latitude) req.body.location = { type: "Point", coordinates: [Number(req.body.longitude), Number(req.body.latitude)] };
-
-    const result = await ClientServices.sendBooking(req.user, req.body, req);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Successfully create Booking",
-        data: result,
-    });
-});
-
+// Controller to update an existing booking's data
 const updateBooking = catchAsync(async (req: Request | any, res: Response) => {
-    if (req.body.longitude && req.body.latitude) req.body.location = { type: "Point", coordinates: [Number(req.body.longitude), Number(req.body.latitude)] };
+  if (req.body.longitude && req.body.latitude)
+    req.body.location = {
+      type: 'Point',
+      coordinates: [Number(req.body.longitude), Number(req.body.latitude)],
+    };
 
-    const result = await ClientServices.updateBooking(req.user, req.params.id as any, req.body);
+  const result = await ClientServices.updateBooking(req.user, req.params.id as any, req.body);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Successfully update Booking",
-        data: result,
-    });
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Successfully update Booking',
+    data: result,
+  });
 });
+const cancelBooking = BookingController.cancelBooking;
+const getBookings = BookingController.getBookings;
 
-const cancelBooking = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.cancelBooking(req.user, req.params.id as any);
+const bookScreen = ServiceController.getServiceById;
 
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Successfully cancel Booking",
-        data: result,
-    });
-});
-
-const getBookings = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.getBookings(req.user, req.query as any, req.body);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Bookings retrieved successfully",
-        data: result,
-    });
-});
-
-const bookScreen = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.bookScreen(req.params.id, req.query as any);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Bookings screen retrieved successfully",
-        data: result,
-    });
-});
-
+// Controller to view specific details of a booking
 const seeBooking = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.seeBooking(req.user, req.params.id);
+  const result = await ClientServices.seeBooking(req.user, req.params.id);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Bookings screen retrieved successfully",
-        data: result,
-    });
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Bookings screen retrieved successfully',
+    data: result,
+  });
 });
 
-const getCategories = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.getCategories(req.query as any);
+const getCategories = CategoryController.getCategories;
 
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Categories retrieved successfully",
-        data: result,
-    });
-});
+const addFavorite = FavoritesController.addFavorite;
+const removeFavorite = FavoritesController.removeFavorite;
+const getFavorites = FavoritesController.getFavorites;
 
+const giveReview = ReviewController.createReview;
+
+// Controller for the client to accept/confirm a booking
 const acceptBooking = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.acceptBooking(req.user, req.params.id);
+  const result = await ClientServices.acceptBooking(req.user, req.params.id);
 
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Successfully accept Booking",
-        data: result,
-    });
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Successfully accept Booking',
+    data: result,
+  });
 });
 
-const giveReview = catchAsync(async (req: Request | any, res: Response) => {
-    const result = await ClientServices.giveReview(req.user, req.params.id, req.body);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Successfully give Review",
-        data: result,
-    });
-});
-
-const getPaymentHistory = catchAsync(async (req: Request, res: Response) => {
-    const result = await ClientServices.walteHistory(req.user, req.query as any);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Successfully get payment history!",
-        data: result,
-    });
-});
-
-const getPaymentInfo = catchAsync(async (req: Request, res: Response) => {
-    const result = await ClientServices.paymentHistoryPage(req.params.id!);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,
-        message: "Successfully get a payment data!",
-        data: result,
-    });
-});
+const getPaymentHistory = PaymentControllers.getPaymentHistory;
+const getPaymentHistoryPage = PaymentControllers.getPaymentDetails;
 
 export const ClientControllers = {
-    getUserProfile,
-    updateProfile,
-    deleteProfile,
-    getServices,
-    getProviderById,
-    getFavorites,
-    addFavorite,
-    removeFavorite,
-    createBooking,
-    updateBooking,
-    cancelBooking,
-    getBookings,
-    bookScreen,
-    seeBooking,
-    getCategories,
-    acceptBooking,
-    giveReview,
-    getPaymentHistory,
-    getPaymentInfo,
+  getUserProfile,
+  updateProfile,
+  deleteProfile,
+  getServices,
+  getProviderById,
+  getFavorites,
+  addFavorite,
+  removeFavorite,
+  createBooking,
+  updateBooking,
+  cancelBooking,
+  getBookings,
+  bookScreen,
+  seeBooking,
+  getCategories,
+  acceptBooking,
+  giveReview,
+  getPaymentHistory,
+  getPaymentHistoryPage,
 };

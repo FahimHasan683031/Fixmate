@@ -1,10 +1,11 @@
 import { Model, Types } from 'mongoose';
 
 export type INotification = {
-    for: Types.ObjectId;
-    message: string;
-    isRead: boolean;
-    readAt?: Date;
+  customId?: string;
+  for: Types.ObjectId;
+  message: string;
+  isRead: boolean;
+  readAt?: Date;
 };
 
 export type NotificationModel = Model<INotification>;

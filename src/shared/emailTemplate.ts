@@ -1,8 +1,8 @@
-import config from '../config'
-import { ICreateAccount, IResetPassword } from '../interfaces/emailTemplate'
+import config from '../config';
+import { ICreateAccount, IResetPassword } from '../interfaces/emailTemplate';
 
 const createAccount = (values: ICreateAccount) => {
-  console.log(values, 'values')
+  console.log(values, 'values');
   const data = {
     to: values.email,
     subject: `Verify your Fixmate account, ${values.name}`,
@@ -78,12 +78,12 @@ const createAccount = (values: ICreateAccount) => {
   </table>
 </body>
     `,
-  }
-  return data
-}
+  };
+  return data;
+};
 
 const resetPassword = (values: IResetPassword) => {
-  console.log(values, 'values')
+  console.log(values, 'values');
   const data = {
     to: values.email,
     subject: `Reset your Fixmate password, ${values.name}`,
@@ -160,19 +160,19 @@ const resetPassword = (values: IResetPassword) => {
   </table>
 </body>
     `,
-  }
+  };
 
-  return data
-}
+  return data;
+};
 
 const resendOtp = (values: {
-  email: string
-  name: string
-  otp: string
-  type: 'resetPassword' | 'createAccount'
+  email: string;
+  name: string;
+  otp: string;
+  type: 'resetPassword' | 'createAccount';
 }) => {
-  console.log(values, 'values')
-  const isReset = values.type === 'resetPassword'
+  console.log(values, 'values');
+  const isReset = values.type === 'resetPassword';
 
   const data = {
     to: values.email,
@@ -258,15 +258,15 @@ const resendOtp = (values: {
   </table>
 </body>
     `,
-  }
-  return data
-}
+  };
+  return data;
+};
 
 const adminContactNotificationEmail = (payload: {
-  name: string
-  email: string
-  phone?: string
-  message: string
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
 }) => {
   return {
     to: config.super_admin.email as string,
@@ -349,14 +349,13 @@ const adminContactNotificationEmail = (payload: {
   </table>
 </body>
     `,
-  }
-}
-
+  };
+};
 
 const userContactConfirmationEmail = (payload: {
-  name: string
-  email: string
-  message: string
+  name: string;
+  email: string;
+  message: string;
 }) => {
   return {
     to: payload.email,
@@ -427,8 +426,8 @@ const userContactConfirmationEmail = (payload: {
   </table>
 </body>
     `,
-  }
-}
+  };
+};
 
 const sendPaymentConfirmationEmail = (data: any) => {
   const parcelsHtml = data.parcel
@@ -442,7 +441,7 @@ const sendPaymentConfirmationEmail = (data: any) => {
         </tr>
       `,
     )
-    .join('')
+    .join('');
 
   return {
     to: data.address_to.email,
@@ -507,8 +506,8 @@ const sendPaymentConfirmationEmail = (data: any) => {
   </table>
 </body>
     `,
-  }
-}
+  };
+};
 
 const sendAdminPaymentNotificationEmail = (data: any) => {
   return {
@@ -625,8 +624,8 @@ const sendAdminPaymentNotificationEmail = (data: any) => {
   </table>
 </body>
     `,
-  }
-}
+  };
+};
 
 const businessUserShipmentInfoEmail = (data: any) => {
   const parcels = data.parcel
@@ -638,7 +637,7 @@ const businessUserShipmentInfoEmail = (data: any) => {
         </td>
       </tr>`,
     )
-    .join('')
+    .join('');
 
   return {
     to: data.address_from.email,
@@ -697,8 +696,8 @@ const businessUserShipmentInfoEmail = (data: any) => {
   </table>
 </body>
 `,
-  }
-}
+  };
+};
 
 const businessUserRegistrationInviteEmail = (data: any) => {
   const parcels = data.parcel
@@ -711,7 +710,7 @@ const businessUserRegistrationInviteEmail = (data: any) => {
           </td>
         </tr>`,
     )
-    .join('')
+    .join('');
 
   return {
     to: data.address_from.email,
@@ -779,12 +778,12 @@ const businessUserRegistrationInviteEmail = (data: any) => {
 
   </table>
 </body>`,
-  }
-}
+  };
+};
 
 const guestLostItemNotificationEmail = (data: any) => {
   const businessDetails = data?.user?.BusinessDetails;
-  const BASE_URL = "https://api.fixmate.com";
+  const BASE_URL = 'https://api.fixmate.com';
 
   const imagesHtml =
     Array.isArray(data?.images) && data.images.length > 0
@@ -804,13 +803,13 @@ const guestLostItemNotificationEmail = (data: any) => {
                     style="width:100%;max-width:170px;
                     border-radius:10px;border:1px solid #ddd;" />
                 </td>
-              `
+              `,
         )
-        .join("")}
+        .join('')}
           </tr>
         </table>
       `
-      : "";
+      : '';
 
   return {
     to: data.guestEmail,
@@ -830,13 +829,10 @@ const guestLostItemNotificationEmail = (data: any) => {
 
         ${businessDetails
         ? `<p style="margin-top:6px;font-size:13px;color:#333;">
-                <strong>${businessDetails.BusinessName || ""}</strong>
-                ${businessDetails.companyName
-          ? `• ${businessDetails.companyName}`
-          : ""
-        }
+                <strong>${businessDetails.BusinessName || ''}</strong>
+                ${businessDetails.companyName ? `• ${businessDetails.companyName}` : ''}
               </p>`
-        : ""
+        : ''
       }
       </td>
     </tr>
@@ -858,7 +854,7 @@ const guestLostItemNotificationEmail = (data: any) => {
           🟦 Lost Item Details
         </h3>
         <p style="font-size:13px;margin:2px 0;"><strong>Item Name:</strong> ${data.itemName}</p>
-        <p style="font-size:13px;margin:2px 0;"><strong>Description:</strong> ${data.itemDescription || "N/A"}</p>
+        <p style="font-size:13px;margin:2px 0;"><strong>Description:</strong> ${data.itemDescription || 'N/A'}</p>
         <p style="font-size:13px;margin:2px 0;">
           <strong>Date Found:</strong> ${new Date(data.dateFound).toDateString()}
         </p>
@@ -913,7 +909,6 @@ const guestLostItemNotificationEmail = (data: any) => {
     `,
   };
 };
-
 
 const businessShippingDetailsUpdateEmail = (data: any) => {
   return {
@@ -994,8 +989,8 @@ const businessShippingDetailsUpdateEmail = (data: any) => {
   </table>
 </body>
 `,
-  }
-}
+  };
+};
 
 const customerShippingDetailsUpdateEmail = (data: any) => {
   return {
@@ -1059,8 +1054,8 @@ const customerShippingDetailsUpdateEmail = (data: any) => {
   </table>
 </body>
 `,
-  }
-}
+  };
+};
 
 const subscriptionActivatedEmail = (data: any) => {
   return {
@@ -1090,8 +1085,50 @@ const subscriptionActivatedEmail = (data: any) => {
   </table>
 </body>
 `,
-  }
-}
+  };
+};
+
+const supportResolved = (values: { name: string; email: string }) => {
+  return {
+    to: values.email,
+    subject: '✅ Support Ticket Resolved - Fixmate',
+    html: `
+<body style="margin:0;padding:0;font-family:Inter,Segoe UI,sans-serif;background:#f7f9fc;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;margin:30px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+    <tr>
+      <td align="center" style="background:#EAF4FF;padding:25px 20px; border-bottom:1px solid #0062EB11;">
+        <h2 style="margin:0;color:#0062EB;font-size:20px;">Support Ticket Resolved ✨</h2>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:40px 30px;">
+        <p style="font-size:16px;color:#003060;line-height:1.6;margin-bottom:20px;">
+          Hi <strong>${values.name}</strong>, 👋
+        </p>
+        <p style="font-size:15px;color:#003060;line-height:1.6;margin-bottom:25px;">
+          We’re writing to let you know that your support ticket has been successfully resolved by our team. 
+          We hope our assistance met your expectations!
+        </p>
+        <div style="background:#F5FAFF; border-left:4px solid #0062EB; padding:20px; border-radius:8px; margin-bottom:30px;">
+          <p style="margin:0; font-size:14px; color:#003060; font-weight:500;">
+            If you have any further questions or if the issue persists, feel free to open a new ticket or reply to this email.
+          </p>
+        </div>
+        <p style="font-size:15px;color:#003060;line-height:1.6;margin-bottom:10px;">
+          Thank you for choosing <strong>Fixmate</strong>! 💙
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" style="background:#F9FBFF;padding:20px;font-size:12px;color:#666;border-top:1px solid #0062EB11;">
+        © ${new Date().getFullYear()} Fixmate • Happy to help you anytime.
+      </td>
+    </tr>
+  </table>
+</body>
+`,
+  };
+};
 
 export const emailTemplate = {
   createAccount,
@@ -1107,4 +1144,5 @@ export const emailTemplate = {
   businessShippingDetailsUpdateEmail,
   customerShippingDetailsUpdateEmail,
   subscriptionActivatedEmail,
-}
+  supportResolved,
+};

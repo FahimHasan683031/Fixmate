@@ -1,117 +1,191 @@
-import ApiError from "../../../errors/ApiError";
-import config from "../../../config";
-import { StatusCodes } from "http-status-codes";
-import { Types } from "mongoose";
-import { verifyPaystackTransaction, createPaystackSubaccount } from "../../../helpers/paystackHelper";
-import { PAYMENT_STATUS } from "../../../enum/payment";
-import { NotificationService } from "../notification/notification.service";
-import { Request } from "express";
-import { Booking } from "../booking/booking.model";
-import { Payment } from "./payment.model";
-import { Service } from "../service/service.model";
-import { User } from "../user/user.model";
-import { BookingStateMachine } from "../booking/bookingStateMachine";
-import { BOOKING_STATUS } from "../../../enum/booking";
-import mongoose from "mongoose";
+// Payment Service
+import ApiError from '../../../errors/ApiError';
+import config from '../../../config';
+import { StatusCodes } from 'http-status-codes';
+import { FilterQuery, Types } from 'mongoose';
+import {
+  verifyPaystackTransaction,
+  createPaystackSubaccount,
+  createTransferRecipient,
+  initiateTransfer,
+} from '../../../helpers/paystackHelper';
+import { PAYMENT_STATUS, PAYMENT_TYPE, SETTLEMENT_TYPE } from '../../../enum/payment';
+import { NotificationService } from '../notification/notification.service';
+import { Request } from 'express';
+import { Booking } from '../booking/booking.model';
+import { Payment } from './payment.model';
+import { Service } from '../service/service.model';
+import { User } from '../user/user.model';
+import { BookingStateMachine } from '../booking/bookingStateMachine';
+import { BOOKING_STATUS } from '../../../enum/booking';
+import { JwtPayload } from 'jsonwebtoken';
+import QueryBuilder from '../../builder/QueryBuilder';
+import { IUser } from '../user/user.interface';
+import { Types as MongooseTypes } from 'mongoose';
 
-const handlePaymentSuccessLogic = async (bookingID: string, transactionId: string, paystackPaymentId: string) => {
+// Handle post-payment logic: update booking, create SERVICE_PAYMENT record, notify provider
+const handlePaymentSuccessLogic = async (
+  bookingID: string,
+  transactionId: string,
+  paystackPaymentId: string,
+) => {
   try {
     const booking = await Booking.findById(bookingID);
-    if (!booking) throw new ApiError(StatusCodes.BAD_REQUEST, "Booking not found");
-    if (booking.isPaid) return; // Already processed
+    if (!booking) throw new ApiError(StatusCodes.BAD_REQUEST, 'Booking not found');
+    if (booking.isPaid) return;
 
-    // Immediately mark as paid to prevent race conditions from webhook/success redirect
     const updatedBooking = await Booking.findOneAndUpdate(
       { _id: bookingID, isPaid: false },
-      {
-        isPaid: true,
-        transactionId: transactionId,
-        paymentId: paystackPaymentId
-      },
-      { new: true }
+      { isPaid: true, transactionId: transactionId, paymentId: paystackPaymentId },
+      { new: true },
     );
 
-    if (!updatedBooking) return; // Already processed by another concurrent request
+    if (!updatedBooking) return;
 
-    await BookingStateMachine.transitionState(bookingID, "system", BOOKING_STATUS.REQUESTED, "Booking automatically requested to provider after successful payment");
+    await BookingStateMachine.transitionState(
+      bookingID,
+      'system',
+      BOOKING_STATUS.REQUESTED,
+      'Booking automatically requested to provider after successful payment',
+    );
 
     const serviceData = await Service.findById(booking.service).lean();
     const providerData = await User.findById(booking.provider).lean();
     const customerData = await User.findById(booking.customer).lean();
 
     if (!serviceData || !providerData || !customerData) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, "Related data not found");
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Related data not found');
     }
 
-    // Calculations
-    const amount = serviceData.price;
-    const totalCommission = Number((amount * 0.18).toFixed(2)); // 18% Gross Deduction (e.g. 36 on 200)
-    const gatewayFee = Number((amount * 0.03).toFixed(2)); // 3% Gateway Cost (e.g. 6 on 200) - Internal cost of platform
-    const providerAmount = Number((amount - totalCommission).toFixed(2)); // 82% Net Provider (e.g. 164 on 200)
+    const serviceAmount = serviceData.price;
+    const gatewayFee = Number((serviceAmount * 0.03).toFixed(2));
+    const platformFee = Number((serviceAmount * 0.15).toFixed(2));
+    const providerAmount = Number((serviceAmount - platformFee - gatewayFee).toFixed(2));
 
-    const commonData = {
-      service: booking.service,
-      provider: booking.provider,
+    await Payment.create({
+      paymentType: PAYMENT_TYPE.SERVICE_PAYMENT,
+      paymentStatus: PAYMENT_STATUS.PAID,
       customer: booking.customer,
+      provider: booking.provider,
+      service: booking.service,
       booking: booking._id,
       paymentId: paystackPaymentId,
-      paymentStatus: PAYMENT_STATUS.PAID,
-    };
-
-    // Create a single payment record with full breakdown
-    await Payment.create({
-      ...commonData,
-      amount: amount,
-      gatewayFee: gatewayFee,
-      platformFee: totalCommission,
-      providerAmount: providerAmount,
-      description: "Service payment",
+      serviceAmount,
+      platformFee,
+      gatewayFee,
+      providerAmount,
     });
 
-    // Update provider wallet and metrics
-    await User.findByIdAndUpdate(booking.provider, { 
-      $inc: { 
-        wallet: providerAmount,
-        "metrics.totalReceivedJobs": 1
-      } 
+    await User.findByIdAndUpdate(booking.provider, {
+      $inc: { wallet: providerAmount, 'metrics.totalReceivedJobs': 1 },
     });
 
-    // Notify provider
     await NotificationService.insertNotification({
       for: booking.provider as any,
-      message: `You have a new booking request, ${customerData.name} has requested a booking for ${serviceData.category}`,
+      message: `You have a new booking request. ${customerData.name} has requested a booking for ${serviceData.category}`,
     });
-
   } catch (error) {
-    console.error("Payment Success Error:", error);
+    console.error('Payment Success Error:', error);
     throw error;
   }
 };
 
+// Create a CANCELLATION_REFUND record when a booking is cancelled
+export const createCancellationRefundRecord = async (
+  bookingId: string,
+  originalAmount: number,
+  penaltyFee: number,
+  refundedAmount: number,
+  cancellationReason: string,
+  customerId?: MongooseTypes.ObjectId,
+  providerId?: MongooseTypes.ObjectId,
+  serviceId?: MongooseTypes.ObjectId,
+  providerDeduction?: number,
+) => {
+  return Payment.create({
+    paymentType: PAYMENT_TYPE.CANCELLATION_REFUND,
+    paymentStatus: refundedAmount > 0 ? PAYMENT_STATUS.REFUNDED : PAYMENT_STATUS.CANCELLED,
+    booking: new MongooseTypes.ObjectId(bookingId),
+    customer: customerId,
+    provider: providerId,
+    service: serviceId,
+    originalAmount,
+    penaltyFee,
+    refundedAmount,
+        cancellationReason,
+        providerDeduction,
+      });
+    };
+
+// Create a SETTLEMENT record when a booking is auto or manually settled
+export const createSettlementRecord = async (
+  bookingId: string,
+  settledAmount: number,
+  settlementType: SETTLEMENT_TYPE,
+  providerId?: MongooseTypes.ObjectId,
+  serviceId?: MongooseTypes.ObjectId,
+  customerId?: MongooseTypes.ObjectId,
+) => {
+  return Payment.create({
+    paymentType: PAYMENT_TYPE.SETTLEMENT,
+    paymentStatus: PAYMENT_STATUS.AUTO_SETTLED,
+    booking: new MongooseTypes.ObjectId(bookingId),
+    provider: providerId,
+    service: serviceId,
+    customer: customerId,
+    settledAmount,
+    settlementType,
+  });
+};
+
+// Create a DISPUTE_REFUND record when a disputed booking is refunded
+export const createDisputeRefundRecord = async (
+  bookingId: string,
+  originalAmount: number,
+  refundedAmount: number,
+  disputeReason: string,
+  customerId?: MongooseTypes.ObjectId,
+  providerId?: MongooseTypes.ObjectId,
+  serviceId?: MongooseTypes.ObjectId,
+) => {
+  return Payment.create({
+    paymentType: PAYMENT_TYPE.DISPUTE_REFUND,
+    paymentStatus: PAYMENT_STATUS.REFUNDED,
+    booking: new MongooseTypes.ObjectId(bookingId),
+    customer: customerId,
+    provider: providerId,
+    service: serviceId,
+    originalAmount,
+    refundedAmount,
+    disputeReason,
+  });
+};
+
+// Process successful payment redirect from Paystack
 const success = async (query: any) => {
   const reference = query.reference || query.trxref || query.sessionId;
   if (!reference) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "Reference / Session ID is required");
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Reference / Session ID is required');
   }
 
-  // --- Paystack Implementation ---
   const verification = await verifyPaystackTransaction(reference);
   if (!verification || !verification.status || verification.data.status !== 'success') {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "Payment not completed or verification failed");
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Payment not completed or verification failed');
   }
 
-  // Paystack metadata is stored in verification.data.metadata.custom_fields
-  const customFields = verification.data.metadata?.custom_fields || [];
-  const getMetaField = (key: string) => customFields.find((f: any) => f.variable_name === key)?.value;
+  const customFields = (verification.data as any).metadata?.custom_fields || [];
+  const getMetaField = (key: string) =>
+    customFields.find((f: any) => f.variable_name === key)?.value;
 
-  const serviceId = new Types.ObjectId(getMetaField('serviceId'));
-  const providerId = new Types.ObjectId(getMetaField('providerId'));
-  const customerId = new Types.ObjectId(getMetaField('customerId'));
-  const bookingID = new Types.ObjectId(getMetaField('bookingId'));
-  const transactionId = verification.data.reference;
-  const paymentId = verification.data.id.toString();
+  const bookingID = getMetaField('bookingId');
 
-  await handlePaymentSuccessLogic(bookingID.toString(), transactionId, paymentId);
+  if (bookingID) {
+    await handlePaymentSuccessLogic(
+      bookingID.toString(),
+      reference,
+      (verification.data as any).id.toString(),
+    );
+  }
 
   return `
     <html>
@@ -133,29 +207,27 @@ const success = async (query: any) => {
     `;
 };
 
+// Create a Paystack subaccount for a provider
 const createConnectedAccount = async (req: Request) => {
   const user = req.user;
   const userOnDB = await User.findById(user.authId || user.id);
   if (!userOnDB) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User not found");
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'User not found');
   }
 
-  // --- Paystack Implementation ---
-  // Paystack creates subaccounts natively. Usually requires Bank Codes, hardcoded here as boilerplate.
-  const subaccount = await createPaystackSubaccount(userOnDB.name, "044", "0690000032");
-
+  const subaccount = await createPaystackSubaccount(userOnDB.name, '044', '0690000032');
   await User.findByIdAndUpdate(userOnDB._id, { paystackAccountId: subaccount.subaccount_code });
 
   return `${config.backend_url}/api/v1/payment/account/${subaccount.subaccount_code}`;
 };
 
-const refreshAccount = async (req: Request) => {
-  // --- Paystack Implementation ---
+// Refresh connected account (placeholder for Paystack)
+const refreshAccount = async (_req: Request) => {
   return `<html><body><p>Paystack subaccounts do not require refreshing.</p></body></html>`;
 };
 
-const successAccount = async (req: Request) => {
-  // --- Paystack Implementation ---
+// Return success message for account connection
+const successAccount = async (_req: Request) => {
   return `
     <html>
         <body>
@@ -166,26 +238,226 @@ const successAccount = async (req: Request) => {
     `;
 };
 
+// Handle Paystack webhooks
 const webhook = async (req: Request) => {
   const event = req.body;
-  
-  // Paystack sends 'charge.success' when a payment is completed
+
   if (event.event === 'charge.success') {
     const data = event.data;
     const reference = data.reference;
 
-    // We can reuse the same confirmation logic, but wrapped for the webhook context
-    // In a production environment, you should verify the Paystack signature header here.
     const customFields = data.metadata?.custom_fields || [];
-    const getMetaField = (key: string) => customFields.find((f: any) => f.variable_name === key)?.value;
+    const getMetaField = (key: string) =>
+      customFields.find((f: any) => f.variable_name === key)?.value;
 
     const bookingID = getMetaField('bookingId');
     if (bookingID) {
-        await handlePaymentSuccessLogic(bookingID, reference, data.id.toString());
+      await handlePaymentSuccessLogic(bookingID, reference, data.id.toString());
     }
   }
 
   return { success: true };
+};
+
+// Retrieve wallet balance and transaction history for a provider
+const getWallet = async (user: JwtPayload, query: any) => {
+  const userId = user.id || user.authId;
+  const provider = (await User.findById(userId).lean().exec()) as IUser;
+  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
+
+  const walletQuery = new QueryBuilder(
+    Payment.find({
+      provider: new Types.ObjectId(userId)
+    }),
+    query,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const walletItems = await walletQuery.modelQuery
+    .populate([{ path: 'service', select: 'image category subCategory' }])
+    .lean()
+    .exec();
+
+  const meta = await walletQuery.getPaginationInfo();
+
+  const data = walletItems.map((item: any) => ({
+    ...item,
+    displayAmount:
+      item.paymentType === PAYMENT_TYPE.SERVICE_PAYMENT
+        ? item.providerAmount
+        : item.paymentType === PAYMENT_TYPE.WITHDRAWAL
+          ? -item.withdrawAmount
+          : item.settledAmount,
+  }));
+
+  return { meta, balance: provider.wallet || 0, data };
+};
+
+// Retrieve filtered payment history for a user
+const getPaymentHistory = async (user: JwtPayload, query: any) => {
+  const { startTime, endTime, paymentType, ...rest } = query;
+  const userId = user.id || user.authId;
+  const userData = (await User.findById(userId).lean().exec()) as IUser;
+  if (!userData) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found!');
+
+  const isProvider = userData.role === 'PROVIDER';
+
+  const filterOptionsQuery: FilterQuery<any> = {
+    [isProvider ? 'provider' : 'customer']: new Types.ObjectId(userId),
+  };
+
+  if (paymentType) {
+    filterOptionsQuery.paymentType = paymentType;
+  }
+
+  if (startTime && endTime) {
+    filterOptionsQuery.createdAt = { $gte: new Date(startTime), $lte: new Date(endTime) };
+  }
+
+  const historyQuery = new QueryBuilder(
+    Payment.find(filterOptionsQuery).populate({
+      path: 'service',
+      select: 'image category subCategory',
+    }),
+    rest,
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const data = await historyQuery.modelQuery.lean().exec();
+  const meta = await historyQuery.getPaginationInfo();
+
+  return { meta, balance: userData.wallet, data };
+};
+
+// Get detailed information for a specific payment record
+const getPaymentDetails = async (id: string) => {
+  const info: any = await Payment.findById(id).populate('customer service provider').lean().exec();
+
+  if (!info) throw new ApiError(StatusCodes.NOT_FOUND, 'Payment details not found!');
+
+  const base = {
+    customId: info.customId,
+    paymentType: info.paymentType,
+    paymentStatus: info.paymentStatus,
+    dateAndTime: info.createdAt,
+    customer: info.customer
+      ? { name: info.customer.name, email: info.customer.email, address: info.customer.address }
+      : null,
+    provider: info.provider
+      ? { name: info.provider.name, email: info.provider.email, address: info.provider.address }
+      : null,
+    service: info.service
+      ? {
+          category: info.service.category,
+          subCategory: info.service.subCategory,
+          price: info.service.price,
+        }
+      : null,
+  };
+
+  if (info.paymentType === PAYMENT_TYPE.SERVICE_PAYMENT) {
+    return {
+      ...base,
+      serviceAmount: info.serviceAmount,
+      platformFee: info.platformFee,
+      gatewayFee: info.gatewayFee,
+      providerAmount: info.providerAmount,
+    };
+  }
+
+  if (
+    info.paymentType === PAYMENT_TYPE.CANCELLATION_REFUND ||
+    info.paymentType === PAYMENT_TYPE.DISPUTE_REFUND
+  ) {
+    return {
+      ...base,
+      originalAmount: info.originalAmount,
+      penaltyFee: info.penaltyFee ?? null,
+      refundedAmount: info.refundedAmount,
+        reason: info.cancellationReason || info.disputeReason,
+        providerDeduction: info.providerDeduction ?? null,
+      };
+    }
+
+  if (info.paymentType === PAYMENT_TYPE.WITHDRAWAL) {
+    return {
+      ...base,
+      withdrawAmount: info.withdrawAmount,
+      withdrawalFee: info.withdrawalFee,
+      netPayout: info.netPayout,
+    };
+  }
+
+  if (info.paymentType === PAYMENT_TYPE.SETTLEMENT) {
+    return { ...base, settledAmount: info.settledAmount, settlementType: info.settlementType };
+  }
+
+  return base;
+};
+
+// Initiate a fund withdrawal to a bank account
+const withdraw = async (
+  user: JwtPayload,
+  data: { amount: number; bankCode?: string; accountNumber?: string },
+) => {
+  const provider = (await User.findById(user.id || user.authId)
+    .lean()
+    .exec()) as IUser;
+  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
+
+  const maxWithdrawable = (provider.wallet || 0) * 0.9;
+  if (data.amount > maxWithdrawable)
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      `Insufficient balance! You can withdraw up to ${maxWithdrawable.toFixed(2)}`,
+    );
+
+  let recipientCode = provider.paystackRecipientCode;
+
+  if (!recipientCode) {
+    const bankCode = (data.bankCode || provider.bankName || '').toString().trim();
+    const accountNumber = (data.accountNumber || provider.accountNumber || '').toString().trim();
+
+    if (!bankCode || !accountNumber) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Bank details are required for first-time withdrawal.',
+      );
+    }
+
+    const recipient = await createTransferRecipient(provider.name, accountNumber, bankCode);
+    recipientCode = recipient.recipient_code;
+
+    await User.findByIdAndUpdate(provider._id, {
+      paystackRecipientCode: recipientCode,
+      bankName: bankCode,
+      accountNumber: accountNumber,
+    });
+  }
+
+  const withdrawalFee = Number((data.amount * 0.1).toFixed(2));
+  const netPayout = Number((data.amount - withdrawalFee).toFixed(2));
+
+  await initiateTransfer(netPayout, recipientCode, `Withdrawal for ${provider.name}`);
+
+  await User.findByIdAndUpdate(provider._id, { wallet: (provider.wallet || 0) - data.amount })
+    .lean()
+    .exec();
+
+  await Payment.create({
+    paymentType: PAYMENT_TYPE.WITHDRAWAL,
+    paymentStatus: PAYMENT_STATUS.WITHDRAWN,
+    provider: provider._id,
+    withdrawAmount: data.amount,
+    withdrawalFee,
+    netPayout,
+  });
 };
 
 export const PaymentServices = {
@@ -193,5 +465,9 @@ export const PaymentServices = {
   createConnectedAccount,
   refreshAccount,
   successAccount,
-  webhook
+  webhook,
+  getWallet,
+  getPaymentHistory,
+  getPaymentDetails,
+  withdraw,
 };

@@ -1,0 +1,17 @@
+{Tue Mar 24 2026 08:25:53} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Tue Mar 24 2026 08:25:53} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Tue Mar 24 2026 08:25:53} [APP 🚀] info: Unverified account cleanup job scheduled to run every minute.
+{Tue Mar 24 2026 08:25:53} [APP 🚀] info: Booking SLA job scheduled to run every 15 minutes (Threshold: 5 hours).
+{Tue Mar 24 2026 08:25:53} [APP 🚀] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Tue Mar 24 2026 08:25:53} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Tue Mar 24 2026 08:25:53} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Tue Mar 24 2026 08:26:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 08:27:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 08:28:00} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Tue Mar 24 2026 08:28:00} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Tue Mar 24 2026 08:28:00} [APP 🚀] info: Unverified account cleanup job scheduled to run every minute.
+{Tue Mar 24 2026 08:28:00} [APP 🚀] info: Booking SLA job scheduled to run every 15 minutes (Threshold: 5 hours).
+{Tue Mar 24 2026 08:28:00} [APP 🚀] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Tue Mar 24 2026 08:28:00} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Tue Mar 24 2026 08:28:00} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Tue Mar 24 2026 08:29:00} [APP 🚀] info: Deleted 0 unverified accounts.

@@ -1,0 +1,1329 @@
+{
+    "info": {
+        "_postman_id": "fixmate-complete-collection",
+        "name": "Fixmate Full API",
+        "description": "Comprehensive Postman collection for all Fixmate Server API endpoints (Auth, Client, Provider, Admin, Booking, Service, Category, Review, Payment, Chat, Message, Notification, Support, Terms, Verification, Favorites)",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Signup",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "name", "value": "Fahim Hasan", "type": "text" },
+                                { "key": "email", "value": "fahim@example.com", "type": "text" },
+                                { "key": "password", "value": "password123", "type": "text" },
+                                { "key": "phone", "value": "+880123456789", "type": "text" },
+                                { "key": "address", "value": "Dhaka, Bangladesh", "type": "text" },
+                                { "key": "role", "value": "CLIENT", "description": "CLIENT or PROVIDER", "type": "text" },
+                                { "key": "image", "type": "file", "src": [], "description": "Profile picture" }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/signup",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "signup"]
+                        }
+                    }
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"fahim@example.com\",\n  \"password\": \"password123\",\n  \"deviceToken\": \"fcm_token_here\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Admin Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@fixmate.com\",\n  \"password\": \"admin123\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/admin-login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "admin-login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Verify Account",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"fahim@example.com\",\n  \"oneTimeCode\": \"1234\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/verify-account",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "verify-account"]
+                        }
+                    }
+                },
+                {
+                    "name": "Forget Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"fahim@example.com\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/forget-password",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "forget-password"]
+                        }
+                    }
+                },
+                {
+                    "name": "Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{temp_token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"newPassword\": \"newpassword123\",\n  \"confirmPassword\": \"newpassword123\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/reset-password",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "reset-password"]
+                        }
+                    }
+                },
+                {
+                    "name": "Resend OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"fahim@example.com\",\n  \"authType\": \"createAccount\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/resend-otp",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "resend-otp"]
+                        }
+                    }
+                },
+                {
+                    "name": "Change Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"currentPassword\": \"password123\",\n  \"newPassword\": \"newpassword123\",\n  \"confirmPassword\": \"newpassword123\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/change-password",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "change-password"]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Account",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"password\": \"password123\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/delete-account",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "delete-account"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Access Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{refresh_token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/access-token",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "access-token"]
+                        }
+                    }
+                },
+                {
+                    "name": "Refresh FCM Token",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"fcmToken\": \"new_fcm_token_here\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/refresh-fcm-token",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "refresh-fcm-token"]
+                        }
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/logout",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "auth", "logout"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Admin",
+            "item": [
+                {
+                    "name": "Overview",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/admin/overview",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "admin", "overview"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/admin/users?role=all&page=1&limit=10",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "admin", "users"],
+                            "query": [
+                                { "key": "role", "value": "all" },
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "10" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get User Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/admin/users/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "admin", "users", ":id"],
+                            "variable": [{ "key": "id", "value": "user_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Block/Unblock/Delete User",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/admin/users/:id/:status",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "admin", "users", ":id", ":status"],
+                            "variable": [
+                                { "key": "id", "value": "user_id" },
+                                { "key": "status", "value": "block", "description": "block, unblock, or delete" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Global Find",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/admin/find?compo=user&search=test",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "admin", "find"],
+                            "query": [
+                                { "key": "compo", "value": "user", "description": "user, verification, or support" },
+                                { "key": "search", "value": "test" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Generate Multi Invoices",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"bookingIds\": [\"booking_id_1\", \"booking_id_2\"]\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/admin/generate-multi-invoices",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "admin", "generate-multi-invoices"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Client",
+            "item": [
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "name", "value": "Fahim Hasan", "type": "text" },
+                                { "key": "gender", "value": "Male", "type": "text" },
+                                { "key": "address", "value": "New Address", "type": "text" },
+                                { "key": "dateOfBirth", "value": "1995-01-01", "type": "text" },
+                                { "key": "whatsApp", "value": "+880123456789", "type": "text" },
+                                { "key": "image", "type": "file", "src": [] }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/client",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "client"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Provider Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/client/provider/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "client", "provider", ":id"],
+                            "variable": [{ "key": "id", "value": "provider_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Booking Screen Info",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/client/book/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "client", "book", ":id"],
+                            "variable": [{ "key": "id", "value": "service_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "View Booking (See Booking)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/client/book/view/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "client", "book", "view", ":id"],
+                            "variable": [{ "key": "id", "value": "booking_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Accept Booking Completion",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/client/book/accept/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "client", "book", "accept", ":id"],
+                            "variable": [{ "key": "id", "value": "booking_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Download PDF Invoice",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/client/download-pdf/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "client", "download-pdf", ":id"],
+                            "variable": [{ "key": "id", "value": "booking_id" }]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Provider",
+            "item": [
+                {
+                    "name": "Provider Home Info",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/provider/home",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "provider", "home"]
+                        }
+                    }
+                },
+                {
+                    "name": "View Booking Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/provider/book/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "provider", "book", ":id"],
+                            "variable": [{ "key": "id", "value": "booking_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Customer Info",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/provider/customer/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "provider", "customer", ":id"],
+                            "variable": [{ "key": "id", "value": "customer_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "name", "value": "Provider Name", "type": "text" },
+                                { "key": "overView", "value": "Expert plumber with 10 years experience", "type": "text" },
+                                { "key": "category", "value": "category_id", "type": "text" },
+                                { "key": "experience", "value": "10 years", "type": "text" },
+                                { "key": "availableDay", "value": "[\"mon\", \"tue\", \"wed\"]", "type": "text" },
+                                { "key": "startTime", "value": "09:00", "type": "text" },
+                                { "key": "endTime", "value": "18:00", "type": "text" },
+                                { "key": "address", "value": "Shop Address", "type": "text" },
+                                { "key": "image", "type": "file", "src": [] }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/provider",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "provider"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Bookings",
+            "item": [
+                {
+                    "name": "Create Booking",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"service\": \"service_id\",\n  \"date\": \"2024-12-01T10:00:00.000Z\",\n  \"latitude\": 23.8103,\n  \"longitude\": 90.4125,\n  \"address\": \"123 Main St, Dhaka\",\n  \"specialNote\": \"Please bring tools\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/bookings/create",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "bookings", "create"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Bookings (Filtered)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/bookings?status=CREATED&page=1&limit=10",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "bookings"],
+                            "query": [
+                                { "key": "status", "value": "CREATED", "description": "CREATED, PAID, REQUESTED, ACCEPTED, IN_PROGRESS, etc." },
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "10" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Booking By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/bookings/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "bookings", ":id"],
+                            "variable": [{ "key": "id", "value": "booking_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Cancel Booking",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/bookings/cancel/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "bookings", "cancel", ":id"],
+                            "variable": [{ "key": "id", "value": "booking_id" }]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Services",
+            "item": [
+                {
+                    "name": "List All Services",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/services?search=plumber&category=cat_id&limit=10",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "services"],
+                            "query": [
+                                { "key": "search", "value": "plumber" },
+                                { "key": "category", "value": "cat_id" },
+                                { "key": "limit", "value": "10" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Service By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/services/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "services", ":id"],
+                            "variable": [{ "key": "id", "value": "service_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Add Service (Provider)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "category", "value": "category_id", "type": "text" },
+                                { "key": "subCategory", "value": "subcategory_name", "type": "text" },
+                                { "key": "price", "value": "100", "type": "text" },
+                                { "key": "expertise", "value": "Expert plumbing work", "type": "text" },
+                                { "key": "image", "type": "file", "src": [] }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/services/add-service",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "services", "add-service"]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Service (Provider)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "price", "value": "120", "type": "text" },
+                                { "key": "expertise", "value": "Advanced plumbing", "type": "text" }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/services/update-service/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "services", "update-service", ":id"],
+                            "variable": [{ "key": "id", "value": "service_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Service (Provider)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/services/delete-service/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "services", "delete-service", ":id"],
+                            "variable": [{ "key": "id", "value": "service_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Provider's Own Services",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/services/provider-services",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "services", "provider-services"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Categories",
+            "item": [
+                {
+                    "name": "Get All Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/categories?page=1&limit=10",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "categories"],
+                            "query": [
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "10" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Category (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Plumbing\",\n  \"subCategory\": [\"Leak Repair\", \"Installation\"]\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/categories/create-category",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "categories", "create-category"]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Category (Admin)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"id\": \"cat_id\",\n  \"name\": \"Emergency Plumbing\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/categories/update-category",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "categories", "update-category"]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Category (Admin)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/categories/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "categories", ":id"],
+                            "variable": [{ "key": "id", "value": "cat_id" }]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Payment & Wallet",
+            "item": [
+                {
+                    "name": "Create Connected Account (Provider)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/payment/connected-account",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "payment", "connected-account"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Wallet Info",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/payment/wallet",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "payment", "wallet"]
+                        }
+                    }
+                },
+                {
+                    "name": "Payment History",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/payment/history?page=1&limit=10",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "payment", "history"],
+                            "query": [
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "10" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Payment Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/payment/history/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "payment", "history", ":id"],
+                            "variable": [{ "key": "id", "value": "payment_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Withdraw Funds",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"amount\": 500,\n  \"bankCode\": \"044\",\n  \"accountNumber\": \"1234567890\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/payment/withdraw",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "payment", "withdraw"]
+                        }
+                    }
+                },
+                {
+                    "name": "Payment Webhook (Public)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/payment/webhook",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "payment", "webhook"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Reviews",
+            "item": [
+                {
+                    "name": "Create Review",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"rating\": 5,\n  \"feedback\": \"Excellent service! Highly recommended.\",\n  \"bookingId\": \"booking_id\",\n  \"provider\": \"provider_id\",\n  \"service\": \"service_id\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/reviews/create",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "reviews", "create"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Reviews by Provider",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/reviews/provider/:providerId",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "reviews", "provider", ":providerId"],
+                            "variable": [{ "key": "providerId", "value": "provider_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Reviews by Service",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/reviews/service/:serviceId",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "reviews", "service", ":serviceId"],
+                            "variable": [{ "key": "serviceId", "value": "service_id" }]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Chat & Messaging",
+            "item": [
+                {
+                    "name": "Get All Chats",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/chat",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "chat"]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Chat",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user\": \"other_user_id\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/chat",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "chat"]
+                        }
+                    }
+                },
+                {
+                    "name": "Find Chat (Global)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/chat/find",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "chat", "find"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Messages of Chat",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/message/:id?page=1&limit=20",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "message", ":id"],
+                            "query": [
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "20" }
+                            ],
+                            "variable": [{ "key": "id", "value": "chat_id" }]
+                        }
+                    }
+                },
+                {
+                    "name": "Send Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "chatId", "value": "chat_id", "type": "text" },
+                                { "key": "message", "value": "Hello there!", "type": "text" },
+                                { "key": "image", "type": "file", "src": [] }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/message",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "message"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Notifications",
+            "item": [
+                {
+                    "name": "Get My Notifications",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/notification",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "notification"]
+                        }
+                    }
+                },
+                {
+                    "name": "Unread Count",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/notification/unread-count",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "notification", "unread-count"]
+                        }
+                    }
+                },
+                {
+                    "name": "Test Push Notification",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userId\": \"target_user_id\",\n  \"title\": \"Test Alert\",\n  \"body\": \"This is a test notification\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/notification/test-push",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "notification", "test-push"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Support",
+            "item": [
+                {
+                    "name": "Create Support Ticket",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "title", "value": "Issue with Payment", "type": "text" },
+                                { "key": "description", "value": "I was charged but booking failed.", "type": "text" },
+                                { "key": "image", "type": "file", "src": [] }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/support",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "support"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Support Tickets (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/support?status=pending&page=1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "support"],
+                            "query": [
+                                { "key": "status", "value": "pending" },
+                                { "key": "page", "value": "1" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Mark as Resolved (Admin)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/support/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "support", ":id"],
+                            "variable": [{ "key": "id", "value": "ticket_id" }]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Verification",
+            "item": [
+                {
+                    "name": "Send Verification Request",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                { "key": "idType", "value": "National ID", "type": "text" },
+                                { "key": "idNumber", "value": "1234567890", "type": "text" },
+                                { "key": "frontImage", "type": "file", "src": [] },
+                                { "key": "backImage", "type": "file", "src": [] }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/verification/send-request",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "verification", "send-request"]
+                        }
+                    }
+                },
+                {
+                    "name": "Check My Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/verification/status",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "verification", "status"]
+                        }
+                    }
+                },
+                {
+                    "name": "All Requests (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/verification/all-requests",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "verification", "all-requests"]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Status (Admin)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"APPROVED\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/verification/update-status/:id",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "verification", "update-status", ":id"],
+                            "variable": [{ "key": "id", "value": "request_id" }]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Favorites",
+            "item": [
+                {
+                    "name": "Add/Toggle Favorite",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"provider\": \"provider_id\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/favorites/add",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "favorites", "add"]
+                        }
+                    }
+                },
+                {
+                    "name": "Remove Favorite",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"provider\": \"provider_id\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/favorites/remove",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "favorites", "remove"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get My Favorites",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/favorites",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "favorites"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Terms & Policy",
+            "item": [
+                {
+                    "name": "Get Terms",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/terms-policy/terms",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "terms-policy", "terms"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Policy",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/terms-policy/policy",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "terms-policy", "policy"]
+                        }
+                    }
+                },
+                {
+                    "name": "Upsert Terms (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"Updated terms and conditions text here...\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/terms-policy/upsert-terms",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "terms-policy", "upsert-terms"]
+                        }
+                    }
+                },
+                {
+                    "name": "Upsert Policy (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"Updated privacy policy text here...\"\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/terms-policy/upsert-policy",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "v1", "terms-policy", "upsert-policy"]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        { "key": "baseUrl", "value": "http://localhost:6005" },
+        { "key": "token", "value": "jwt_token_here" },
+        { "key": "refresh_token", "value": "refresh_token_here" },
+        { "key": "temp_token", "value": "reset_password_temp_token" }
+    ]
+}

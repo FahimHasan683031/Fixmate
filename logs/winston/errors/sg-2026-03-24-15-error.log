@@ -1,0 +1,5 @@
+{Tue Mar 24 2026 15:05:19} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/favorites/add 404 - 13.581 ms
+{Tue Mar 24 2026 15:05:40} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/favorites/add 404 - 3.186 ms
+{Tue Mar 24 2026 15:07:35} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/favorites/add 404 - 19.704 ms
+{Tue Mar 24 2026 15:07:53} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/favorites/add 404 - 4.948 ms
+{Tue Mar 24 2026 15:10:08} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/favorites/remove 404 - 3.387 ms

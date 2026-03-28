@@ -1,5 +1,5 @@
 export enum MESSAGE {
-    Text = 'text',
-    Image = 'image',
-    MoneyRequest = 'moneyRequest',
+  Text = 'text',
+  Image = 'image',
+  MoneyRequest = 'moneyRequest',
 }

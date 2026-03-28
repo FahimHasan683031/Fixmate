@@ -1,10 +1,8 @@
-import { Request, Response, NextFunction } from 'express'
-import multer, { FileFilterCallback } from 'multer'
-import ApiError from '../../errors/ApiError'
-import { StatusCodes } from 'http-status-codes'
-import path from 'path'
-import fs from 'fs'
-import sharp from 'sharp'
+import { Request, Response, NextFunction } from 'express';
+import multer, { FileFilterCallback } from 'multer';
+import path from 'path';
+import fs from 'fs';
+import sharp from 'sharp';
 
 type IFolderName =
   | 'image'
@@ -14,10 +12,10 @@ type IFolderName =
   | 'license'
   | 'nidFront'
   | 'nidBack'
-  | 'other'
+  | 'other';
 
 interface ProcessedFiles {
-  [key: string]: string | string[] | undefined
+  [key: string]: string | string[] | undefined;
 }
 
 const uploadFields = [
@@ -29,7 +27,7 @@ const uploadFields = [
   { name: 'nidFront', maxCount: 1 },
   { name: 'nidBack', maxCount: 1 },
   { name: 'other', maxCount: 5 },
-] as const
+] as const;
 
 export const fileAndBodyProcessorUsingDiskStorage = () => {
   const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -38,29 +36,21 @@ export const fileAndBodyProcessorUsingDiskStorage = () => {
   }
 
   const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (_req, file, cb) => {
       const folderPath = path.join(uploadsDir, file.fieldname);
       if (!fs.existsSync(folderPath)) {
         fs.mkdirSync(folderPath, { recursive: true });
       }
       cb(null, folderPath);
     },
-    filename: (req, file, cb) => {
-      const extension =
-        path.extname(file.originalname) || `.${file.mimetype.split('/')[1]}`;
-      const filename = `${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2, 8)}${extension}`;
+    filename: (_req, file, cb) => {
+      const extension = path.extname(file.originalname) || `.${file.mimetype.split('/')[1]}`;
+      const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${extension}`;
       cb(null, filename);
     },
   });
 
-  const fileFilter = (
-    req: Request,
-    file: Express.Multer.File,
-    cb: FileFilterCallback,
-  ) => {
-    // Allow all file types as requested
+  const fileFilter = (_req: Request, _file: Express.Multer.File, cb: FileFilterCallback) => {
     cb(null, true);
   };
 
@@ -71,7 +61,7 @@ export const fileAndBodyProcessorUsingDiskStorage = () => {
   }).fields(uploadFields);
 
   return (req: Request, res: Response, next: NextFunction) => {
-    upload(req, res, async (error) => {
+    upload(req, res, async error => {
       if (error) return next(error);
 
       try {
@@ -84,9 +74,7 @@ export const fileAndBodyProcessorUsingDiskStorage = () => {
         }
 
         const processedFiles: ProcessedFiles = {};
-        const fieldsConfig = new Map(
-          uploadFields.map((f) => [f.name, f.maxCount]),
-        );
+        const fieldsConfig = new Map(uploadFields.map(f => [f.name, f.maxCount]));
 
         await Promise.all(
           Object.entries(req.files).map(async ([fieldName, files]) => {
@@ -95,21 +83,15 @@ export const fileAndBodyProcessorUsingDiskStorage = () => {
             const paths: string[] = [];
 
             await Promise.all(
-              fileArray.map(async (file) => {
+              fileArray.map(async file => {
                 const filePath = `/${fieldName}/${file.filename}`;
                 paths.push(filePath);
 
                 if (
-                  ['image', 'nid', 'license', 'nidFront', 'nidBack', 'other'].includes(
-                    fieldName,
-                  ) &&
+                  ['image', 'nid', 'license', 'nidFront', 'nidBack', 'other'].includes(fieldName) &&
                   file.mimetype.startsWith('image/')
                 ) {
-                  const fullPath = path.join(
-                    uploadsDir,
-                    fieldName,
-                    file.filename,
-                  );
+                  const fullPath = path.join(uploadsDir, fieldName, file.filename);
                   const tempPath = fullPath + '.opt';
 
                   try {

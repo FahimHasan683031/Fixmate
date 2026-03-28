@@ -1,15 +1,14 @@
-import { FilterQuery, Query, PopulateOptions } from 'mongoose'
+import { FilterQuery, Query, PopulateOptions } from 'mongoose';
 
 class QueryBuilder<T> {
-  public modelQuery: Query<T[], T>
-  public query: Record<string, unknown>
+  public modelQuery: Query<T[], T>;
+  public query: Record<string, unknown>;
 
   constructor(modelQuery: Query<T[], T>, query: Record<string, unknown>) {
-    this.modelQuery = modelQuery
-    this.query = query
+    this.modelQuery = modelQuery;
+    this.query = query;
   }
 
-  // Searching
   search(searchableFields: string[]) {
     if (this?.query?.searchTerm) {
       this.modelQuery = this.modelQuery.find({
@@ -22,132 +21,113 @@ class QueryBuilder<T> {
               },
             }) as FilterQuery<T>,
         ),
-      })
+      });
     }
-    return this
+    return this;
   }
 
-  // Filtering
-// Filtering
-filter() {
-  const queryObj = { ...this.query }
-  const excludeFields = [
-    'searchTerm',
-    'sort',
-    'page',
-    'limit',
-    'fields',
-    'withLocked',
-    'showHidden',
-    'download',
-  ]
-  excludeFields.forEach(el => delete queryObj[el])
+  filter() {
+    const queryObj = { ...this.query };
+    const excludeFields = [
+      'searchTerm',
+      'sort',
+      'page',
+      'limit',
+      'fields',
+      'withLocked',
+      'showHidden',
+      'download',
+    ];
+    excludeFields.forEach(el => delete queryObj[el]);
 
-  const filters: Record<string, any> = cleanObject(queryObj)
+    const filters: Record<string, any> = cleanObject(queryObj);
 
-  // Handle salary range filtering
-  if (queryObj.minSalary || queryObj.maxSalary) {
-    if (queryObj.minSalary) {
-      filters.minSalary = { $gte: Number(queryObj.minSalary) }
-      delete queryObj.minSalary
+    if (queryObj.minSalary || queryObj.maxSalary) {
+      if (queryObj.minSalary) {
+        filters.minSalary = { $gte: Number(queryObj.minSalary) };
+        delete queryObj.minSalary;
+      }
+      if (queryObj.maxSalary) {
+        filters.maxSalary = { $lte: Number(queryObj.maxSalary) };
+        delete queryObj.maxSalary;
+      }
     }
-    if (queryObj.maxSalary) {
-      filters.maxSalary = { $lte: Number(queryObj.maxSalary) }
-      delete queryObj.maxSalary
+
+    if (this.query.jobLocation) {
+      filters.jobLocation = {
+        $regex: this.query.jobLocation,
+        $options: 'i',
+      };
     }
+
+    this.modelQuery = this.modelQuery.find(filters as FilterQuery<T>);
+    return this;
   }
 
-  // ✅ Add partial match for jobLocation
-  if (this.query.jobLocation) {
-    filters.jobLocation = {
-      $regex: this.query.jobLocation,
-      $options: 'i', // case-insensitive
-    }
-  }
-
-  this.modelQuery = this.modelQuery.find(filters as FilterQuery<T>)
-  return this
-}
-
-
-
-  // Sorting
   sort() {
-    let sort = (this?.query?.sort as string) || '-createdAt'
-    this.modelQuery = this.modelQuery.sort(sort)
-    return this
+    let sort = (this?.query?.sort as string) || '-createdAt';
+    this.modelQuery = this.modelQuery.sort(sort);
+    return this;
   }
 
-  // Pagination
   paginate() {
-    let limit = Number(this?.query?.limit) || 10
-    let page = Number(this?.query?.page) || 1
-    let skip = (page - 1) * limit
+    let limit = Number(this?.query?.limit) || 10;
+    let page = Number(this?.query?.page) || 1;
+    let skip = (page - 1) * limit;
 
-    this.modelQuery = this.modelQuery.skip(skip).limit(limit)
-    return this
+    this.modelQuery = this.modelQuery.skip(skip).limit(limit);
+    return this;
   }
 
-  // Fields filtering
   fields() {
-    let fields = (this?.query?.fields as string)?.split(',').join(' ') || '-__v'
-    this.modelQuery = this.modelQuery.select(fields)
-    return this
+    let fields = (this?.query?.fields as string)?.split(',').join(' ') || '-__v';
+    this.modelQuery = this.modelQuery.select(fields);
+    return this;
   }
 
-  // Populating (flat + nested supported)
   populate(
     populateFields: (string | PopulateOptions)[],
     selectFields: Record<string, unknown> = {},
   ) {
     this.modelQuery = this.modelQuery.populate(
       populateFields.map(field =>
-        typeof field === 'string'
-          ? { path: field, select: selectFields[field] }
-          : field,
+        typeof field === 'string' ? { path: field, select: selectFields[field] } : field,
       ),
-    )
-    return this
+    );
+    return this;
   }
 
-  // Pagination info
   async getPaginationInfo() {
-    const total = await this.modelQuery.model.countDocuments(
-      this.modelQuery.getFilter(),
-    )
-    const limit = Number(this?.query?.limit) || 10
-    const page = Number(this?.query?.page) || 1
-    const totalPage = Math.ceil(total / limit)
+    const total = await this.modelQuery.model.countDocuments(this.modelQuery.getFilter());
+    const limit = Number(this?.query?.limit) || 10;
+    const page = Number(this?.query?.page) || 1;
+    const totalPage = Math.ceil(total / limit);
 
     return {
       total,
       limit,
       page,
       totalPage,
-    }
+    };
   }
 }
 
 function cleanObject(obj: Record<string, any>) {
-  const cleaned: Record<string, any> = {}
+  const cleaned: Record<string, any> = {};
   for (const key in obj) {
-    const value = obj[key]
+    const value = obj[key];
     if (
       value !== null &&
       value !== undefined &&
       value !== '' &&
       value !== 'undefined' &&
       !(Array.isArray(value) && value.length === 0) &&
-      !(
-        typeof value === 'object' &&
-        !Array.isArray(value) &&
-        Object.keys(value).length === 0
-      )
+      !(typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0)
     ) {
-      cleaned[key] = value
+      cleaned[key] = value;
     }
   }
-  return cleaned
+  return cleaned;
 }
 
-export default QueryBuilder
+export default QueryBuilder;

@@ -1,0 +1,50 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "D:\\Fahim\\Projects\\New project\\Fixmate-new\\logs\\winston\\successes\\.f8efac0535f7b7e5e1927f899f5a9956e1901c88-audit.json",
+    "files": [
+        {
+            "date": 1774330594054,
+            "name": "D:\\Fahim\\Projects\\New project\\Fixmate-new\\logs\\winston\\successes\\sg-2026-03-24-11-success.log",
+            "hash": "11db08674ca14643e36e8b111dedc455dfbe956eee7c696f32fbf964580c95ac"
+        },
+        {
+            "date": 1774332000717,
+            "name": "D:\\Fahim\\Projects\\New project\\Fixmate-new\\logs\\winston\\successes\\sg-2026-03-24-12-success.log",
+            "hash": "e866921844f5d45597c4f25fe5aa68653962bc0bbc52e8571b723046b76a3300"
+        },
+        {
+            "date": 1774335600921,
+            "name": "D:\\Fahim\\Projects\\New project\\Fixmate-new\\logs\\winston\\successes\\sg-2026-03-24-13-success.log",
+            "hash": "c5bcb805db75eb9748253550c869f7fe84a4195a25da57e6fa86eed8edbdda38"
+        },
+        {
+            "date": 1774339200306,
+            "name": "D:\\Fahim\\Projects\\New project\\Fixmate-new\\logs\\winston\\successes\\sg-2026-03-24-14-success.log",
+            "hash": "38c8da888ca0127b000ffd951f34430fde369ff7778fc531ff4daa9b7e29cc73"
+        },
+        {
+            "date": 1774342800929,
+            "name": "D:\\Fahim\\Projects\\New project\\Fixmate-new\\logs\\winston\\successes\\sg-2026-03-24-15-success.log",
+            "hash": "4f3ac5b65c05ff3707111825c0405d550f230c84a13dd679d011fc4fe8b7bfca"
+        },
+        {
+            "date": 1774667887953,
+            "name": "D:\\Fahim\\Projects\\New project\\Fixmate-new\\logs\\winston\\successes\\sg-2026-03-28-09-success.log",
+            "hash": "5b4caca075bc238feddb74f18d34dba38d68ec4948b8a601e1747f39b8ea2ed7"
+        },
+        {
+            "date": 1774670400795,
+            "name": "D:\\Fahim\\Projects\\New project\\Fixmate-new\\logs\\winston\\successes\\sg-2026-03-28-10-success.log",
+            "hash": "be08d908a8bc26388116ba742aca070b5fbb6d900f087b08ef3a7a5a2e00fd0f"
+        },
+        {
+            "date": 1774674000663,
+            "name": "D:\\Fahim\\Projects\\New project\\Fixmate-new\\logs\\winston\\successes\\sg-2026-03-28-11-success.log",
+            "hash": "68d8b963bb811fdc3097e52ec5b16a56fc367c014b373df443ef721036de4aea"
+        }
+    ],
+    "hashType": "sha256"
+}

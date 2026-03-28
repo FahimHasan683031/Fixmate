@@ -1,43 +1,59 @@
-import { model, Schema } from "mongoose";
-import { IService } from "./service.interface";
+import { model, Schema } from 'mongoose';
+import { IService } from './service.interface';
+import { generateCustomId } from '../../../utils/idGenerator';
 
-const serviceSchema = new Schema<IService>({
+const serviceSchema = new Schema<IService>(
+  {
     creator: {
-        type: Schema.Types.ObjectId,
-        ref: "User"
+      type: Schema.Types.ObjectId,
+      ref: 'User',
     },
     image: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     category: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     subCategory: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     price: {
-        type: Number,
-        required: true
+      type: Number,
+      required: true,
     },
     expertise: {
-        type: String,
-        default: ""
+      type: String,
+      default: '',
     },
     isDeleted: {
-        type: Boolean,
-        default: false
-    }
-}, {
+      type: Boolean,
+      default: false,
+    },
+    customId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+  },
+  {
     timestamps: true,
-    versionKey: false
-});
+    versionKey: false,
+  },
+);
 
 serviceSchema.index({ category: 1, subCategory: 1 });
 serviceSchema.index({ creator: 1 });
 serviceSchema.index({ price: 1 });
 serviceSchema.index({ createdAt: -1 });
 
-export const Service = model<IService>("Service", serviceSchema);
+serviceSchema.pre('save', async function (next) {
+  if (this.isNew && !this.customId) {
+    this.customId = await generateCustomId('SVC');
+  }
+  next();
+});
+
+export const Service = model<IService>('Service', serviceSchema);

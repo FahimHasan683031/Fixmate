@@ -1,8 +1,8 @@
 import { Model, Types } from 'mongoose';
-import { MESSAGE } from '../../../enum/message';
 
 export interface IMessage {
   _id: Types.ObjectId;
+  customId?: string;
   chatId: Types.ObjectId;
   message: string;
   image: string;

@@ -1,0 +1,62 @@
+{Tue Mar 24 2026 09:18:08} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Tue Mar 24 2026 09:18:08} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Tue Mar 24 2026 09:18:08} [APP 🚀] info: Unverified account cleanup job scheduled to run every minute.
+{Tue Mar 24 2026 09:18:08} [APP 🚀] info: Booking SLA job scheduled to run every 15 minutes (Threshold: 5 hours).
+{Tue Mar 24 2026 09:18:08} [APP 🚀] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Tue Mar 24 2026 09:18:08} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Tue Mar 24 2026 09:18:08} [APP 🚀] info: [33m♻️  Application listening on port:5007[39m
+{Tue Mar 24 2026 09:19:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:20:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:21:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:22:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:23:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:23:32} [APP 🚀] info: ::ffff:10.10.7.50 - GET / 200 - 4.898 ms
+{Tue Mar 24 2026 09:24:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:25:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:26:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:27:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:28:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:28:14} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/login 200 - 259.944 ms
+{Tue Mar 24 2026 09:29:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:30:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:30:43} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/login 200 - 214.939 ms
+{Tue Mar 24 2026 09:31:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:31:50} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/auth/login 200 - 215.605 ms
+{Tue Mar 24 2026 09:32:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:32:39} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/admin/overview 200 - 31.747 ms
+{Tue Mar 24 2026 09:32:50} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/admin/users?role=all&page=1&limit=10 200 - 10.718 ms
+{Tue Mar 24 2026 09:33:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:34:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:34:27} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/admin/users 200 - 6.089 ms
+{Tue Mar 24 2026 09:34:32} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/admin/users?role=all 200 - 4.199 ms
+{Tue Mar 24 2026 09:34:46} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/admin/users 200 - 3.719 ms
+{Tue Mar 24 2026 09:35:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:35:39} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/admin/users/69b28a44f6dcc4b21c10baf0 200 - 3.776 ms
+{Tue Mar 24 2026 09:36:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:36:21} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/admin/find?compo=user&search=test 200 - 4.250 ms
+{Tue Mar 24 2026 09:36:35} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/admin/find 200 - 6.546 ms
+{Tue Mar 24 2026 09:36:40} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/admin/find?search=test 200 - 3.369 ms
+{Tue Mar 24 2026 09:36:46} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/admin/find?compo=user 200 - 3.166 ms
+{Tue Mar 24 2026 09:37:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:37:45} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/bookings?status=CREATED&page=1&limit=10 200 - 7.516 ms
+{Tue Mar 24 2026 09:37:57} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/bookings 200 - 13.138 ms
+{Tue Mar 24 2026 09:38:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:39:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:39:21} [APP 🚀] info: ::ffff:10.10.7.50 - POST /api/v1/admin/generate-multi-invoices 200 - 218.786 ms
+{Tue Mar 24 2026 09:40:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:41:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:42:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:43:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:44:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:45:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:46:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:46:47} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/admin/users 200 - 3.887 ms
+{Tue Mar 24 2026 09:47:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:47:04} [APP 🚀] info: ::ffff:10.10.7.50 - GET /api/v1/client/provider/69b28a44f6dcc4b21c10baf0 200 - 4.397 ms
+{Tue Mar 24 2026 09:48:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:49:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:50:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:51:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:52:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:53:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Tue Mar 24 2026 09:54:00} [APP 🚀] info: Deleted 0 unverified accounts.

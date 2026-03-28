@@ -1,6 +1,7 @@
-import { Types } from "mongoose";
+import { Types } from 'mongoose';
 
 export interface ICustomerFavorite {
-    customer: Types.ObjectId;
-    provider: Types.ObjectId;
+  customId?: string;
+  customer: Types.ObjectId;
+  provider: Types.ObjectId;
 }

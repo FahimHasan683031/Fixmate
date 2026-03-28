@@ -1,80 +1,71 @@
-import colors from 'colors'
-import mongoose from 'mongoose'
-import { Server } from 'socket.io'
-import app from './app'
-import config from './config'
-import { errorLogger, logger } from './shared/logger'
-import seedAdmin from './app/DB'
-import { socketHelper } from './helpers/socketHelper'
-import { scheduleUnverifiedAccountCleanup } from './cronjob/scheduleUnverifiedAccountCleanup'
-import { bookingSLAJob } from './cronjob/bookingSLAJob'
-import { bookingAutoSettleJob } from './cronjob/bookingAutoSettleJob'
+import colors from 'colors';
+import mongoose from 'mongoose';
+import { Server } from 'socket.io';
+import app from './app';
+import config from './config';
+import { errorLogger, logger } from './shared/logger';
+import seedAdmin from './app/DB';
+import { socketHelper } from './helpers/socketHelper';
+import { scheduleUnverifiedAccountCleanup } from './cronjob/scheduleUnverifiedAccountCleanup';
+import { bookingSLAJob } from './cronjob/bookingSLAJob';
+import { bookingAutoSettleJob } from './cronjob/bookingAutoSettleJob';
 
 process.on('uncaughtException', error => {
-    errorLogger.error('UnhandledException Detected', error)
-    process.exit(1)
-})
+  errorLogger.error('UnhandledException Detected', error);
+  process.exit(1);
+});
 
-let server: any
+let server: any;
 async function main() {
-    try {
-        await mongoose.connect(config.database_url as string)
-        logger.info(colors.green('🚀 Database connected successfully'))
+  try {
+    await mongoose.connect(config.database_url as string);
+    logger.info(colors.green('🚀 Database connected successfully'));
 
-        // seed admin
-        await seedAdmin()
+    await seedAdmin();
 
-        // cron jobs
-        scheduleUnverifiedAccountCleanup();
-        bookingSLAJob();
-        bookingAutoSettleJob();
+    scheduleUnverifiedAccountCleanup();
+    bookingSLAJob();
+    bookingAutoSettleJob();
 
-        const port =
-            typeof config.port === 'number' ? config.port : Number(config.port)
+    const port = typeof config.port === 'number' ? config.port : Number(config.port);
 
-        server = app.listen(port, config.ip_address as string, () => {
-            logger.info(
-                colors.yellow(`♻️  Application listening on port:${config.port}`),
-            )
+    server = app.listen(port, config.ip_address as string, () => {
+      logger.info(colors.yellow(`♻️  Application listening on port:${config.port}`));
+    });
 
-        })
+    const io = new Server(server, {
+      pingTimeout: 60000,
+      cors: {
+        origin: '*',
+      },
+    });
 
-        //socket
-        const io = new Server(server, {
-            pingTimeout: 60000,
-            cors: {
-                origin: '*',
-            },
-        })
+    logger.info(colors.green('🍁 Server connected successfully'));
 
+    socketHelper.socket(io);
 
-        logger.info(colors.green('🍁 Server connected successfully'))
+    global.io = io;
+  } catch (error) {
+    errorLogger.error(colors.red('Server Failed to connect Database'));
+    config.node_env === 'development' && console.log(error);
+  }
 
-        socketHelper.socket(io)
-        //@ts-ignore
-        global.io = io
-    } catch (error) {
-        errorLogger.error(colors.red('Server Failed to connect Database'))
-        config.node_env === 'development' && console.log(error)
-    }
-    //handle unhandleRejection
-    process.on('unhandledRejection', error => {
-        if (server) {
-            server.close(() => {
-                errorLogger.error('UnhandledRejection Detected', error)
-                process.exit(1)
-            })
-        } else {
-            process.exit(1)
-        }
-    })
-}
-main()
-
-//SIGTERM
-process.on('SIGTERM', async () => {
-    logger.info('SIGTERM IS RECEIVE')
+  process.on('unhandledRejection', error => {
     if (server) {
-        server.close()
+      server.close(() => {
+        errorLogger.error('UnhandledRejection Detected', error);
+        process.exit(1);
+      });
+    } else {
+      process.exit(1);
     }
-})
+  });
+}
+main();
+
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM IS RECEIVE');
+  if (server) {
+    server.close();
+  }
+});

@@ -1,0 +1,2 @@
+{Wed Mar 18 2026 12:05:31} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/admin/generate-multi-invoices 400 - 3.425 ms
+{Wed Mar 18 2026 12:25:20} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/admin/generate-multi-invoices 400 - 3.325 ms

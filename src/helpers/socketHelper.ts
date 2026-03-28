@@ -1,10 +1,10 @@
-import colors from 'colors'
-import { Server } from 'socket.io'
-import { logger } from '../shared/logger'
+import colors from 'colors';
+import { Server } from 'socket.io';
+import { logger } from '../shared/logger';
 
 const socket = (io: Server) => {
   io.on('connection', socket => {
-    logger.info(colors.blue('A user connected'))
+    logger.info(colors.blue('A user connected'));
 
     const userId = socket.handshake.query.userId as string;
     if (userId) {
@@ -12,13 +12,10 @@ const socket = (io: Server) => {
       logger.info(colors.green(`User ${userId} joined room ${userId}`));
     }
 
-    //disconnect
     socket.on('disconnect', () => {
-      logger.info(colors.red('A user disconnect'))
-    })
-  })
-}
+      logger.info(colors.red('A user disconnect'));
+    });
+  });
+};
 
-export const socketHelper = { socket }
-
-
+export const socketHelper = { socket };

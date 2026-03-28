@@ -1,10 +1,10 @@
-import { Types } from "mongoose";
+import { Types } from 'mongoose';
 
 export interface ICategory {
   _id: Types.ObjectId;
+  customId?: string;
   name: string;
   image: string;
   subCategory: string[];
   isDeleted: boolean;
 }
-

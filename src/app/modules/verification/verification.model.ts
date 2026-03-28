@@ -1,28 +1,31 @@
-import { model, Schema } from "mongoose";
-import { IVerificaiton } from "./verification.interface";
-import { VERIFICATION_STATUS } from "../../../enum/user";
+import { model, Schema } from 'mongoose';
+import { IVerificaiton } from './verification.interface';
+import { VERIFICATION_STATUS } from '../../../enum/user';
 
-const verificaitonSchema = new Schema<IVerificaiton>({
+const verificaitonSchema = new Schema<IVerificaiton>(
+  {
     user: {
-        type: Schema.Types.ObjectId,
-        ref: "User"
+      type: Schema.Types.ObjectId,
+      ref: 'User',
     },
     status: {
-        type: String,
-        enum: Object.values(VERIFICATION_STATUS),
-        default: VERIFICATION_STATUS.UNVERIFIED
+      type: String,
+      enum: Object.values(VERIFICATION_STATUS),
+      default: VERIFICATION_STATUS.UNVERIFIED,
     },
     nid: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     license: {
-        type: String,
-        required: true
-    }
-}, {
+      type: String,
+      required: true,
+    },
+  },
+  {
     timestamps: true,
-    versionKey: false
-})
+    versionKey: false,
+  },
+);
 
-export const Verification = model<IVerificaiton>("Verificaiton", verificaitonSchema);
+export const Verification = model<IVerificaiton>('Verificaiton', verificaitonSchema);

@@ -1,32 +1,44 @@
 import { Schema, model } from 'mongoose';
 import { IMessage, MessageModel } from './message.interface';
-import { MESSAGE } from '../../../enum/message';
+import { generateCustomId } from '../../../utils/idGenerator';
 
 const messageSchema = new Schema<IMessage, MessageModel>(
   {
     chatId: {
       type: Schema.Types.ObjectId,
-      ref: "Chat"
+      ref: 'Chat',
     },
     sender: {
       type: Schema.Types.ObjectId,
-      ref: "User"
+      ref: 'User',
     },
     image: {
-      type: String
+      type: String,
     },
     message: {
-      type: String
+      type: String,
     },
     isSeen: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
+    customId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
   },
   {
     timestamps: true,
-    versionKey: false
-  }
+    versionKey: false,
+  },
 );
+
+messageSchema.pre('save', async function (next) {
+  if (this.isNew && !this.customId) {
+    this.customId = await generateCustomId('MSG');
+  }
+  next();
+});
 
 export const Message = model<IMessage, MessageModel>('Message', messageSchema);

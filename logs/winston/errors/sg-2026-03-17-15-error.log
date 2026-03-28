@@ -1,0 +1,5 @@
+{Tue Mar 17 2026 15:33:19} [APP 🐞] error: ::ffff:10.10.7.50 - DELETE /api/v1/client/book/69b919e1855da9c5bd45d0b3 500 - 3.228 ms
+{Tue Mar 17 2026 15:33:39} [APP 🐞] error: ::ffff:10.10.7.50 - DELETE /api/v1/client/book/69b919e1855da9c5bd45d0b3 400 - 5.726 ms
+{Tue Mar 17 2026 15:42:22} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/book 400 - 40.181 ms
+{Tue Mar 17 2026 15:43:01} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/book 400 - 11.008 ms
+{Tue Mar 17 2026 15:43:53} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/provider/book 400 - 14.957 ms

@@ -1,85 +1,101 @@
-import { model, Schema } from "mongoose";
-import { IBooking } from "./booking.interface";
-import { BOOKING_STATUS } from "../../../enum/booking";
+import { model, Schema } from 'mongoose';
+import { IBooking } from './booking.interface';
+import { BOOKING_STATUS } from '../../../enum/booking';
+import { generateCustomId } from '../../../utils/idGenerator';
 
-const bookingSchema = new Schema<IBooking>({
+const bookingSchema = new Schema<IBooking>(
+  {
     customer: {
-        type: Schema.Types.ObjectId,
-        ref: "User"
+      type: Schema.Types.ObjectId,
+      ref: 'User',
     },
     provider: {
-        type: Schema.Types.ObjectId,
-        ref: "User"
+      type: Schema.Types.ObjectId,
+      ref: 'User',
     },
     service: {
-        type: Schema.Types.ObjectId,
-        ref: "Service"
+      type: Schema.Types.ObjectId,
+      ref: 'Service',
     },
     bookingStatus: {
-        type: String,
-        enum: Object.values(BOOKING_STATUS),
-        default: BOOKING_STATUS.CREATED
+      type: String,
+      enum: Object.values(BOOKING_STATUS),
+      default: BOOKING_STATUS.CREATED,
     },
     currentStats: {
-        type: Object,
-        default: {
-            [BOOKING_STATUS.CREATED]: true,
-            [BOOKING_STATUS.PAID]: false,
-            [BOOKING_STATUS.REQUESTED]: false,
-            [BOOKING_STATUS.ACCEPTED]: false,
-            [BOOKING_STATUS.IN_PROGRESS]: false,
-            [BOOKING_STATUS.COMPLETED_BY_PROVIDER]: false,
-            [BOOKING_STATUS.CONFIRMED_BY_CLIENT]: false,
-            [BOOKING_STATUS.SETTLED]: false,
-        }
+      type: Object,
+      default: {
+        [BOOKING_STATUS.CREATED]: true,
+        [BOOKING_STATUS.PAID]: false,
+        [BOOKING_STATUS.REQUESTED]: false,
+        [BOOKING_STATUS.ACCEPTED]: false,
+        [BOOKING_STATUS.IN_PROGRESS]: false,
+        [BOOKING_STATUS.COMPLETED_BY_PROVIDER]: false,
+        [BOOKING_STATUS.CONFIRMED_BY_CLIENT]: false,
+        [BOOKING_STATUS.SETTLED]: false,
+      },
     },
     date: {
-        type: Date,
-        default: Date.now
+      type: Date,
+      default: Date.now,
     },
     location: {
-        type: {
-            type: String,
-            enum: ["Point"],
-            default: "Point"
-        },
-        coordinates: {
-            type: [Number],
-            default: [0, 0]
-        }
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number],
+        default: [0, 0],
+      },
     },
     address: {
-        type: String,
-        default: ""
+      type: String,
+      default: '',
     },
     specialNote: {
-        type: String,
-        default: ""
+      type: String,
+      default: '',
     },
     paymentId: {
-        type: String,
-        default: ""
+      type: String,
+      default: '',
     },
 
     transactionId: {
-        type: String,
+      type: String,
+    },
+    customId: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
     rejectReason: {
-        type: String,
-        default: ""
+      type: String,
+      default: '',
     },
     isPaid: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false,
     },
     respondedAt: {
-        type: Date
-    }
-}, {
+      type: Date,
+    },
+  },
+  {
     timestamps: true,
-    versionKey: false
-});
+    versionKey: false,
+  },
+);
 
 bookingSchema.index({ location: '2dsphere' });
 
-export const Booking = model<IBooking>("Booking", bookingSchema);
+bookingSchema.pre('save', async function (next) {
+  if (this.isNew && !this.customId) {
+    this.customId = await generateCustomId('BKG');
+  }
+  next();
+});
+
+export const Booking = model<IBooking>('Booking', bookingSchema);

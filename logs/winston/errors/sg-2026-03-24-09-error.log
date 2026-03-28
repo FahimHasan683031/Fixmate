@@ -1,0 +1,6 @@
+{Tue Mar 24 2026 09:23:32} [APP 🐞] error: ::ffff:10.10.7.50 - GET /favicon.ico 404 - 1.077 ms
+{Tue Mar 24 2026 09:24:12} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/bookings?status=CREATED&page=1&limit=10 500 - 5.848 ms
+{Tue Mar 24 2026 09:34:40} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/admin/users?role= 400 - 3.237 ms
+{Tue Mar 24 2026 09:35:29} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/admin/users/user_id 400 - 29.566 ms
+{Tue Mar 24 2026 09:43:52} [APP 🐞] error: ::ffff:10.10.7.50 - PATCH /api/v1/client 404 - 1.345 ms
+{Tue Mar 24 2026 09:47:53} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/client/provider/69ae479bef72186dff209278 401 - 1.560 ms

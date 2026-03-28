@@ -4,14 +4,16 @@ import { USER_ROLES } from '../../../enum/user';
 import { NotificationController } from './notification.controller';
 const router = express.Router();
 
-router.get('/',
-    auth(USER_ROLES.CLIENT, USER_ROLES.PROVIDER, USER_ROLES.ADMIN),
-    NotificationController.getNotificationFromDB
+router.get(
+  '/',
+  auth(USER_ROLES.CLIENT, USER_ROLES.PROVIDER, USER_ROLES.ADMIN),
+  NotificationController.getNotificationFromDB,
 );
 
-router.get('/unread-count',
-    auth(USER_ROLES.CLIENT, USER_ROLES.PROVIDER, USER_ROLES.ADMIN),
-    NotificationController.getUnreadCount
+router.get(
+  '/unread-count',
+  auth(USER_ROLES.CLIENT, USER_ROLES.PROVIDER, USER_ROLES.ADMIN),
+  NotificationController.getUnreadCount,
 );
 
 router.post('/test-push', NotificationController.sendTestPushNotification);

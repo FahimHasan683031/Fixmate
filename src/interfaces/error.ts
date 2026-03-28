@@ -1,10 +1,10 @@
 export type IGenericErrorMessage = {
-  path: string | number
-  message: string
-}
+  path: string | number;
+  message: string;
+};
 
 export type IGenericErrorResponse = {
-  statusCode: number
-  message: string
-  errorMessages: IGenericErrorMessage[]
-}
+  statusCode: number;
+  message: string;
+  errorMessages: IGenericErrorMessage[];
+};

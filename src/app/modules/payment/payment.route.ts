@@ -1,45 +1,40 @@
-import { Router } from "express";
-import { PaymentControllers } from "./payment.controller";
-import { USER_ROLES } from "../../../enum/user";
-import auth from "../../middleware/auth";
+import { Router } from 'express';
+import { PaymentControllers } from './payment.controller';
+import { USER_ROLES } from '../../../enum/user';
+import auth from '../../middleware/auth';
 
 const router = Router();
 
-router
-    .route("/success")
-    .get(
-        PaymentControllers.success
-    );
+router.get('/success', PaymentControllers.success);
 
-router
-    .route("/account/:id")
-    .get(
-        PaymentControllers.successAccount
-    );
+router.get('/account/:id', PaymentControllers.successAccount);
 
-router
-    .route("/account/refresh/:id")
-    .get(
-        PaymentControllers.refreshAccount
-    );
+router.get('/account/refresh/:id', PaymentControllers.refreshAccount);
 
-router
-    .route("/cancel")
-    .get(
-        PaymentControllers.failure
-    );
+router.get('/cancel', PaymentControllers.failure);
 
-router
-    .route("/connected-account")
-    .get(
-        auth(USER_ROLES.PROVIDER),
-        PaymentControllers.createConnectedAccount
-    );
+router.get(
+  '/connected-account',
+  auth(USER_ROLES.PROVIDER),
+  PaymentControllers.createConnectedAccount,
+);
 
-router
-    .route("/webhook")
-    .post(
-        PaymentControllers.webhook
-    );
-    
+router.post('/webhook', PaymentControllers.webhook);
+
+router.get('/wallet', auth(USER_ROLES.PROVIDER), PaymentControllers.getWallet);
+
+router.get(
+  '/history',
+  auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT),
+  PaymentControllers.getPaymentHistory,
+);
+
+router.get(
+  '/history/:id',
+  auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT),
+  PaymentControllers.getPaymentDetails,
+);
+
+router.post('/withdraw', auth(USER_ROLES.PROVIDER), PaymentControllers.withdraw);
+
 export const PaymentRoutes = router;

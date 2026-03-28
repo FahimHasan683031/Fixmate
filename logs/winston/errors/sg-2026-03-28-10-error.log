@@ -1,0 +1,3 @@
+{Sat Mar 28 2026 10:19:17} [APP 🐞] error: ::ffff:10.10.7.50 - PATCH /api/v1/user/update-profile 404 - 6.973 ms
+{Sat Mar 28 2026 10:28:46} [APP 🐞] error: ::ffff:10.10.7.50 - GET /api/v1/provider/home 500 - 3.809 ms
+{Sat Mar 28 2026 10:30:07} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/verification/send-request 500 - 2.652 ms
