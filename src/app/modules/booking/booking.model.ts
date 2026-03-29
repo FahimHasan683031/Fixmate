@@ -82,6 +82,13 @@ const bookingSchema = new Schema<IBooking>(
     respondedAt: {
       type: Date,
     },
+    disputeReason: {
+      type: String,
+      default: '',
+    },
+    disputedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

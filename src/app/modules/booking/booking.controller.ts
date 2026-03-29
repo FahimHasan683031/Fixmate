@@ -55,9 +55,22 @@ const cancelBooking = catchAsync(async (req: Request | any, res: Response) => {
   });
 });
 
+// Controller to dispute an existing booking
+const disputeBooking = catchAsync(async (req: Request | any, res: Response) => {
+  const result = await BookingService.disputeBooking(req.user, req.params.id, req.body.reason);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Booking disputed successfully',
+    data: result,
+  });
+});
+
 export const BookingController = {
   createBooking,
   getBookings,
   getBookingById,
   cancelBooking,
+  disputeBooking,
 };

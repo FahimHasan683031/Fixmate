@@ -208,10 +208,33 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
   return { message: 'Booking cancelled successfully' };
 };
 
+// Dispute a booking with a reason
+const disputeBooking = async (user: JwtPayload, id: string, reason: string) => {
+  const booking = await Booking.findById(id).lean().exec();
+  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
+
+  const userId = user.id || user.authId;
+  if (booking.customer.toString() !== userId) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You are not authorized to dispute this booking!');
+  }
+
+  await BookingStateMachine.transitionState(id, 'client', BOOKING_STATUS.DISPUTED);
+  const updatedBooking = await Booking.findByIdAndUpdate(
+    id,
+    { disputeReason: reason, disputedAt: new Date() },
+    { new: true },
+  )
+    .lean()
+    .exec();
+
+  return updatedBooking;
+};
+
 export const BookingService = {
   createBooking,
   getBookings,
   getBookingById,
   updateBooking,
   cancelBooking,
+  disputeBooking,
 };

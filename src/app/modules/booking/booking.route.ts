@@ -25,4 +25,10 @@ router.post(
   BookingController.cancelBooking,
 );
 
+router.post(
+  '/dispute/:id',
+  auth(USER_ROLES.CLIENT),
+  BookingController.disputeBooking,
+);
+
 export const BookingRoutes = router;
