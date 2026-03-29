@@ -53,17 +53,24 @@ export const createUser = async (payload: IUser) => {
       wrongLoginAttempts: 0,
     };
 
-    const user = await User.create(
-      [
-        {
-          ...payload,
-          password: payload.password,
-          authentication,
-          role: payload.role || USER_ROLES.CLIENT,
-        },
-      ],
-      { session },
-    );
+    const userData: any = {
+      ...payload,
+      password: payload.password,
+      authentication,
+      role: payload.role || USER_ROLES.CLIENT,
+    };
+
+    // Ensure providerDetails is only present for PROVIDER role
+    if (userData.role !== USER_ROLES.PROVIDER) {
+      delete userData.providerDetails;
+    } else if (!userData.providerDetails) {
+      // Initialize empty providerDetails for providers if needed, 
+      // or let it be undefined if preferred. Given the requirement, 
+      // we can just leave it to be filled later or init with empty object.
+      userData.providerDetails = {};
+    }
+
+    const user = await User.create([userData], { session });
 
     if (!user[0]) throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user.');
 

@@ -1,28 +1,58 @@
 import { z } from 'zod';
 
-const updateProfileZodSchema = z.object({
+const updateUserProfileZodSchema = z.object({
   body: z
     .object({
       name: z.string().optional(),
       gender: z.string().optional(),
       address: z.string().optional(),
       dateOfBirth: z.string().optional(),
-      nationality: z.string().optional(),
       whatsApp: z.string().optional(),
       contact: z.string().optional(),
-      overView: z.string().optional(),
-      experience: z.string().optional(),
-      language: z.string().optional(),
-      category: z.string().optional(),
       longitude: z.coerce.number().optional(),
       latitude: z.coerce.number().optional(),
       image: z.string().optional(),
-      bankName: z.string().optional(),
-      accountNumber: z.string().optional(),
+    })
+    .strict(),
+});
+
+const updateProviderProfileZodSchema = z.object({
+  body: z
+    .object({
+      name: z.string().optional(),
+      gender: z.string().optional(),
+      address: z.string().optional(),
+      dateOfBirth: z.string().optional(),
+      whatsApp: z.string().optional(),
+      contact: z.string().optional(),
+      longitude: z.coerce.number().optional(),
+      latitude: z.coerce.number().optional(),
+      image: z.string().optional(),
+      providerDetails: z
+        .object({
+          category: z.string().optional(),
+          nationalId: z.string().optional(),
+          nationality: z.string().optional(),
+          experience: z.string().optional(),
+          language: z.string().optional(),
+          overView: z.string().optional(),
+          distance: z.coerce.number().optional(),
+          availableDay: z.array(z.string()).optional(),
+          startTime: z.string().optional(),
+          endTime: z.string().optional(),
+          isVatRegistered: z.boolean().optional(),
+          vatNumber: z.string().optional(),
+          bankName: z.string().optional(),
+          accountNumber: z.string().optional(),
+          paystackAccountId: z.string().optional(),
+        })
+        .strict()
+        .optional(),
     })
     .strict(),
 });
 
 export const UserValidation = {
-  updateProfileZodSchema,
+  updateUserProfileZodSchema,
+  updateProviderProfileZodSchema,
 };

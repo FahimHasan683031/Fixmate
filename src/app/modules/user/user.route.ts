@@ -15,11 +15,19 @@ router.get(
 );
 
 router.patch(
-  '/update-profile',
-  auth(USER_ROLES.ADMIN, USER_ROLES.CLIENT, USER_ROLES.PROVIDER),
+  '/update-user-profile',
+  auth(USER_ROLES.ADMIN, USER_ROLES.CLIENT),
   fileAndBodyProcessorUsingDiskStorage(),
-  validateRequest(UserValidation.updateProfileZodSchema),
-  UserController.updateProfile,
+  validateRequest(UserValidation.updateUserProfileZodSchema),
+  UserController.updateUserProfile,
+);
+
+router.patch(
+  '/update-provider-profile',
+  auth(USER_ROLES.PROVIDER),
+  fileAndBodyProcessorUsingDiskStorage(),
+  validateRequest(UserValidation.updateProviderProfileZodSchema),
+  UserController.updateProviderProfile,
 );
 
 router.delete(

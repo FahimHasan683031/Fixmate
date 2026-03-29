@@ -18,7 +18,6 @@ type IAuthentication = {
 export type IUser = {
   _id: Types.ObjectId;
   customId?: string;
-
   name: string;
   email: string;
   password: string;
@@ -28,50 +27,46 @@ export type IUser = {
   dateOfBirth: string;
   gender: GENDER;
   address: string;
-  role: USER_ROLES;
-
-  category: string;
-  nationalId: string;
-  nationality: string;
-  experience: string;
-  language: string;
-  overView: string;
-  wallet: number;
-
   location: {
     type: 'Point';
     coordinates: number[];
   };
-  distance: number;
-  availableDay: SERVICE_DAY[];
-  startTime: string;
-  endTime: string;
-
-  paystackRecipientCode: string;
-  paystackAccountId: string;
-  bankName: string;
-  accountNumber: string;
-
-  status: USER_STATUS;
-  isDeleted: boolean;
-  rankingScore: number;
-  verified: boolean;
-  verificationStatus: VERIFICATION_STATUS;
+  role: USER_ROLES;
   fcmToken: string;
-  deviceToken?: string;
   authentication: IAuthentication;
-
-  metrics: {
-    acceptedJobs: number;
-    declinedJobs: number;
-    completedJobs: number;
-    totalReceivedJobs: number;
-    disputedJobs: number;
-    totalResponseTime: number;
-    totalResponseCount: number;
-  };
-
-  fullName?: string;
+  status: USER_STATUS;
+  verified: boolean;
+  // provider specific fields
+  providerDetails?: {
+    category?: string;
+    nationalId?: string;
+    nationality?: string;
+    experience?: string;
+    language?: string;
+    overView?: string;
+    wallet?: number;
+    distance?: number;
+    availableDay?: SERVICE_DAY[];
+    startTime?: string;
+    endTime?: string;
+    isVatRegistered?: boolean;
+    vatNumber?: string;
+    paystackRecipientCode?: string;
+    paystackAccountId?: string;
+    bankName?: string;
+    accountNumber?: string;
+    rankingScore?: number;
+    verificationStatus?: VERIFICATION_STATUS;
+    metrics?: {
+      acceptedJobs?: number;
+      declinedJobs?: number;
+      completedJobs?: number;
+      totalReceivedJobs?: number;
+      disputedJobs?: number;
+      totalResponseTime?: number;
+      totalResponseCount?: number;
+    };
+  }
 };
 
 export type UserModel = {

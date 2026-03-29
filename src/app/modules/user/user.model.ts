@@ -56,35 +56,11 @@ const UserSchema = new Schema<IUser, UserModel>(
       required: true,
     },
 
-    category: {
+    status: {
       type: String,
-      default: '',
+      enum: Object.values(USER_STATUS),
+      default: USER_STATUS.ACTIVE,
     },
-    nationalId: {
-      type: String,
-      default: '',
-    },
-    nationality: {
-      type: String,
-      default: '',
-    },
-    experience: {
-      type: String,
-      default: '',
-    },
-    language: {
-      type: String,
-      default: '',
-    },
-    overView: {
-      type: String,
-      default: '',
-    },
-    wallet: {
-      type: Number,
-      default: 0,
-    },
-
     location: {
       type: {
         type: String,
@@ -95,56 +71,11 @@ const UserSchema = new Schema<IUser, UserModel>(
         default: [0, 0],
       },
     },
-    distance: {
-      type: Number,
-      default: 20,
-    },
-    availableDay: {
-      type: [String],
-      enum: Object.values(SERVICE_DAY),
-      default: [],
-    },
-    startTime: {
-      type: String,
-      default: '',
-    },
-    endTime: {
-      type: String,
-      default: '',
-    },
-
-    paystackRecipientCode: {
-      type: String,
-      default: '',
-    },
-    bankName: {
-      type: String,
-      default: '',
-    },
-    accountNumber: {
-      type: String,
-      default: '',
-    },
-
-    status: {
-      type: String,
-      enum: Object.values(USER_STATUS),
-      default: USER_STATUS.ACTIVE,
-    },
     verified: {
       type: Boolean,
       default: false,
     },
-    verificationStatus: {
-      type: String,
-      enum: Object.values(VERIFICATION_STATUS),
-      default: VERIFICATION_STATUS.UNVERIFIED,
-    },
     fcmToken: {
-      type: String,
-      default: '',
-    },
-    deviceToken: {
       type: String,
       default: '',
     },
@@ -187,26 +118,100 @@ const UserSchema = new Schema<IUser, UserModel>(
       },
       select: 0,
     },
-    rankingScore: { type: Number, default: 0 },
     customId: { type: String, unique: true, sparse: true },
-    metrics: {
-      acceptedJobs: { type: Number, default: 0 },
-      declinedJobs: { type: Number, default: 0 },
-      completedJobs: { type: Number, default: 0 },
-      totalReceivedJobs: { type: Number, default: 0 },
-      disputedJobs: { type: Number, default: 0 },
-      totalResponseTime: { type: Number, default: 0 },
-      totalResponseCount: { type: Number, default: 0 },
+    providerDetails: {
+      type: {
+        category: {
+          type: String,
+          default: '',
+        },
+        nationalId: {
+          type: String,
+          default: '',
+        },
+        nationality: {
+          type: String,
+          default: '',
+        },
+        experience: {
+          type: String,
+          default: '',
+        },
+        language: {
+          type: String,
+          default: '',
+        },
+        overView: {
+          type: String,
+          default: '',
+        },
+        wallet: {
+          type: Number,
+          default: 0,
+        },
+        distance: {
+          type: Number,
+          default: 0,
+        },
+        availableDay: {
+          type: [String],
+          enum: Object.values(SERVICE_DAY),
+          default: [],
+        },
+        startTime: {
+          type: String,
+          default: '',
+        },
+        endTime: {
+          type: String,
+          default: '',
+        },
+        isVatRegistered: {
+          type: Boolean,
+          default: false,
+        },
+        vatNumber: {
+          type: String,
+          required: false,
+        },
+        paystackRecipientCode: {
+          type: String,
+          default: '',
+        },
+        paystackAccountId: {
+          type: String,
+          default: '',
+        },
+        bankName: {
+          type: String,
+          default: '',
+        },
+        accountNumber: {
+          type: String,
+          default: '',
+        },
+        rankingScore: { type: Number, default: 0 },
+        verificationStatus: {
+          type: String,
+          enum: Object.values(VERIFICATION_STATUS),
+          default: VERIFICATION_STATUS.UNVERIFIED,
+        },
+        metrics: {
+          acceptedJobs: { type: Number, default: 0 },
+          declinedJobs: { type: Number, default: 0 },
+          completedJobs: { type: Number, default: 0 },
+          totalReceivedJobs: { type: Number, default: 0 },
+          disputedJobs: { type: Number, default: 0 },
+          totalResponseTime: { type: Number, default: 0 },
+          totalResponseCount: { type: Number, default: 0 },
+        },
+      },
+      required: false,
+      _id: false,
     },
   },
   {
-    timestamps: true,
-    toJSON: {
-      virtuals: true,
-    },
-    toObject: {
-      virtuals: true,
-    },
+    timestamps: true
   },
 );
 
@@ -217,33 +222,43 @@ UserSchema.virtual('fullName').get(function (this: IUser) {
 });
 
 UserSchema.virtual('metrics.acceptance_rate').get(function (this: IUser) {
-  return this.metrics.totalReceivedJobs > 0
-    ? Math.round((this.metrics.acceptedJobs / this.metrics.totalReceivedJobs) * 100)
-    : 0;
+  const metrics = this.providerDetails?.metrics;
+  if (!metrics) return 0;
+  const totalReceivedJobs = metrics.totalReceivedJobs || 0;
+  const acceptedJobs = metrics.acceptedJobs || 0;
+  return totalReceivedJobs > 0 ? Math.round((acceptedJobs / totalReceivedJobs) * 100) : 0;
 });
 
 UserSchema.virtual('metrics.decline_rate').get(function (this: IUser) {
-  return this.metrics.totalReceivedJobs > 0
-    ? Math.round((this.metrics.declinedJobs / this.metrics.totalReceivedJobs) * 100)
-    : 0;
+  const metrics = this.providerDetails?.metrics;
+  if (!metrics) return 0;
+  const totalReceivedJobs = metrics.totalReceivedJobs || 0;
+  const declinedJobs = metrics.declinedJobs || 0;
+  return totalReceivedJobs > 0 ? Math.round((declinedJobs / totalReceivedJobs) * 100) : 0;
 });
 
 UserSchema.virtual('metrics.avg_response_time').get(function (this: IUser) {
-  return this.metrics.totalResponseCount > 0
-    ? Math.round(this.metrics.totalResponseTime / this.metrics.totalResponseCount)
-    : 0;
+  const metrics = this.providerDetails?.metrics;
+  if (!metrics) return 0;
+  const totalResponseCount = metrics.totalResponseCount || 0;
+  const totalResponseTime = metrics.totalResponseTime || 0;
+  return totalResponseCount > 0 ? Math.round(totalResponseTime / totalResponseCount) : 0;
 });
 
 UserSchema.virtual('metrics.completion_rate').get(function (this: IUser) {
-  return this.metrics.acceptedJobs > 0
-    ? Math.round((this.metrics.completedJobs / this.metrics.acceptedJobs) * 100)
-    : 0;
+  const metrics = this.providerDetails?.metrics;
+  if (!metrics) return 0;
+  const acceptedJobs = metrics.acceptedJobs || 0;
+  const completedJobs = metrics.completedJobs || 0;
+  return acceptedJobs > 0 ? Math.round((completedJobs / acceptedJobs) * 100) : 0;
 });
 
 UserSchema.virtual('metrics.dispute_rate').get(function (this: IUser) {
-  return this.metrics.acceptedJobs > 0
-    ? Math.round((this.metrics.disputedJobs / this.metrics.acceptedJobs) * 100)
-    : 0;
+  const metrics = this.providerDetails?.metrics;
+  if (!metrics) return 0;
+  const acceptedJobs = metrics.acceptedJobs || 0;
+  const disputedJobs = metrics.disputedJobs || 0;
+  return acceptedJobs > 0 ? Math.round((disputedJobs / acceptedJobs) * 100) : 0;
 });
 
 UserSchema.statics.isPasswordMatched = async function (
@@ -268,20 +283,16 @@ UserSchema.statics.updateRankingScore = async function (
   const user = await this.findById(providerId).session(session || null).lean().exec();
   if (!user || user.role !== USER_ROLES.PROVIDER) return;
 
-  const metrics = user.metrics || {
-    acceptedJobs: 0,
-    completedJobs: 0,
-    totalReceivedJobs: 0,
-    totalResponseCount: 0,
-    totalResponseTime: 0,
-  };
+  const metrics = user.providerDetails?.metrics || {};
+  const acceptedJobs = metrics.acceptedJobs || 0;
+  const completedJobs = metrics.completedJobs || 0;
+  const totalReceivedJobs = metrics.totalReceivedJobs || 0;
+  const totalResponseCount = metrics.totalResponseCount || 0;
+  const totalResponseTime = metrics.totalResponseTime || 0;
 
-  const completionRate =
-    metrics.acceptedJobs > 0 ? (metrics.completedJobs / metrics.acceptedJobs) * 100 : 0;
-  const acceptanceRate =
-    metrics.totalReceivedJobs > 0 ? (metrics.acceptedJobs / metrics.totalReceivedJobs) * 100 : 0;
-  const avgResponseTime =
-    metrics.totalResponseCount > 0 ? metrics.totalResponseTime / metrics.totalResponseCount : 0;
+  const completionRate = acceptedJobs > 0 ? (completedJobs / acceptedJobs) * 100 : 0;
+  const acceptanceRate = totalReceivedJobs > 0 ? (acceptedJobs / totalReceivedJobs) * 100 : 0;
+  const avgResponseTime = totalResponseCount > 0 ? totalResponseTime / totalResponseCount : 0;
 
   const ratingResult = await mongoose
     .model('Review')
@@ -310,7 +321,7 @@ UserSchema.statics.updateRankingScore = async function (
 
   await this.findByIdAndUpdate(
     providerId,
-    { rankingScore: finalScore },
+    { 'providerDetails.rankingScore': finalScore },
     { session: session || null },
   );
 };

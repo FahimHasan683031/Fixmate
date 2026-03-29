@@ -18,8 +18,8 @@ const getProfile = catchAsync(async (req: Request | any, res: Response) => {
   });
 });
 
-// Controller to process profile updates and location data
-const updateProfile = catchAsync(async (req: Request | any, res: Response) => {
+// Controller to process standard user profile updates
+const updateUserProfile = catchAsync(async (req: Request | any, res: Response) => {
   const image = getSingleFilePath(req.files, 'image');
   if (image) req.body.image = image;
 
@@ -30,12 +30,34 @@ const updateProfile = catchAsync(async (req: Request | any, res: Response) => {
     };
   }
 
-  const result = await UserService.updateProfile(req.user, req.body);
+  const result = await UserService.updateUserProfile(req.user, req.body);
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
     message: 'Profile updated successfully',
+    data: result,
+  });
+});
+
+// Controller to process provider profile updates
+const updateProviderProfile = catchAsync(async (req: Request | any, res: Response) => {
+  const image = getSingleFilePath(req.files, 'image');
+  if (image) req.body.image = image;
+
+  if (req.body.longitude && req.body.latitude) {
+    req.body.location = {
+      type: 'Point',
+      coordinates: [Number(req.body.longitude), Number(req.body.latitude)],
+    };
+  }
+
+  const result = await UserService.updateProviderProfile(req.user, req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Provider profile updated successfully',
     data: result,
   });
 });
@@ -54,6 +76,7 @@ const deleteProfile = catchAsync(async (req: Request | any, res: Response) => {
 
 export const UserController = {
   getProfile,
-  updateProfile,
+  updateUserProfile,
+  updateProviderProfile,
   deleteProfile,
 };
