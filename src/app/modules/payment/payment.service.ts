@@ -77,7 +77,7 @@ const handlePaymentSuccessLogic = async (
     });
 
     await User.findByIdAndUpdate(booking.provider, {
-      $inc: { wallet: providerAmount, 'metrics.totalReceivedJobs': 1 },
+      $inc: { 'providerDetails.wallet': providerAmount, 'providerDetails.metrics.totalReceivedJobs': 1 },
     });
 
     await NotificationService.insertNotification({
@@ -216,7 +216,7 @@ const createConnectedAccount = async (req: Request) => {
   }
 
   const subaccount = await createPaystackSubaccount(userOnDB.name, '044', '0690000032');
-  await User.findByIdAndUpdate(userOnDB._id, { paystackAccountId: subaccount.subaccount_code });
+  await User.findByIdAndUpdate(userOnDB._id, { 'providerDetails.paystackAccountId': subaccount.subaccount_code });
 
   return `${config.backend_url}/api/v1/payment/account/${subaccount.subaccount_code}`;
 };
@@ -293,7 +293,7 @@ const getWallet = async (user: JwtPayload, query: any) => {
           : item.settledAmount,
   }));
 
-  return { meta, balance: provider.wallet || 0, data };
+  return { meta, balance: provider.providerDetails?.wallet || 0, data };
 };
 
 // Retrieve filtered payment history for a user
@@ -332,7 +332,7 @@ const getPaymentHistory = async (user: JwtPayload, query: any) => {
   const data = await historyQuery.modelQuery.lean().exec();
   const meta = await historyQuery.getPaginationInfo();
 
-  return { meta, balance: userData.wallet, data };
+  return { meta, balance: userData.providerDetails?.wallet || 0, data };
 };
 
 // Get detailed information for a specific payment record
@@ -411,18 +411,18 @@ const withdraw = async (
     .exec()) as IUser;
   if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
 
-  const maxWithdrawable = (provider.wallet || 0) * 0.9;
+  const maxWithdrawable = (provider.providerDetails?.wallet || 0) * 0.9;
   if (data.amount > maxWithdrawable)
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
       `Insufficient balance! You can withdraw up to ${maxWithdrawable.toFixed(2)}`,
     );
 
-  let recipientCode = provider.paystackRecipientCode;
+  let recipientCode = provider.providerDetails?.paystackRecipientCode;
 
   if (!recipientCode) {
-    const bankCode = (data.bankCode || provider.bankName || '').toString().trim();
-    const accountNumber = (data.accountNumber || provider.accountNumber || '').toString().trim();
+    const bankCode = (data.bankCode || provider.providerDetails?.bankName || '').toString().trim();
+    const accountNumber = (data.accountNumber || provider.providerDetails?.accountNumber || '').toString().trim();
 
     if (!bankCode || !accountNumber) {
       throw new ApiError(
@@ -435,18 +435,18 @@ const withdraw = async (
     recipientCode = recipient.recipient_code;
 
     await User.findByIdAndUpdate(provider._id, {
-      paystackRecipientCode: recipientCode,
-      bankName: bankCode,
-      accountNumber: accountNumber,
+      'providerDetails.paystackRecipientCode': recipientCode,
+      'providerDetails.bankName': bankCode,
+      'providerDetails.accountNumber': accountNumber,
     });
   }
 
   const withdrawalFee = Number((data.amount * 0.1).toFixed(2));
   const netPayout = Number((data.amount - withdrawalFee).toFixed(2));
 
-  await initiateTransfer(netPayout, recipientCode, `Withdrawal for ${provider.name}`);
+  await initiateTransfer(netPayout, recipientCode as string, `Withdrawal for ${provider.name}`);
 
-  await User.findByIdAndUpdate(provider._id, { wallet: (provider.wallet || 0) - data.amount })
+  await User.findByIdAndUpdate(provider._id, { 'providerDetails.wallet': (provider.providerDetails?.wallet || 0) - data.amount })
     .lean()
     .exec();
 

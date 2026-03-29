@@ -191,6 +191,8 @@ const UserSchema = new Schema<IUser, UserModel>(
           default: '',
         },
         rankingScore: { type: Number, default: 0 },
+        totalRating: { type: Number, default: 0 },
+        averageRating: { type: Number, default: 0 },
         verificationStatus: {
           type: String,
           enum: Object.values(VERIFICATION_STATUS),
@@ -298,11 +300,12 @@ UserSchema.statics.updateRankingScore = async function (
     .model('Review')
     .aggregate([
       { $match: { provider: new Types.ObjectId(providerId as string) } },
-      { $group: { _id: null, avgRating: { $avg: '$rating' } } },
+      { $group: { _id: null, avgRating: { $avg: '$rating' }, totalRating: { $sum: 1 } } },
     ])
     .session(session || null);
 
   const avgRating = ratingResult.length > 0 ? ratingResult[0].avgRating || 0 : 0;
+  const totalRating = ratingResult.length > 0 ? ratingResult[0].totalRating || 0 : 0;
 
   const oneDayInMs = 24 * 60 * 60 * 1000;
   const oneHourInMs = 60 * 60 * 1000;
@@ -321,7 +324,11 @@ UserSchema.statics.updateRankingScore = async function (
 
   await this.findByIdAndUpdate(
     providerId,
-    { 'providerDetails.rankingScore': finalScore },
+    { 
+      'providerDetails.rankingScore': finalScore,
+      'providerDetails.totalRating': totalRating,
+      'providerDetails.averageRating': Math.round((avgRating) * 10) / 10,
+    },
     { session: session || null },
   );
 };

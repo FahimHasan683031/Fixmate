@@ -64,11 +64,11 @@ const updateStatus = async (id: string, status: VERIFICATION_STATUS) => {
 
   if (status === VERIFICATION_STATUS.APPROVED) {
     await User.findByIdAndUpdate(verification.user, {
-      verificationStatus: VERIFICATION_STATUS.APPROVED,
+      'providerDetails.verificationStatus': VERIFICATION_STATUS.APPROVED,
     });
   } else if (status === VERIFICATION_STATUS.REJECTED) {
     await User.findByIdAndUpdate(verification.user, {
-      verificationStatus: VERIFICATION_STATUS.REJECTED,
+      'providerDetails.verificationStatus': VERIFICATION_STATUS.REJECTED,
     });
   }
 

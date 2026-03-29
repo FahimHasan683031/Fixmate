@@ -61,7 +61,7 @@ const getServices = async (user: JwtPayload | null, query: any) => {
   const serviceQuery = new QueryBuilder(
     Service.find({ isDeleted: false }).populate(
       'creator',
-      'name image email contact location category experience',
+      'name image email contact location providerDetails.category providerDetails.experience',
     ),
     query,
   )

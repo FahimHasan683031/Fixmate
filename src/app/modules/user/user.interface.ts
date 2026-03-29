@@ -56,6 +56,8 @@ export type IUser = {
     bankName?: string;
     accountNumber?: string;
     rankingScore?: number;
+    totalRating?: number;
+    averageRating?: number;
     verificationStatus?: VERIFICATION_STATUS;
     metrics?: {
       acceptedJobs?: number;

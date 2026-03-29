@@ -49,7 +49,7 @@ export const overview = async (yearChart: string) => {
         userId: '$user._id',
         name: '$user.name',
         image: '$user.image',
-        category: '$user.category',
+        category: '$user.providerDetails.category',
         reviewCount: 1,
         avgRating: { $round: ['$avgRating', 2] },
         lastReviewAt: 1,
@@ -61,7 +61,7 @@ export const overview = async (yearChart: string) => {
     bookingStatus: { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.SETTLED] },
   })
     .select('provider bookingStatus customer date service')
-    .populate('provider', 'name contact address category')
+    .populate('provider', 'name contact address providerDetails.category')
     .populate('customer', 'name')
     .populate('service', 'price')
     .sort({ createdAt: -1 })
@@ -204,20 +204,20 @@ export const getUser = async (id: string) => {
       upCommingWork,
       cancelWork,
 
-      experience: result.experience,
+      experience: result.providerDetails?.experience,
       totalDoneWork: completedWork,
       review: averageRating,
 
-      expertise: result.category,
+      expertise: result.providerDetails?.category,
       country: result.nationality,
       serviceArea: result.address,
-      serviceDistance: result.distance,
+      serviceDistance: result.providerDetails?.distance,
       availableTime: {
-        startTime: result.startTime ?? '',
-        endTime: result.endTime ?? '',
+        startTime: result.providerDetails?.startTime ?? '',
+        endTime: result.providerDetails?.endTime ?? '',
       },
-      availableDay: result.availableDay,
-      overview: result.overView,
+      availableDay: result.providerDetails?.availableDay,
+      overview: result.providerDetails?.overView,
 
       licenses: verificationFile ? [verificationFile.license, verificationFile.nid] : [],
     };

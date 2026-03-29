@@ -16,7 +16,7 @@ import { Verification } from '../verification/verification.model';
 export const getProviderById = async (user: JwtPayload, id: string, query: any) => {
   const provider: any = await User.findById(id)
     .select(
-      'name image overView address distance gender language experience nationality category metrics availableDay startTime endTime',
+      'name image providerDetails.overView address providerDetails.distance gender providerDetails.language providerDetails.experience nationality providerDetails.category providerDetails.metrics providerDetails.availableDay providerDetails.startTime providerDetails.endTime',
     )
     .lean()
     .exec();
@@ -27,7 +27,7 @@ export const getProviderById = async (user: JwtPayload, id: string, query: any) 
     .limit(Number(query.servicesLimit) || 10)
     .skip((Number(query.servicesPage) - 1) * Number(query.servicesLimit) || 0)
     .sort({ createdAt: query.servicesSortOrder === 'desc' ? -1 : 1 })
-    .populate('creator', 'name image category')
+    .populate('creator', 'name image providerDetails.category')
     .lean()
     .exec();
 
@@ -77,21 +77,21 @@ export const getProviderById = async (user: JwtPayload, id: string, query: any) 
       _id: provider._id,
       name: provider.name,
       image: provider.image,
-      category: provider.category,
-      experience: provider.experience,
+      category: provider.providerDetails?.category,
+      experience: provider.providerDetails?.experience,
       complitedTask: completedTask,
       rating: averageRating,
       isFavorite: !!isFavorite,
-      metrics: provider.metrics, // Preserving new feature
+      metrics: provider.providerDetails?.metrics,
     },
     overView: {
-      overView: provider.overView,
-      language: provider.language,
+      overView: provider.providerDetails?.overView,
+      language: provider.providerDetails?.language,
       address: provider.address,
-      serviceDestance: provider.distance,
-      availableDay: provider.availableDay,
-      startTime: provider.startTime,
-      endTime: provider.endTime,
+      serviceDestance: provider.providerDetails?.distance,
+      availableDay: provider.providerDetails?.availableDay,
+      startTime: provider.providerDetails?.startTime,
+      endTime: provider.providerDetails?.endTime,
       license: validationRequest?.license ?? '',
     },
   };
@@ -107,7 +107,7 @@ export const seeBooking = async (_user: JwtPayload, id: string) => {
       {
         path: 'provider',
         select:
-          'name image address distance gender language experience nationality category whatsApp contact',
+          'name image address providerDetails.distance gender providerDetails.language providerDetails.experience nationality providerDetails.category whatsApp contact',
       },
     ])
     .lean()

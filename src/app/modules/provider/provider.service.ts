@@ -22,7 +22,7 @@ export const providerHome = async (payload: JwtPayload) => {
 
   const [balanceResult, newRequests, upCommingOrder, completedOrder, availableDayResult] =
     await Promise.all([
-      User.findById(id).select('wallet').lean(),
+      User.findById(id).select('providerDetails.wallet').lean(),
       Booking.countDocuments({ provider: id, bookingStatus: BOOKING_STATUS.REQUESTED }),
       Booking.countDocuments({ provider: id, bookingStatus: BOOKING_STATUS.ACCEPTED }),
       Booking.countDocuments({
@@ -47,13 +47,13 @@ export const providerHome = async (payload: JwtPayload) => {
     ]);
 
   return {
-    balance: balanceResult?.wallet || 0, // Current field
+    balance: balanceResult?.providerDetails?.wallet || 0,
     pendigTask: newRequests, // Current field (misspelled)
     complitedTask: completedOrder, // Current field (misspelled)
     availableDay: availableDayResult.length > 0 ? availableDayResult[0].date : null, // Current field
 
     // Legacy fields for parity
-    totalEarning: balanceResult?.wallet || 0,
+    totalEarning: balanceResult?.providerDetails?.wallet || 0,
     completedOrder: completedOrder,
     upCommingOrder: upCommingOrder,
     newRequests: newRequests,
@@ -90,7 +90,7 @@ export const seeBooking = async (user: JwtPayload, id: string) => {
   return {
     service: { ...booking.service, date: booking.date },
     details: {
-      distance: provider.distance,
+      distance: provider.providerDetails?.distance,
       status: booking.bookingStatus,
       fee: booking.service?.price,
       address: booking.address,

@@ -9,7 +9,7 @@ import { Service } from '../service/service.model';
 import { User } from '../user/user.model';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { BookingStateMachine } from './bookingStateMachine';
-import { createPaystackCheckout } from '../../../helpers/paystackHelper';
+import { createPaystackCheckout, refundPaystackTransaction } from '../../../helpers/paystackHelper';
 import { Request } from 'express';
 import {
   createCancellationRefundRecord,
@@ -78,7 +78,7 @@ const getBookings = async (user: JwtPayload, query: any, role: 'client' | 'provi
   const bookingQuery = new QueryBuilder(
     Booking.find(filter).populate([
       { path: 'customer', select: 'name image address contact whatsApp' },
-      { path: 'provider', select: 'name image contact whatsApp' },
+      { path: 'provider', select: 'name image contact whatsApp providerDetails.category' },
       { path: 'service', select: 'name image price category subCategory' },
     ]),
     query,
@@ -99,7 +99,7 @@ const getBookingById = async (id: string) => {
   const booking = await Booking.findById(id)
     .populate([
       { path: 'service', select: 'image price category subCategory' },
-      { path: 'provider', select: 'name image address category contact whatsApp' },
+      { path: 'provider', select: 'name image address providerDetails.category contact whatsApp' },
       { path: 'customer', select: 'name image address contact whatsApp' },
     ])
     .lean()
@@ -145,7 +145,6 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
       }
       refundedAmount = originalAmount - penaltyFee;
 
-      // Create refund record
       await createCancellationRefundRecord(
         booking._id.toString(),
         originalAmount,
@@ -157,15 +156,13 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
         booking.service as any,
       );
 
-      // Refund client wallet (assuming wallet holds refunds too)
-      await User.findByIdAndUpdate(booking.customer, {
-        $inc: { wallet: refundedAmount },
-      });
+      if (refundedAmount > 0) {
+        await refundPaystackTransaction(booking.transactionId, refundedAmount);
+      }
 
-      // Credit penalty to provider (optional business rule)
       if (penaltyFee > 0) {
         await User.findByIdAndUpdate(booking.provider, {
-          $inc: { wallet: penaltyFee },
+          $inc: { 'providerDetails.wallet': penaltyFee },
         });
       }
     }
@@ -178,28 +175,25 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
       const providerDeduction = penaltyFee;
       refundedAmount = originalAmount; // Client gets full refund
 
-      // Create a single refund record handling both client refund and provider penalty
       await createCancellationRefundRecord(
         booking._id.toString(),
         originalAmount,
-        penaltyFee,   // 5% system deduction from original
-        refundedAmount, // full refund back to the customer
+        penaltyFee,
+        refundedAmount,
         `Provider cancelled booking`,
         booking.customer as any,
         booking.provider as any,
         booking.service as any,
-        providerDeduction // The actual amount taken from the provider's wallet
+        providerDeduction
       );
 
-      // Deduct penalty from provider
       await User.findByIdAndUpdate(booking.provider, {
-        $inc: { wallet: -providerDeduction },
+        $inc: { 'providerDetails.wallet': -providerDeduction },
       });
 
-      // Refund client fully
-      await User.findByIdAndUpdate(booking.customer, {
-        $inc: { wallet: refundedAmount },
-      });
+      if (refundedAmount > 0) {
+        await refundPaystackTransaction(booking.transactionId, refundedAmount);
+      }
     }
 
     await BookingStateMachine.transitionState(id, 'provider', BOOKING_STATUS.CANCELLED);
