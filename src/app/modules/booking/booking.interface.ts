@@ -16,7 +16,6 @@ export interface IBooking {
   };
   address: string;
   specialNote: string;
-
   isPaid: boolean;
   rejectReason: string;
   paymentId: string;
