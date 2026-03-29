@@ -15,6 +15,8 @@ export interface IPayment {
   platformFee: number;
   paystackGatewayFee: number;
   providerPay: number;
+  clientPenalty?: number;
+  providerPenalty?: number;
   refundAmount?: number;
   createdAt?: Date;
   updatedAt?: Date;

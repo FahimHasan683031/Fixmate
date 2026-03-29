@@ -20,6 +20,8 @@ const paymentSchema = new Schema<any>(
     platformFee: { type: Number, required: true },
     paystackGatewayFee: { type: Number, required: true },
     providerPay: { type: Number, required: true },
+    clientPenalty: { type: Number, default: 0 },
+    providerPenalty: { type: Number, default: 0 },
     refundAmount: { type: Number, default: 0 },
     customId: { type: String, unique: true, sparse: true },
   },

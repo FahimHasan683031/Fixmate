@@ -98,12 +98,16 @@ const handlePaymentSuccessLogic = async (
 export const createCancellationRefundRecord = async (
   bookingId: string,
   refundedAmount: number,
+  clientPenalty: number = 0,
+  providerPenalty: number = 0,
 ) => {
   return Payment.findOneAndUpdate(
     { booking: new MongooseTypes.ObjectId(bookingId) },
     {
       paymentStatus: PAYMENT_STATUS.REFUNDED,
       refundAmount: refundedAmount,
+      clientPenalty,
+      providerPenalty,
     },
     { new: true }
   );

@@ -9,10 +9,10 @@ import { Service } from '../service/service.model';
 import { User } from '../user/user.model';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { BookingStateMachine } from './bookingStateMachine';
-import { createPaystackCheckout, refundPaystackTransaction } from '../../../helpers/paystackHelper';
+import { createPaystackCheckout } from '../../../helpers/paystackHelper';
 import { Request } from 'express';
-import { createCancellationRefundRecord } from '../payment/payment.service';
 import { Payment } from '../payment/payment.model';
+import { applyClientCancellationPenalty, applyProviderCancellationPenalty } from '../penalty/penalty.utils';
 
 // Create a new booking and initialize Paystack checkout
 const createBooking = async (user: JwtPayload, data: IBooking, req: Request) => {
@@ -126,57 +126,43 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
   const originalAmount = originalPayment
     ? originalPayment.servicePrice || 0
     : 0;
-  let refundedAmount = originalAmount;
   let penaltyFee = 0;
 
   const currentStatus = booking.bookingStatus as BOOKING_STATUS;
 
   if (role === 'client') {
     if (originalAmount > 0) {
-      // Basic penalty rules (can be expanded based on business logic)
       if (currentStatus === BOOKING_STATUS.ACCEPTED) {
-        penaltyFee = originalAmount * 0.1; // 10% penalty for late client cancellation
+        penaltyFee = originalAmount * 0.05; 
       } else if (currentStatus === BOOKING_STATUS.IN_PROGRESS) {
-        penaltyFee = originalAmount * 0.5; // 50% penalty if job already started
+        penaltyFee = originalAmount * 0.10; 
       }
-      refundedAmount = originalAmount - penaltyFee;
 
-      await createCancellationRefundRecord(
+      await applyClientCancellationPenalty(
         booking._id.toString(),
-        refundedAmount,
+        booking.transactionId,
+        booking.customer.toString(),
+        booking.service._id.toString(),
+        originalAmount,
+        penaltyFee
       );
-
-      if (refundedAmount > 0) {
-        await refundPaystackTransaction(booking.transactionId, refundedAmount);
-      }
-
-      if (penaltyFee > 0) {
-        await User.findByIdAndUpdate(booking.provider, {
-          $inc: { 'providerDetails.wallet': penaltyFee },
-        });
-      }
     }
 
     await BookingStateMachine.transitionState(id, 'client', BOOKING_STATUS.CANCELLED);
   } else {
-    // Provider cancels
     if (originalAmount > 0) {
-      penaltyFee = originalAmount * 0.05; // 5% penalty deduction for provider bailing out
-      const providerDeduction = penaltyFee;
-      refundedAmount = originalAmount; // Client gets full refund
-
-      await createCancellationRefundRecord(
-        booking._id.toString(),
-        refundedAmount,
-      );
-
-      await User.findByIdAndUpdate(booking.provider, {
-        $inc: { 'providerDetails.wallet': -providerDeduction },
-      });
-
-      if (refundedAmount > 0) {
-        await refundPaystackTransaction(booking.transactionId, refundedAmount);
+      if (currentStatus === BOOKING_STATUS.ACCEPTED || currentStatus === BOOKING_STATUS.IN_PROGRESS) {
+        penaltyFee = 30;
       }
+
+      await applyProviderCancellationPenalty(
+        booking._id.toString(),
+        booking.transactionId,
+        booking.provider.toString(),
+        booking.service._id.toString(),
+        originalAmount,
+        penaltyFee
+      );
     }
 
     await BookingStateMachine.transitionState(id, 'provider', BOOKING_STATUS.CANCELLED);
