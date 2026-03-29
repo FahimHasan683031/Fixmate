@@ -82,9 +82,9 @@ export const overview = async (yearChart: string) => {
   });
 
   const [{ totalRevenue = 0 } = {}] = await Payment.aggregate([
-    { $match: { paymentStatus: PAYMENT_STATUS.PAID } },
+    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.CLIENT_PAID, PAYMENT_STATUS.SETTLED] } } },
     {
-      $group: { _id: null, totalRevenue: { $sum: '$amount' } },
+      $group: { _id: null, totalRevenue: { $sum: '$platformFee' } },
     },
   ]);
 
@@ -93,7 +93,7 @@ export const overview = async (yearChart: string) => {
   const monthly = await Payment.aggregate([
     {
       $match: {
-        paymentStatus: PAYMENT_STATUS.PAID,
+        paymentStatus: { $in: [PAYMENT_STATUS.CLIENT_PAID, PAYMENT_STATUS.SETTLED] },
         createdAt: {
           $gte: new Date(`${year}-01-01`),
           $lte: new Date(`${year}-12-31`),
@@ -103,7 +103,7 @@ export const overview = async (yearChart: string) => {
     {
       $group: {
         _id: { $month: '$createdAt' },
-        totalProfit: { $sum: '$amount' },
+        totalProfit: { $sum: '$platformFee' },
       },
     },
     { $sort: { _id: 1 } },

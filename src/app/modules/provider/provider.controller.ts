@@ -12,7 +12,7 @@ import { ServiceController } from '../service/service.controller';
 import { PaymentControllers } from '../payment/payment.controller';
 
 const provider = UserController.getProfile;
-const providerProfileUpdate = UserController.updateProfile;
+const providerProfileUpdate = UserController.updateProviderProfile;
 const providerProfileDelete = UserController.deleteProfile;
 
 // Controller to retrieve the dashboard data for the provider

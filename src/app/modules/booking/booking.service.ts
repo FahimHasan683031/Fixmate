@@ -11,11 +11,8 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { BookingStateMachine } from './bookingStateMachine';
 import { createPaystackCheckout, refundPaystackTransaction } from '../../../helpers/paystackHelper';
 import { Request } from 'express';
-import {
-  createCancellationRefundRecord,
-} from '../payment/payment.service';
+import { createCancellationRefundRecord } from '../payment/payment.service';
 import { Payment } from '../payment/payment.model';
-import { PAYMENT_TYPE } from '../../../enum/payment';
 
 // Create a new booking and initialize Paystack checkout
 const createBooking = async (user: JwtPayload, data: IBooking, req: Request) => {
@@ -121,14 +118,13 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
   const booking = await Booking.findById(id).populate('service').lean().exec();
   if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
 
-  // Check if booking was paid
   const originalPayment: any = await Payment.findOne({
     booking: booking._id,
-    paymentType: PAYMENT_TYPE.SERVICE_PAYMENT,
+    paymentStatus: 'CLIENT_PAID',
   }).lean();
 
   const originalAmount = originalPayment
-    ? originalPayment.serviceAmount || originalPayment.amount
+    ? originalPayment.servicePrice || 0
     : 0;
   let refundedAmount = originalAmount;
   let penaltyFee = 0;
@@ -147,13 +143,7 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
 
       await createCancellationRefundRecord(
         booking._id.toString(),
-        originalAmount,
-        penaltyFee,
         refundedAmount,
-        `Client cancelled during ${currentStatus}`,
-        booking.customer as any,
-        booking.provider as any,
-        booking.service as any,
       );
 
       if (refundedAmount > 0) {
@@ -177,14 +167,7 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
 
       await createCancellationRefundRecord(
         booking._id.toString(),
-        originalAmount,
-        penaltyFee,
         refundedAmount,
-        `Provider cancelled booking`,
-        booking.customer as any,
-        booking.provider as any,
-        booking.service as any,
-        providerDeduction
       );
 
       await User.findByIdAndUpdate(booking.provider, {

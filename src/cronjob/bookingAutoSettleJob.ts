@@ -47,14 +47,13 @@ export const bookingAutoSettleJob = () => {
           );
 
           await Payment.findByIdAndUpdate(payment._id, {
-            paymentStatus: PAYMENT_STATUS.AUTO_SETTLED,
+            paymentStatus: PAYMENT_STATUS.SETTLED,
           });
 
-          const provider = (await User.findById(booking.provider).select('wallet').lean()) as IUser;
+          const provider = (await User.findById(booking.provider).select('providerDetails').lean()) as IUser;
           if (provider) {
-            await User.findByIdAndUpdate(booking.provider, {
-              wallet: (provider.wallet || 0) + (payment.providerAmount || 0),
-            });
+            // Wait, we don't need to credit the wallet here anymore. It's done at checkout!
+            // But we should log that we swapped the state.
           }
 
           await NotificationService.insertNotification({

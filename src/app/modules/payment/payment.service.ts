@@ -9,7 +9,7 @@ import {
   createTransferRecipient,
   initiateTransfer,
 } from '../../../helpers/paystackHelper';
-import { PAYMENT_STATUS, PAYMENT_TYPE, SETTLEMENT_TYPE } from '../../../enum/payment';
+import { PAYMENT_STATUS } from '../../../enum/payment';
 import { NotificationService } from '../notification/notification.service';
 import { Request } from 'express';
 import { Booking } from '../booking/booking.model';
@@ -22,6 +22,7 @@ import { JwtPayload } from 'jsonwebtoken';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { IUser } from '../user/user.interface';
 import { Types as MongooseTypes } from 'mongoose';
+import { Transaction } from '../transaction/transaction.model';
 
 // Handle post-payment logic: update booking, create SERVICE_PAYMENT record, notify provider
 const handlePaymentSuccessLogic = async (
@@ -57,27 +58,31 @@ const handlePaymentSuccessLogic = async (
       throw new ApiError(StatusCodes.BAD_REQUEST, 'Related data not found');
     }
 
-    const serviceAmount = serviceData.price;
-    const gatewayFee = Number((serviceAmount * 0.03).toFixed(2));
-    const platformFee = Number((serviceAmount * 0.15).toFixed(2));
-    const providerAmount = Number((serviceAmount - platformFee - gatewayFee).toFixed(2));
+    const servicePrice = serviceData.price;
+    let vat = 0;
+    if (providerData.providerDetails?.isVatRegistered) {
+      vat = Number((servicePrice * 0.15).toFixed(2));
+    }
+    const platformFee = Number((servicePrice * 0.18).toFixed(2));
+    const providerPay = Number((servicePrice * 0.82).toFixed(2));
+    const paystackGatewayFee = Number((servicePrice * 0.03).toFixed(2));
 
     await Payment.create({
-      paymentType: PAYMENT_TYPE.SERVICE_PAYMENT,
-      paymentStatus: PAYMENT_STATUS.PAID,
+      paymentStatus: PAYMENT_STATUS.CLIENT_PAID,
       customer: booking.customer,
       provider: booking.provider,
       service: booking.service,
       booking: booking._id,
       paymentId: paystackPaymentId,
-      serviceAmount,
+      servicePrice,
+      vat,
       platformFee,
-      gatewayFee,
-      providerAmount,
+      paystackGatewayFee,
+      providerPay,
     });
 
     await User.findByIdAndUpdate(booking.provider, {
-      $inc: { 'providerDetails.wallet': providerAmount, 'providerDetails.metrics.totalReceivedJobs': 1 },
+      $inc: { 'providerDetails.wallet': providerPay, 'providerDetails.metrics.totalReceivedJobs': 1 },
     });
 
     await NotificationService.insertNotification({
@@ -90,75 +95,40 @@ const handlePaymentSuccessLogic = async (
   }
 };
 
-// Create a CANCELLATION_REFUND record when a booking is cancelled
 export const createCancellationRefundRecord = async (
   bookingId: string,
-  originalAmount: number,
-  penaltyFee: number,
   refundedAmount: number,
-  cancellationReason: string,
-  customerId?: MongooseTypes.ObjectId,
-  providerId?: MongooseTypes.ObjectId,
-  serviceId?: MongooseTypes.ObjectId,
-  providerDeduction?: number,
 ) => {
-  return Payment.create({
-    paymentType: PAYMENT_TYPE.CANCELLATION_REFUND,
-    paymentStatus: refundedAmount > 0 ? PAYMENT_STATUS.REFUNDED : PAYMENT_STATUS.CANCELLED,
-    booking: new MongooseTypes.ObjectId(bookingId),
-    customer: customerId,
-    provider: providerId,
-    service: serviceId,
-    originalAmount,
-    penaltyFee,
-    refundedAmount,
-        cancellationReason,
-        providerDeduction,
-      });
-    };
-
-// Create a SETTLEMENT record when a booking is auto or manually settled
-export const createSettlementRecord = async (
-  bookingId: string,
-  settledAmount: number,
-  settlementType: SETTLEMENT_TYPE,
-  providerId?: MongooseTypes.ObjectId,
-  serviceId?: MongooseTypes.ObjectId,
-  customerId?: MongooseTypes.ObjectId,
-) => {
-  return Payment.create({
-    paymentType: PAYMENT_TYPE.SETTLEMENT,
-    paymentStatus: PAYMENT_STATUS.AUTO_SETTLED,
-    booking: new MongooseTypes.ObjectId(bookingId),
-    provider: providerId,
-    service: serviceId,
-    customer: customerId,
-    settledAmount,
-    settlementType,
-  });
+  return Payment.findOneAndUpdate(
+    { booking: new MongooseTypes.ObjectId(bookingId) },
+    {
+      paymentStatus: PAYMENT_STATUS.REFUNDED,
+      refundAmount: refundedAmount,
+    },
+    { new: true }
+  );
 };
 
-// Create a DISPUTE_REFUND record when a disputed booking is refunded
+export const createSettlementRecord = async (bookingId: string) => {
+  return Payment.findOneAndUpdate(
+    { booking: new MongooseTypes.ObjectId(bookingId) },
+    { paymentStatus: PAYMENT_STATUS.SETTLED },
+    { new: true }
+  );
+};
+
 export const createDisputeRefundRecord = async (
   bookingId: string,
-  originalAmount: number,
   refundedAmount: number,
-  disputeReason: string,
-  customerId?: MongooseTypes.ObjectId,
-  providerId?: MongooseTypes.ObjectId,
-  serviceId?: MongooseTypes.ObjectId,
 ) => {
-  return Payment.create({
-    paymentType: PAYMENT_TYPE.DISPUTE_REFUND,
-    paymentStatus: PAYMENT_STATUS.REFUNDED,
-    booking: new MongooseTypes.ObjectId(bookingId),
-    customer: customerId,
-    provider: providerId,
-    service: serviceId,
-    originalAmount,
-    refundedAmount,
-    disputeReason,
-  });
+  return Payment.findOneAndUpdate(
+    { booking: new MongooseTypes.ObjectId(bookingId) },
+    {
+      paymentStatus: PAYMENT_STATUS.REFUNDED,
+      refundAmount: refundedAmount,
+    },
+    { new: true }
+  );
 };
 
 // Process successful payment redirect from Paystack
@@ -266,32 +236,12 @@ const getWallet = async (user: JwtPayload, query: any) => {
   if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
 
   const walletQuery = new QueryBuilder(
-    Payment.find({
-      provider: new Types.ObjectId(userId)
-    }),
+    Transaction.find({ provider: new Types.ObjectId(userId) }),
     query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  ).filter().sort().paginate().fields();
 
-  const walletItems = await walletQuery.modelQuery
-    .populate([{ path: 'service', select: 'image category subCategory' }])
-    .lean()
-    .exec();
-
+  const data = await walletQuery.modelQuery.lean().exec();
   const meta = await walletQuery.getPaginationInfo();
-
-  const data = walletItems.map((item: any) => ({
-    ...item,
-    displayAmount:
-      item.paymentType === PAYMENT_TYPE.SERVICE_PAYMENT
-        ? item.providerAmount
-        : item.paymentType === PAYMENT_TYPE.WITHDRAWAL
-          ? -item.withdrawAmount
-          : item.settledAmount,
-  }));
 
   return { meta, balance: provider.providerDetails?.wallet || 0, data };
 };
@@ -309,9 +259,6 @@ const getPaymentHistory = async (user: JwtPayload, query: any) => {
     [isProvider ? 'provider' : 'customer']: new Types.ObjectId(userId),
   };
 
-  if (paymentType) {
-    filterOptionsQuery.paymentType = paymentType;
-  }
 
   if (startTime && endTime) {
     filterOptionsQuery.createdAt = { $gte: new Date(startTime), $lte: new Date(endTime) };
@@ -343,7 +290,6 @@ const getPaymentDetails = async (id: string) => {
 
   const base = {
     customId: info.customId,
-    paymentType: info.paymentType,
     paymentStatus: info.paymentStatus,
     dateAndTime: info.createdAt,
     customer: info.customer
@@ -361,44 +307,15 @@ const getPaymentDetails = async (id: string) => {
       : null,
   };
 
-  if (info.paymentType === PAYMENT_TYPE.SERVICE_PAYMENT) {
-    return {
-      ...base,
-      serviceAmount: info.serviceAmount,
-      platformFee: info.platformFee,
-      gatewayFee: info.gatewayFee,
-      providerAmount: info.providerAmount,
-    };
-  }
-
-  if (
-    info.paymentType === PAYMENT_TYPE.CANCELLATION_REFUND ||
-    info.paymentType === PAYMENT_TYPE.DISPUTE_REFUND
-  ) {
-    return {
-      ...base,
-      originalAmount: info.originalAmount,
-      penaltyFee: info.penaltyFee ?? null,
-      refundedAmount: info.refundedAmount,
-        reason: info.cancellationReason || info.disputeReason,
-        providerDeduction: info.providerDeduction ?? null,
-      };
-    }
-
-  if (info.paymentType === PAYMENT_TYPE.WITHDRAWAL) {
-    return {
-      ...base,
-      withdrawAmount: info.withdrawAmount,
-      withdrawalFee: info.withdrawalFee,
-      netPayout: info.netPayout,
-    };
-  }
-
-  if (info.paymentType === PAYMENT_TYPE.SETTLEMENT) {
-    return { ...base, settledAmount: info.settledAmount, settlementType: info.settlementType };
-  }
-
-  return base;
+  return {
+    ...base,
+    servicePrice: info.servicePrice,
+    vat: info.vat,
+    platformFee: info.platformFee,
+    paystackGatewayFee: info.paystackGatewayFee,
+    providerPay: info.providerPay,
+    refundAmount: info.refundAmount,
+  };
 };
 
 // Initiate a fund withdrawal to a bank account
@@ -450,13 +367,13 @@ const withdraw = async (
     .lean()
     .exec();
 
-  await Payment.create({
-    paymentType: PAYMENT_TYPE.WITHDRAWAL,
-    paymentStatus: PAYMENT_STATUS.WITHDRAWN,
+  await Transaction.create({
+    type: 'WITHDRAWAL',
     provider: provider._id,
-    withdrawAmount: data.amount,
-    withdrawalFee,
-    netPayout,
+    amount: data.amount,
+    fee: withdrawalFee,
+    netAmount: netPayout,
+    status: 'COMPLETED',
   });
 };
 

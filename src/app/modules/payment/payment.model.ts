@@ -1,52 +1,31 @@
 import { Schema, model } from 'mongoose';
 import { IPayment } from './payment.interface';
-import { PAYMENT_STATUS, PAYMENT_TYPE, SETTLEMENT_TYPE } from '../../../enum/payment';
+import { PAYMENT_STATUS } from '../../../enum/payment';
 import { generateCustomId } from '../../../utils/idGenerator';
 
 const paymentSchema = new Schema<any>(
   {
-    paymentType: {
-      type: String,
-      required: true,
-      enum: Object.values(PAYMENT_TYPE),
-    },
     paymentStatus: {
       type: String,
       required: true,
       enum: Object.values(PAYMENT_STATUS),
     },
-
     customer: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     provider: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     service: { type: Schema.Types.ObjectId, ref: 'Service', default: null },
     booking: { type: Schema.Types.ObjectId, ref: 'Booking', default: null },
     paymentId: { type: String, default: '' },
-    serviceAmount: { type: Number, default: null },
-    platformFee: { type: Number, default: null },
-    gatewayFee: { type: Number, default: null },
-    providerAmount: { type: Number, default: null },
-    originalAmount: { type: Number, default: null },
-    penaltyFee: { type: Number, default: null },
-    refundedAmount: { type: Number, default: null },
-    cancellationReason: { type: String, default: '' },
-    providerDeduction: { type: Number, default: null },
-    disputeReason: { type: String, default: '' },
-    reason: { type: String, default: '' },
-    withdrawAmount: { type: Number, default: null },
-    withdrawalFee: { type: Number, default: null },
-    netPayout: { type: Number, default: null },
-    settledAmount: { type: Number, default: null },
-    settlementType: {
-      type: String,
-      enum: Object.values(SETTLEMENT_TYPE),
-      default: null,
-    },
+    servicePrice: { type: Number, required: true },
+    vat: { type: Number, required: true },
+    platformFee: { type: Number, required: true },
+    paystackGatewayFee: { type: Number, required: true },
+    providerPay: { type: Number, required: true },
+    refundAmount: { type: Number, default: 0 },
     customId: { type: String, unique: true, sparse: true },
   },
   { timestamps: true },
 );
 
-paymentSchema.index({ paymentType: 1 });
 paymentSchema.index({ paymentStatus: 1 });
 paymentSchema.index({ customer: 1 });
 paymentSchema.index({ provider: 1 });

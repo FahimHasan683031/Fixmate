@@ -13,7 +13,7 @@ import { ReviewController } from '../review/review.controller';
 import { PaymentControllers } from '../payment/payment.controller';
 
 const getUserProfile = UserController.getProfile;
-const updateProfile = UserController.updateProfile;
+const updateProfile = UserController.updateUserProfile;
 const deleteProfile = UserController.deleteProfile;
 
 const getServices = ServiceController.getServices;
