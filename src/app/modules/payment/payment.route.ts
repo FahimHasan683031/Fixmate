@@ -5,21 +5,11 @@ import auth from '../../middleware/auth';
 
 const router = Router();
 
-router.get('/success', PaymentControllers.success);
-
-router.get('/account/:id', PaymentControllers.successAccount);
-
-router.get('/account/refresh/:id', PaymentControllers.refreshAccount);
-
-router.get('/cancel', PaymentControllers.failure);
-
-router.get(
-  '/connected-account',
+router.post(
+  '/generate-recipient',
   auth(USER_ROLES.PROVIDER),
-  PaymentControllers.createConnectedAccount,
+  PaymentControllers.generateRecipient,
 );
-
-router.post('/webhook', PaymentControllers.webhook);
 
 router.get('/wallet', auth(USER_ROLES.PROVIDER), PaymentControllers.getWallet);
 

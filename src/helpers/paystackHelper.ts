@@ -36,21 +36,6 @@ export const createPaystackCheckout = async (
   return { sessionUrl: response.data.authorization_url, id: response.data.reference };
 };
 
-export const createPaystackSubaccount = async (
-  businessName: string,
-  settlementBank: string,
-  accountNumber: string,
-) => {
-  const response = await paystackInstance.subaccount.create({
-    business_name: businessName,
-    settlement_bank: settlementBank,
-    account_number: accountNumber,
-    percentage_charge: 10,
-  });
-
-  return response.data;
-};
-
 export const verifyPaystackTransaction = async (reference: string) => {
   return await paystackInstance.transaction.verify({ reference });
 };

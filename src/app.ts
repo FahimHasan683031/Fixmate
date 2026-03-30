@@ -3,6 +3,7 @@ import cors from 'cors';
 import { StatusCodes } from 'http-status-codes';
 import { Morgan } from './shared/morgan';
 import router from './app/routes';
+import { PaymentControllers } from './app/modules/payment/payment.controller';
 import globalErrorHandler from './app/middleware/globalErrorHandler';
 import requestIp from 'request-ip';
 
@@ -12,6 +13,9 @@ app.use(Morgan.successHandler);
 app.use(Morgan.errorHandler);
 
 app.use(cors());
+
+// Stripe/Paystack webhook requires raw body
+app.post('/api/v1/webhook', express.raw({ type: 'application/json' }), PaymentControllers.webhook);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

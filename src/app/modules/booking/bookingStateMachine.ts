@@ -4,6 +4,7 @@ import { BOOKING_STATUS } from '../../../enum/booking';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { User } from '../user/user.model';
+import { handleBookingSettlement } from '../payment/payment.service';
 
 const VALID_TRANSITIONS: Record<string, BOOKING_STATUS[]> = {
   [BOOKING_STATUS.CREATED]: [BOOKING_STATUS.PAID, BOOKING_STATUS.CANCELLED],
@@ -147,6 +148,10 @@ export class BookingStateMachine {
 
     booking.markModified('currentStats');
     await booking.save();
+
+    if (targetState === BOOKING_STATUS.SETTLED || targetState === BOOKING_STATUS.AUTO_SETTLED) {
+      await handleBookingSettlement(bookingId.toString());
+    }
 
     return booking;
   }

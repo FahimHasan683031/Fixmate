@@ -5,46 +5,16 @@ import { PaymentServices } from './payment.service';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 
-// Handle payment success callback
-const success = catchAsync(async (req: Request, res: Response) => {
-  const result = await PaymentServices.success(req.query);
-  res.send(result);
-});
-
-// Handle payment failure case
-const failure = catchAsync(async (_req: Request, res: Response) => {
-  res.send(`
-    <html>
-        <body>
-            <h1 style="color: red;">Payment Failed!</h1>
-            <p>There was an error processing your payment. Please try again.</p>
-        </body>
-    </html>
-    `);
-});
-
-// Controller to create provider connected account
-const createConnectedAccount = catchAsync(async (req: Request, res: Response) => {
-  const result = await PaymentServices.createConnectedAccount(req);
+// Controller to create provider transfer recipient
+const generateRecipient = catchAsync(async (req: Request, res: Response) => {
+  const result = await PaymentServices.generateRecipient(req);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'Connected account created successfully',
+    message: 'Transfer recipient generated successfully',
     data: result,
   });
-});
-
-// Controller for successful account connection message
-const successAccount = catchAsync(async (_req: Request, res: Response) => {
-  const result = await PaymentServices.successAccount(_req);
-  res.send(result);
-});
-
-// Controller to refresh account status
-const refreshAccount = catchAsync(async (_req: Request, res: Response) => {
-  const result = await PaymentServices.refreshAccount(_req);
-  res.send(result);
 });
 
 // Webhook entry point for payment updates
@@ -107,11 +77,7 @@ const withdraw = catchAsync(async (req: Request | any, res: Response) => {
 });
 
 export const PaymentControllers = {
-  success,
-  failure,
-  createConnectedAccount,
-  successAccount,
-  refreshAccount,
+  generateRecipient,
   webhook,
   getWallet,
   getPaymentHistory,

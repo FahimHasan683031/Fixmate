@@ -4,11 +4,10 @@ import config from '../../../config';
 import { StatusCodes } from 'http-status-codes';
 import { FilterQuery, Types } from 'mongoose';
 import {
-  verifyPaystackTransaction,
-  createPaystackSubaccount,
   createTransferRecipient,
   initiateTransfer,
 } from '../../../helpers/paystackHelper';
+import crypto from 'crypto';
 import { PAYMENT_STATUS } from '../../../enum/payment';
 import { NotificationService } from '../notification/notification.service';
 import { Request } from 'express';
@@ -23,6 +22,7 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { IUser } from '../user/user.interface';
 import { Types as MongooseTypes } from 'mongoose';
 import { Transaction } from '../transaction/transaction.model';
+import { settlePendingPenaltyDues } from '../penalty/penalty.utils';
 
 // Handle post-payment logic: update booking, create SERVICE_PAYMENT record, notify provider
 const handlePaymentSuccessLogic = async (
@@ -81,16 +81,46 @@ const handlePaymentSuccessLogic = async (
       providerPay,
     });
 
-    await User.findByIdAndUpdate(booking.provider, {
-      $inc: { 'providerDetails.wallet': providerPay, 'providerDetails.metrics.totalReceivedJobs': 1 },
-    });
-
     await NotificationService.insertNotification({
       for: booking.provider as any,
       message: `You have a new booking request. ${customerData.name} has requested a booking for ${serviceData.category}`,
     });
   } catch (error) {
     console.error('Payment Success Error:', error);
+    throw error;
+  }
+};
+
+export const handleBookingSettlement = async (bookingId: string) => {
+  try {
+    const payment = await Payment.findOne({ booking: new MongooseTypes.ObjectId(bookingId) });
+    if (!payment || !payment.provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Payment record not found for this booking');
+    
+    if (payment.paymentStatus === PAYMENT_STATUS.SETTLED) {
+      return; // Already settled
+    }
+
+    const providerId = payment.provider.toString();
+    const providerPay = payment.providerPay;
+
+    // Settle pending penalty dues automatically from provider's earnings
+    const creditAmount = await settlePendingPenaltyDues(providerId, providerPay);
+
+    // Credit provider wallet
+    await User.findByIdAndUpdate(providerId, {
+      $inc: { 'providerDetails.wallet': creditAmount, 'providerDetails.metrics.totalReceivedJobs': 1 },
+    });
+
+    // Update Payment record status
+    payment.paymentStatus = PAYMENT_STATUS.SETTLED;
+    await payment.save();
+
+    await NotificationService.insertNotification({
+      for: payment.provider as any,
+      message: `Booking settled. You have received ${creditAmount.toFixed(2)} in your wallet (after any penalty adjustments).`,
+    });
+  } catch (error) {
+    console.error('Booking Settlement Error:', error);
     throw error;
   }
 };
@@ -135,86 +165,44 @@ export const createDisputeRefundRecord = async (
   );
 };
 
-// Process successful payment redirect from Paystack
-const success = async (query: any) => {
-  const reference = query.reference || query.trxref || query.sessionId;
-  if (!reference) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Reference / Session ID is required');
-  }
-
-  const verification = await verifyPaystackTransaction(reference);
-  if (!verification || !verification.status || verification.data.status !== 'success') {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Payment not completed or verification failed');
-  }
-
-  const customFields = (verification.data as any).metadata?.custom_fields || [];
-  const getMetaField = (key: string) =>
-    customFields.find((f: any) => f.variable_name === key)?.value;
-
-  const bookingID = getMetaField('bookingId');
-
-  if (bookingID) {
-    await handlePaymentSuccessLogic(
-      bookingID.toString(),
-      reference,
-      (verification.data as any).id.toString(),
-    );
-  }
-
-  return `
-    <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f4f4f4; }
-                .container { text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-                h1 { color: #4CAF50; }
-                p { color: #555; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>Payment Successful!</h1>
-                <p>Your payment has been processed successfully. You can now close this window.</p>
-            </div>
-        </body>
-    </html>
-    `;
-};
-
-// Create a Paystack subaccount for a provider
-const createConnectedAccount = async (req: Request) => {
+// Create a Paystack transfer recipient for a provider
+const generateRecipient = async (req: Request) => {
   const user = req.user;
+  const { name, accountNumber, bankCode } = req.body;
+
+  if (!name || !accountNumber || !bankCode) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Name, Account Number and Bank Code are required');
+  }
+
   const userOnDB = await User.findById(user.authId || user.id);
   if (!userOnDB) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'User not found');
   }
 
-  const subaccount = await createPaystackSubaccount(userOnDB.name, '044', '0690000032');
-  await User.findByIdAndUpdate(userOnDB._id, { 'providerDetails.paystackAccountId': subaccount.subaccount_code });
+  const recipient = await createTransferRecipient(name, accountNumber, bankCode);
+  
+  await User.findByIdAndUpdate(userOnDB._id, { 
+    'providerDetails.paystackRecipientCode': recipient.recipient_code,
+    'providerDetails.bankName': bankCode,
+    'providerDetails.accountNumber': accountNumber,
+  });
 
-  return `${config.backend_url}/api/v1/payment/account/${subaccount.subaccount_code}`;
-};
-
-// Refresh connected account (placeholder for Paystack)
-const refreshAccount = async (_req: Request) => {
-  return `<html><body><p>Paystack subaccounts do not require refreshing.</p></body></html>`;
-};
-
-// Return success message for account connection
-const successAccount = async (_req: Request) => {
-  return `
-    <html>
-        <body>
-            <h1>Account Connected Successfully!</h1>
-            <p>Your Paystack account has been linked. You can now receive payments.</p>
-        </body>
-    </html>
-    `;
+  return { 
+    recipientCode: recipient.recipient_code,
+    bankName: bankCode,
+    accountNumber: accountNumber
+  };
 };
 
 // Handle Paystack webhooks
 const webhook = async (req: Request) => {
-  const event = req.body;
+  const payload = req.body; // Buffer from express.raw
+  const hash = crypto.createHmac('sha512', config.paystack.secretKey || 'sk_test_placeholder').update(payload).digest('hex');
+  if (hash !== req.headers['x-paystack-signature']) {
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'Invalid Signature!');
+  }
+
+  const event = JSON.parse(req.body.toString());
 
   if (event.event === 'charge.success') {
     const data = event.data;
@@ -227,6 +215,16 @@ const webhook = async (req: Request) => {
     const bookingID = getMetaField('bookingId');
     if (bookingID) {
       await handlePaymentSuccessLogic(bookingID, reference, data.id.toString());
+    }
+  } else if (event.event === 'transfer.success') {
+    const data = event.data;
+    await Transaction.findOneAndUpdate({ p2ptransactionId: data.reference }, { status: 'COMPLETED' });
+  } else if (event.event === 'transfer.failed' || event.event === 'transfer.reversed') {
+    const data = event.data;
+    const tx = await Transaction.findOneAndUpdate({ p2ptransactionId: data.reference }, { status: 'FAILED' });
+    if (tx) {
+      // Refund user's wallet
+      await User.findByIdAndUpdate(tx.provider, { $inc: { 'providerDetails.wallet': tx.amount } });
     }
   }
 
@@ -362,10 +360,10 @@ const withdraw = async (
     });
   }
 
-  const withdrawalFee = Number((data.amount * 0.1).toFixed(2));
-  const netPayout = Number((data.amount - withdrawalFee).toFixed(2));
+  const withdrawalFee = 0; // Configured to 0 withdrawal fee as requested
+  const netPayout = data.amount;
 
-  await initiateTransfer(netPayout, recipientCode as string, `Withdrawal for ${provider.name}`);
+  const transferRes = await initiateTransfer(netPayout, recipientCode as string, `Withdrawal for ${provider.name}`);
 
   await User.findByIdAndUpdate(provider._id, { 'providerDetails.wallet': (provider.providerDetails?.wallet || 0) - data.amount })
     .lean()
@@ -377,15 +375,13 @@ const withdraw = async (
     amount: data.amount,
     fee: withdrawalFee,
     netAmount: netPayout,
-    status: 'COMPLETED',
+    status: 'PENDING',
+    p2ptransactionId: transferRes.reference,
   });
 };
 
 export const PaymentServices = {
-  success,
-  createConnectedAccount,
-  refreshAccount,
-  successAccount,
+  generateRecipient,
   webhook,
   getWallet,
   getPaymentHistory,

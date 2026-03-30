@@ -1,0 +1,38 @@
+{Mon Mar 30 2026 14:00:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:01:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:02:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:03:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:04:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:05:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:06:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:07:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:08:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:09:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:10:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:11:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:12:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:13:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:14:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:15:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:16:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:17:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:18:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:19:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:20:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:21:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:22:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:23:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:24:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:25:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:26:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:27:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:28:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:29:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:30:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Mon Mar 30 2026 14:30:51} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Mon Mar 30 2026 14:30:51} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Mon Mar 30 2026 14:30:51} [APP 🚀] info: Unverified account cleanup job scheduled to run every minute.
+{Mon Mar 30 2026 14:30:51} [APP 🚀] info: Booking SLA job scheduled to run every 15 minutes (Threshold: 5 hours).
+{Mon Mar 30 2026 14:30:51} [APP 🚀] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Mon Mar 30 2026 14:30:51} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Mon Mar 30 2026 14:30:51} [APP 🚀] info: [33m♻️  Application listening on port:5004[39m

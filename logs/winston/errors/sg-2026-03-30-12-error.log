@@ -1,0 +1,2 @@
+{Mon Mar 30 2026 12:43:06} [APP 🐞] error: ::ffff:10.10.7.50 - GET /favicon.ico 404 - 1.328 ms
+{Mon Mar 30 2026 12:44:18} [APP 🐞] error: ::ffff:10.10.7.50 - POST /api/v1/webhook 500 - 13.361 ms
