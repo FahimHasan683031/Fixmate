@@ -1,4 +1,4 @@
-import { model, Schema } from 'mongoose';
+import { Document, model, Schema } from 'mongoose';
 import { IBooking } from './booking.interface';
 import { BOOKING_STATUS } from '../../../enum/booking';
 import { generateCustomId } from '../../../utils/idGenerator';
@@ -82,13 +82,6 @@ const bookingSchema = new Schema<IBooking>(
     respondedAt: {
       type: Date,
     },
-    disputeReason: {
-      type: String,
-      default: '',
-    },
-    disputedAt: {
-      type: Date,
-    },
   },
   {
     timestamps: true,
@@ -98,7 +91,7 @@ const bookingSchema = new Schema<IBooking>(
 
 bookingSchema.index({ location: '2dsphere' });
 
-bookingSchema.pre('save', async function (next) {
+bookingSchema.pre('save', async function (this: IBooking & Document, next) {
   if (this.isNew && !this.customId) {
     this.customId = await generateCustomId('BKG');
   }

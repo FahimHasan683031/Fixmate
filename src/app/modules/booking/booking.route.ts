@@ -19,16 +19,10 @@ router.get(
   BookingController.getBookingById,
 );
 
-router.post(
+router.patch(
   '/cancel/:id',
   auth(USER_ROLES.CLIENT, USER_ROLES.PROVIDER),
   BookingController.cancelBooking,
-);
-
-router.post(
-  '/dispute/:id',
-  auth(USER_ROLES.CLIENT),
-  BookingController.disputeBooking,
 );
 
 export const BookingRoutes = router;

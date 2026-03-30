@@ -22,8 +22,6 @@ export interface IBooking {
   isDeleted: boolean;
   transactionId: string;
   respondedAt?: Date;
-  disputeReason?: string;
-  disputedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
