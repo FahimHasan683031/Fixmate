@@ -4,10 +4,9 @@ import { generateCustomId } from '../../../utils/idGenerator';
 
 const penaltySchema = new Schema<IPenalty>(
   {
-    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    user: { type: String, ref: 'User', required: true },
     type: { type: String, enum: ['CLIENT', 'PROVIDER'], required: true },
-    booking: { type: Schema.Types.ObjectId, ref: 'Booking', required: true },
-    service: { type: Schema.Types.ObjectId, ref: 'Service', default: null },
+    booking: { type: String, ref: 'Booking', required: true },
     amount: { type: Number, required: true },
     taken: { type: Number, required: true },
     due: { type: Number, required: true },

@@ -142,7 +142,6 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
         booking._id.toString(),
         booking.transactionId,
         booking.customer.toString(),
-        booking.service._id.toString(),
         originalAmount,
         penaltyFee
       );
@@ -159,7 +158,6 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
         booking._id.toString(),
         booking.transactionId,
         booking.provider.toString(),
-        booking.service._id.toString(),
         originalAmount,
         penaltyFee
       );

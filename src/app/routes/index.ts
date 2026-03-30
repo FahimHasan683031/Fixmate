@@ -17,6 +17,7 @@ import { ServiceRoutes } from '../modules/service/service.route';
 import { ReviewRoutes } from '../modules/review/review.route';
 import { FavoritesRoutes } from '../modules/favorites/favorites.route';
 import { UserRoutes } from '../modules/user/user.route';
+import { PenaltyRoutes } from '../modules/penalty/penalty.route';
 
 const router = express.Router();
 
@@ -39,6 +40,7 @@ const apiRoutes = [
   { path: '/services', route: ServiceRoutes },
   { path: '/reviews', route: ReviewRoutes },
   { path: '/favorites', route: FavoritesRoutes },
+  { path: '/penalties', route: PenaltyRoutes },
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));

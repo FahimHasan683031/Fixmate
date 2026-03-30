@@ -1,51 +1,42 @@
-import { Types } from 'mongoose';
+import mongoose from 'mongoose';
 import { Penalty } from './penalty.model';
 import { User } from '../user/user.model';
-import { IUser } from '../user/user.interface';
+import { Booking } from '../booking/booking.model';
 import { createCancellationRefundRecord } from '../payment/payment.service';
 import { refundPaystackTransaction } from '../../../helpers/paystackHelper';
 import { NotificationService } from '../notification/notification.service';
 
-/**
- * Handle a cancellation from the Client.
- * Deducts percentages based on booking status phase,
- * refunds the rest to the client via paystack,
- * logs a completed Penalty for platform accounting,
- * and updates exactly the booking payment tracking record.
- */
+
+// client cancellation penalty
 export const applyClientCancellationPenalty = async (
   bookingId: string,
   transactionId: string,
   customerId: string,
-  serviceId: string,
   originalPrice: number,
   penaltyFee: number
 ) => {
   const refundedAmount = originalPrice - penaltyFee;
 
-  // Track the penalty strictly on the single booking Payment ledger.
-  await createCancellationRefundRecord(
-    bookingId,
-    refundedAmount,
-    penaltyFee, // clientPenalty
-    0           // providerPenalty
-  );
+  await createCancellationRefundRecord(bookingId, refundedAmount, penaltyFee, 0);
 
   if (refundedAmount > 0) {
     await refundPaystackTransaction(transactionId, refundedAmount);
   }
 
   if (penaltyFee > 0) {
-    // Platform keeps the fee (no wallet injection)
+    const [userObj, bookingObj] = await Promise.all([
+      User.findById(customerId).select('customId').lean(),
+      Booking.findById(bookingId).select('customId').lean(),
+    ]);
+
     await Penalty.create({
-      user: new Types.ObjectId(customerId),
+      user: (userObj as any)?.customId,
       type: 'CLIENT',
-      booking: new Types.ObjectId(bookingId),
-      service: new Types.ObjectId(serviceId),
+      booking: (bookingObj as any)?.customId,
       amount: penaltyFee,
       taken: penaltyFee,
       due: 0,
-      reason: `Client cancelled booking, incurring a penalty of ${penaltyFee}`,
+      reason: `Client cancelled booking. Penalty: ${penaltyFee}`,
       status: 'COMPLETED',
     });
 
@@ -56,96 +47,84 @@ export const applyClientCancellationPenalty = async (
   }
 };
 
-/**
- * Handle a cancellation from the Provider.
- * Provider flat rates a fee (30).
- * Checks the provider wallet dynamically:
- * If balance > fee, drains it instantly and completes it.
- * If balance < fee, drains remainder and establishes a pending debt. 
- * Recomputes all previous pending debts to drive wallet negatively exactly.
- */
+
+// provider cancellation penalty
 export const applyProviderCancellationPenalty = async (
   bookingId: string,
   transactionId: string,
   providerId: string,
-  serviceId: string,
   originalPrice: number,
-  penaltyFee: number // Fixed 30
+  penaltyFee: number
 ) => {
-  // Provider cancellation instantly gives client full 100% refund
-  const refundedAmount = originalPrice;
+  await createCancellationRefundRecord(bookingId, originalPrice, 0, penaltyFee);
 
-  await createCancellationRefundRecord(
-    bookingId,
-    refundedAmount,
-    0,         // clientPenalty
-    penaltyFee // providerPenalty
-  );
-
-  if (refundedAmount > 0) {
-    await refundPaystackTransaction(transactionId, refundedAmount);
+  if (originalPrice > 0) {
+    await refundPaystackTransaction(transactionId, originalPrice);
   }
 
-  if (penaltyFee > 0) {
-    // Probe provider's current holding capacity
-    const provider = (await User.findById(providerId).select('providerDetails.wallet').lean()) as IUser;
-    let currentWallet = provider?.providerDetails?.wallet || 0;
+  if (penaltyFee <= 0) return;
 
-    let taken = 0;
-    let due = 0;
-    let status = 'COMPLETED';
+  const [provider, bookingObj] = await Promise.all([
+    User.findById(providerId).select('providerDetails.wallet customId').lean(),
+    Booking.findById(bookingId).select('customId').lean(),
+  ]);
 
-    // Has sufficient coverage
-    if (currentWallet >= penaltyFee) {
-      taken = penaltyFee;
-      due = 0;
-      
-      // Deduct immediately
-      await User.findByIdAndUpdate(providerId, {
-         $inc: { 'providerDetails.wallet': -penaltyFee }
-      });
+  const currentWallet = (provider as any)?.providerDetails?.wallet || 0;
+  const taken = currentWallet > 0 ? Math.min(currentWallet, penaltyFee) : 0;
+  const due = penaltyFee - taken;
+  const status = due > 0 ? 'PENDING' : 'COMPLETED';
+
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+
+    if (due > 0) {
+      const pendingDueTotal = await Penalty.aggregate([
+        { $match: { user: (provider as any)?.customId, status: 'PENDING' } },
+        { $group: { _id: null, total: { $sum: '$due' } } },
+      ]).session(session);
+
+      const newTotalDue = (pendingDueTotal[0]?.total || 0) + due;
+
+      await User.findByIdAndUpdate(
+        providerId,
+        { 'providerDetails.wallet': -newTotalDue },
+        { session }
+      );
     } else {
-      // Insufficient balance handling (e.g., Wallet = 15, Penalty = 30)
-      if (currentWallet > 0) {
-         taken = currentWallet; // Wipe out what they had left
-      } else {
-         taken = 0; // If they had nothing, or already negative, can't take anything
-      }
-      
-      due = penaltyFee - taken; // Note how much is missing (e.g. 30 - 15 = 15)
-      status = 'PENDING';
-
-      // Calculate all PREVIOUS pending penalties' total dues
-      const pendingPenalties = await Penalty.find({
-        user: new Types.ObjectId(providerId),
-        status: 'PENDING',
-      }).lean();
-
-      const previousDueTotal = pendingPenalties.reduce((sum, p) => sum + (p.due || 0), 0);
-      const newTotalDue = previousDueTotal + due;
-
-      // Direct wipe-to-debt state (as instructed: -(totalPending Penalties + due))
-      await User.findByIdAndUpdate(providerId, {
-        'providerDetails.wallet': -newTotalDue,
-      });
+      await User.findByIdAndUpdate(
+        providerId,
+        { $inc: { 'providerDetails.wallet': -penaltyFee } },
+        { session }
+      );
     }
 
-    await Penalty.create({
-      user: new Types.ObjectId(providerId),
-      type: 'PROVIDER',
-      booking: new Types.ObjectId(bookingId),
-      service: new Types.ObjectId(serviceId),
-      amount: penaltyFee,
-      taken,
-      due,
-      reason: `Provider cancelled booking, incurring a penalty of ${penaltyFee}`,
-      status,
-    });
+    await Penalty.create(
+      [
+        {
+          user: (provider as any)?.customId,
+          type: 'PROVIDER',
+          booking: (bookingObj as any)?.customId,
+          amount: penaltyFee,
+          taken,
+          due,
+          reason: `Provider cancelled booking. Penalty: ${penaltyFee}`,
+          status,
+        },
+      ],
+      { session }
+    );
 
-    await NotificationService.insertNotification({
-      for: providerId as any,
-      message: `You cancelled an accepted booking. A fixed penalty of ${penaltyFee} was assessed (Withheld: ${taken}, Outstanding Due: ${due}).`,
-    });
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
   }
-};
 
+  await NotificationService.insertNotification({
+    for: providerId as any,
+    message: `You cancelled a booking. Penalty: ${penaltyFee} assessed (Withheld: ${taken}, Outstanding: ${due}).`,
+  });
+};

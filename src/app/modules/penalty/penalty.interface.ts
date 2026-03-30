@@ -3,10 +3,9 @@ import { Types } from 'mongoose';
 export interface IPenalty {
   _id?: Types.ObjectId;
   customId?: string;
-  user: Types.ObjectId; // Who incurred the penalty
+  user: string;
   type: 'CLIENT' | 'PROVIDER';
-  booking: Types.ObjectId;
-  service?: Types.ObjectId;
+  booking: string;
   amount: number;
   taken: number;
   due: number;

@@ -1,0 +1,44 @@
+import { Request, Response } from 'express';
+import catchAsync from '../../../shared/catchAsync';
+import sendResponse from '../../../shared/sendResponse';
+import { StatusCodes } from 'http-status-codes';
+import { PenaltyService } from './penalty.service';
+
+const createPenaltyByAdmin = catchAsync(async (req: Request, res: Response) => {
+  const result = await PenaltyService.createPenaltyByAdmin(req.body);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Penalty created successfully',
+    data: result,
+  });
+});
+
+const getAllPenalties = catchAsync(async (req: Request, res: Response) => {
+  const result = await PenaltyService.getAllPenalties(req.query as any);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Penalties retrieved successfully',
+    data: result,
+  });
+});
+
+const getMyPenalties = catchAsync(async (req: Request, res: Response) => {
+  const result = await PenaltyService.getMyPenalties(req.user as any, req.query as any);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'My penalties retrieved successfully',
+    data: result,
+  });
+});
+
+export const PenaltyController = {
+  createPenaltyByAdmin,
+  getAllPenalties,
+  getMyPenalties,
+};
