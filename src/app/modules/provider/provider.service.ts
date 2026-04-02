@@ -10,7 +10,6 @@ import { BookingStateMachine } from '../booking/bookingStateMachine';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { refundPaystackTransaction } from '../../../helpers/paystackHelper';
 import { Payment } from '../payment/payment.model';
-import { NotificationService } from '../notification/notification.service';
 import { PAYMENT_STATUS } from '../../../enum/payment';
 import { Review } from '../review/review.model';
 import { IPaginationOptions } from '../../../interfaces/pagination';
@@ -111,10 +110,6 @@ const actionBooking = async (
 
   if (data.action == 'accept') {
     await BookingStateMachine.transitionState(data.bookId, 'provider', BOOKING_STATUS.ACCEPTED);
-    await NotificationService.insertNotification({
-      for: bookingInfo.customer,
-      message: `Your booking for ${bookingInfo.service?.subCategory} has been accepted.`,
-    });
   } else if (data.action == 'reject') {
     await BookingStateMachine.transitionState(
       data.bookId,
@@ -132,10 +127,6 @@ const actionBooking = async (
     )
       .lean()
       .exec();
-    await NotificationService.insertNotification({
-      for: bookingInfo.customer,
-      message: `Your booking has been rejected.`,
-    });
   } else if (data.action == 'start') {
     await BookingStateMachine.transitionState(data.bookId, 'provider', BOOKING_STATUS.IN_PROGRESS);
   } else if (data.action == 'complete') {

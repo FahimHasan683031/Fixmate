@@ -15,6 +15,7 @@ import { NotificationService } from '../notification/notification.service';
 import { Penalty } from '../penalty/penalty.model';
 import { settlePendingPenaltyDues } from '../penalty/penalty.utils';
 import mongoose, { Types as MongooseTypes } from 'mongoose';
+import { TransactionService } from '../transaction/transaction.service';
 
 const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
   const booking = await Booking.findById(payload.bookingId);
@@ -108,13 +109,21 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
       payment.paymentStatus = PAYMENT_STATUS.SETTLED;
       await payment.save({ session });
 
+      await TransactionService.recordTransaction({
+        type: 'EARNINGS',
+        user: (payment.provider as MongooseTypes.ObjectId),
+        booking: bookingId,
+        amount: payment.providerPay,
+        status: 'COMPLETED',
+      });
+
     } else if (payload.type === 'refund') {
       // full refund to client
       await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.REFUNDED, payload.note || 'Resolved by admin: full refund');
       
       if (payment.paymentStatus === PAYMENT_STATUS.SETTLED) {
         // RECLAIM logic: provider already received money, take it back
-        const reclaimAmount = payment.servicePrice;
+        const reclaimAmount = payment.providerPay;
         const providerData = await User.findById(payment.provider).session(session);
         if (providerData) {
             const currentWallet = providerData.providerDetails?.wallet || 0;
@@ -143,6 +152,22 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
               reason: `Dispute Refund: Reclaim for already settled booking (ID: ${payment.customId})`,
               status: due > 0 ? 'PENDING' : 'COMPLETED',
             }], { session });
+
+            await TransactionService.recordTransaction({
+              type: 'PENALTY',
+              user: providerData._id,
+              booking: bookingId,
+              amount: reclaimAmount,
+              status: 'COMPLETED',
+            });
+
+            await TransactionService.recordTransaction({
+              type: 'PENALTY',
+              user: providerData._id,
+              booking: bookingId,
+              amount: reclaimAmount,
+              status: 'COMPLETED',
+            });
 
             await NotificationService.insertNotification({
               for: providerData._id,
@@ -201,6 +226,14 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
                 status: due > 0 ? 'PENDING' : 'COMPLETED',
               }], { session });
 
+              await TransactionService.recordTransaction({
+                type: 'PENALTY',
+                user: providerData._id,
+                booking: bookingId,
+                amount: reclaimAmount,
+                status: 'COMPLETED',
+              });
+
               await NotificationService.insertNotification({
                 for: providerData._id,
                 message: `A partial refund of ${reclaimAmount.toFixed(2)} was reclaimed from your wallet following a dispute resolution. (Taken: ${taken.toFixed(2)}, Due: ${due.toFixed(2)})`,
@@ -221,10 +254,18 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
               await User.findByIdAndUpdate(payment.provider, {
                 $inc: { 'providerDetails.wallet': creditAmount, 'providerDetails.metrics.totalReceivedJobs': 1 },
               }, { session });
+
+              await TransactionService.recordTransaction({
+                type: 'EARNINGS',
+                user: (payment.provider as MongooseTypes.ObjectId),
+                booking: bookingId,
+                amount: providerPayout,
+                status: 'COMPLETED',
+              });
           }
       }
 
-      payment.paymentStatus = PAYMENT_STATUS.REFUNDED;
+      payment.paymentStatus = PAYMENT_STATUS.PARTIAL_REFUNDED;
       payment.refundAmount = refundAmount;
       await payment.save({ session });
     }
@@ -257,6 +298,11 @@ const rejectDispute = async (id: string, note: string) => {
     if (!dispute) {
         throw new ApiError(StatusCodes.NOT_FOUND, 'Dispute not found');
     }
+
+    await NotificationService.insertNotification({
+      for: dispute.user as any,
+      message: `Your dispute for a booking has been rejected. Note: ${note}`,
+    });
     
     return dispute;
 };

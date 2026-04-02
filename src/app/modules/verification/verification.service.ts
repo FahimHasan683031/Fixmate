@@ -7,6 +7,7 @@ import { IVerificaiton } from './verification.interface';
 import { VERIFICATION_STATUS } from '../../../enum/user';
 import { User } from '../user/user.model';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { NotificationService } from '../notification/notification.service';
 
 // Submit or update a provider's verification request with identity documents
 const sendRequest = async (user: JwtPayload, payload: Partial<IVerificaiton>) => {
@@ -71,6 +72,11 @@ const updateStatus = async (id: string, status: VERIFICATION_STATUS) => {
       'providerDetails.verificationStatus': VERIFICATION_STATUS.REJECTED,
     });
   }
+
+  await NotificationService.insertNotification({
+    for: verification.user as any,
+    message: `Your account verification request has been ${status.toLowerCase()}.`,
+  });
 
   return verification;
 };

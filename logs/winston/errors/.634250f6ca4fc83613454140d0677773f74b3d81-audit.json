@@ -1,0 +1,30 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "D:\\Fahim\\Projects\\Fixmate\\logs\\winston\\errors\\.634250f6ca4fc83613454140d0677773f74b3d81-audit.json",
+    "files": [
+        {
+            "date": 1775107536884,
+            "name": "D:\\Fahim\\Projects\\Fixmate\\logs\\winston\\errors\\sg-2026-04-02-11-error.log",
+            "hash": "183407e454a108329c2eac6a22063febcdb469d5334af3984b0b82ef706f7a73"
+        },
+        {
+            "date": 1775130394355,
+            "name": "D:\\Fahim\\Projects\\Fixmate\\logs\\winston\\errors\\sg-2026-04-02-17-error.log",
+            "hash": "3fa4d300065559f626e562e6bfacfd37d94ad01072a6c9fdd996d68b932618df"
+        },
+        {
+            "date": 1775131407494,
+            "name": "D:\\Fahim\\Projects\\Fixmate\\logs\\winston\\errors\\sg-2026-04-02-18-error.log",
+            "hash": "eb95e80314c26180e763ee1d019d74527caa141d22bad881cb38210704c6daba"
+        },
+        {
+            "date": 1775135118562,
+            "name": "D:\\Fahim\\Projects\\Fixmate\\logs\\winston\\errors\\sg-2026-04-02-19-error.log",
+            "hash": "6e151b2775aeeb1781950d3af5158050820b8bf034dde997b7d40a1c75062b79"
+        }
+    ],
+    "hashType": "sha256"
+}

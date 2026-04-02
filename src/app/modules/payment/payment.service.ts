@@ -23,6 +23,7 @@ import { IUser } from '../user/user.interface';
 import { Types as MongooseTypes } from 'mongoose';
 import { Transaction } from '../transaction/transaction.model';
 import { settlePendingPenaltyDues } from '../penalty/penalty.utils';
+import { TransactionService } from '../transaction/transaction.service';
 
 // Handle post-payment logic: update booking, create SERVICE_PAYMENT record, notify provider
 const handlePaymentSuccessLogic = async (
@@ -81,10 +82,21 @@ const handlePaymentSuccessLogic = async (
       providerPay,
     });
 
-    await NotificationService.insertNotification({
-      for: booking.provider as any,
-      message: `You have a new booking request. ${customerData.name} has requested a booking for ${serviceData.category}`,
+    await TransactionService.recordTransaction({
+      type: 'PAYMENT',
+      user: booking.customer,
+      booking: booking._id,
+      amount: servicePrice,
+      status: 'COMPLETED',
+      p2ptransactionId: transactionId,
     });
+
+    await BookingStateMachine.transitionState(
+      bookingID,
+      'system',
+      BOOKING_STATUS.REQUESTED,
+      'Booking automatically requested to provider after successful payment',
+    );
   } catch (error) {
     console.error('Payment Success Error:', error);
     throw error;
@@ -115,6 +127,14 @@ export const handleBookingSettlement = async (bookingId: string) => {
     payment.paymentStatus = PAYMENT_STATUS.SETTLED;
     await payment.save();
 
+    await TransactionService.recordTransaction({
+      type: 'EARNINGS',
+      user: providerId,
+      booking: bookingId,
+      amount: providerPay,
+      status: 'COMPLETED',
+    });
+
     await NotificationService.insertNotification({
       for: payment.provider as any,
       message: `Booking settled. You have received ${creditAmount.toFixed(2)} in your wallet (after any penalty adjustments).`,
@@ -140,7 +160,18 @@ export const createCancellationRefundRecord = async (
       providerPenalty,
     },
     { new: true }
-  );
+  ).then(async (res) => {
+    if (res) {
+      await TransactionService.recordTransaction({
+        type: 'REFUND',
+        user: (res as any).customer,
+        booking: (res as any).booking,
+        amount: refundedAmount,
+        status: 'COMPLETED',
+      });
+    }
+    return res;
+  });
 };
 
 export const createSettlementRecord = async (bookingId: string) => {
@@ -162,7 +193,18 @@ export const createDisputeRefundRecord = async (
       refundAmount: refundedAmount,
     },
     { new: true }
-  );
+  ).then(async (res) => {
+    if (res) {
+      await TransactionService.recordTransaction({
+        type: 'REFUND',
+        user: (res as any).customer,
+        booking: (res as any).booking,
+        amount: refundedAmount,
+        status: 'COMPLETED',
+      });
+    }
+    return res;
+  });
 };
 
 // Create a Paystack transfer recipient for a provider
@@ -218,13 +260,23 @@ const webhook = async (req: Request) => {
     }
   } else if (event.event === 'transfer.success') {
     const data = event.data;
-    await Transaction.findOneAndUpdate({ p2ptransactionId: data.reference }, { status: 'COMPLETED' });
+    const tx: any = await Transaction.findOneAndUpdate({ p2ptransactionId: data.reference }, { status: 'COMPLETED' });
+    if (tx) {
+      await NotificationService.insertNotification({
+        for: tx.user,
+        message: `Your withdrawal of ${tx.amount.toFixed(2)} has been successfully completed.`,
+      });
+    }
   } else if (event.event === 'transfer.failed' || event.event === 'transfer.reversed') {
     const data = event.data;
-    const tx = await Transaction.findOneAndUpdate({ p2ptransactionId: data.reference }, { status: 'FAILED' });
+    const tx: any = await Transaction.findOneAndUpdate({ p2ptransactionId: data.reference }, { status: 'FAILED' });
     if (tx) {
       // Refund user's wallet
-      await User.findByIdAndUpdate(tx.provider, { $inc: { 'providerDetails.wallet': tx.amount } });
+      await User.findByIdAndUpdate(tx.user, { $inc: { 'providerDetails.wallet': tx.amount } });
+      await NotificationService.insertNotification({
+        for: tx.user,
+        message: `Your withdrawal of ${tx.amount.toFixed(2)} failed and has been refunded to your wallet.`,
+      });
     }
   }
 
@@ -238,7 +290,7 @@ const getWallet = async (user: JwtPayload, query: any) => {
   if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
 
   const walletQuery = new QueryBuilder(
-    Transaction.find({ provider: new Types.ObjectId(userId) }),
+    Transaction.find({ user: new Types.ObjectId(userId) }),
     query,
   ).filter().sort().paginate().fields();
 
@@ -369,12 +421,11 @@ const withdraw = async (
     .lean()
     .exec();
 
-  await Transaction.create({
+  await TransactionService.recordTransaction({
     type: 'WITHDRAWAL',
-    provider: provider._id,
+    user: provider._id,
     amount: data.amount,
     fee: withdrawalFee,
-    netAmount: netPayout,
     status: 'PENDING',
     p2ptransactionId: transferRes.reference,
   });

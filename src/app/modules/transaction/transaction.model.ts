@@ -4,15 +4,25 @@ import { generateCustomId } from '../../../utils/idGenerator';
 
 const transactionSchema = new Schema<ITransaction>(
   {
-    type: { type: String, required: true },
-    provider: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    type: {
+      type: String,
+      enum: ['PAYMENT', 'EARNINGS', 'REFUND', 'WITHDRAWAL', 'PENALTY'],
+      required: true,
+    },
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    booking: { type: Schema.Types.ObjectId, ref: 'Booking', default: null },
     amount: { type: Number, required: true },
     fee: { type: Number, required: true },
     netAmount: { type: Number, required: true },
-    status: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ['PENDING', 'COMPLETED', 'FAILED'],
+      required: true,
+    },
+    p2ptransactionId: { type: String, default: '' },
     customId: { type: String, unique: true, sparse: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 transactionSchema.pre('save', async function (next) {

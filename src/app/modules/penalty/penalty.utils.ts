@@ -5,6 +5,7 @@ import { Booking } from '../booking/booking.model';
 import { createCancellationRefundRecord } from '../payment/payment.service';
 import { refundPaystackTransaction } from '../../../helpers/paystackHelper';
 import { NotificationService } from '../notification/notification.service';
+import { TransactionService } from '../transaction/transaction.service';
 
 
 // client cancellation penalty
@@ -37,6 +38,14 @@ export const applyClientCancellationPenalty = async (
       taken: penaltyFee,
       due: 0,
       reason: `Client cancelled booking. Penalty: ${penaltyFee}`,
+      status: 'COMPLETED',
+    });
+
+    await TransactionService.recordTransaction({
+      type: 'PENALTY',
+      user: customerId,
+      booking: bookingId,
+      amount: penaltyFee,
       status: 'COMPLETED',
     });
 
@@ -114,6 +123,14 @@ export const applyProviderCancellationPenalty = async (
       ],
       { session }
     );
+
+    await TransactionService.recordTransaction({
+      type: 'PENALTY',
+      user: providerId,
+      booking: bookingId,
+      amount: penaltyFee,
+      status: 'COMPLETED',
+    });
 
     await session.commitTransaction();
   } catch (error) {

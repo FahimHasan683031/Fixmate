@@ -7,6 +7,7 @@ import { User } from '../user/user.model';
 import { Booking } from '../booking/booking.model';
 import { NotificationService } from '../notification/notification.service';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { TransactionService } from '../transaction/transaction.service';
 
 // crete penalty by admin
 const createPenaltyByAdmin = async (payload: {
@@ -61,6 +62,14 @@ const createPenaltyByAdmin = async (payload: {
       [{ user: provider, type: 'PROVIDER', booking, amount, taken, due, reason, status }],
       { session }
     );
+
+    await TransactionService.recordTransaction({
+      type: 'PENALTY',
+      user: (providerObj as any)._id,
+      booking: (bookingObj as any)._id,
+      amount: amount,
+      status: 'COMPLETED',
+    });
 
     await session.commitTransaction();
   } catch (error) {

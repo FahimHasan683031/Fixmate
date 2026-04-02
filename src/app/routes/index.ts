@@ -19,6 +19,7 @@ import { FavoritesRoutes } from '../modules/favorites/favorites.route';
 import { UserRoutes } from '../modules/user/user.route';
 import { PenaltyRoutes } from '../modules/penalty/penalty.route';
 import { DisputeRoutes } from '../modules/dispute/dispute.route';
+import { TransactionRoutes } from '../modules/transaction/transaction.route';
 
 const router = express.Router();
 
@@ -43,6 +44,7 @@ const apiRoutes = [
   { path: '/favorites', route: FavoritesRoutes },
   { path: '/penalties', route: PenaltyRoutes },
   { path: '/disputes', route: DisputeRoutes },
+  { path: '/transactions', route: TransactionRoutes },
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));
