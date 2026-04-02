@@ -76,6 +76,15 @@ const withdraw = catchAsync(async (req: Request | any, res: Response) => {
   });
 });
 
+const downloadPayments = catchAsync(async (req: Request, res: Response) => {
+  const result = await PaymentServices.downloadPayments(req.query);
+
+  res.setHeader('Content-Disposition', `attachment; filename="payments_${Date.now()}.${result.fileExtension}"`);
+  res.setHeader('Content-Type', result.contentType);
+  
+  res.send(result.buffer);
+});
+
 export const PaymentControllers = {
   generateRecipient,
   webhook,
@@ -83,4 +92,5 @@ export const PaymentControllers = {
   getPaymentHistory,
   getPaymentDetails,
   withdraw,
+  downloadPayments,
 };

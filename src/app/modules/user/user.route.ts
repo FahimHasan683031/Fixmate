@@ -36,4 +36,10 @@ router.delete(
   UserController.deleteProfile,
 );
 
+router.get(
+  '/download',
+  auth(USER_ROLES.ADMIN),
+  UserController.downloadUsers,
+);
+
 export const UserRoutes = router;

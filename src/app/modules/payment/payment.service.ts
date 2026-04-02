@@ -16,6 +16,8 @@ import { Payment } from './payment.model';
 import { Service } from '../service/service.model';
 import { User } from '../user/user.model';
 import { BookingStateMachine } from '../booking/bookingStateMachine';
+import exceljs from 'exceljs';
+
 import { BOOKING_STATUS } from '../../../enum/booking';
 import { JwtPayload } from 'jsonwebtoken';
 import QueryBuilder from '../../builder/QueryBuilder';
@@ -431,6 +433,86 @@ const withdraw = async (
   });
 };
 
+const downloadPayments = async (query: Record<string, unknown>) => {
+  const { startDate, endDate, format } = query;
+
+  if (!format || !['csv', 'excel'].includes((format as string).toLowerCase())) {
+     throw new ApiError(StatusCodes.BAD_REQUEST, "File 'format' is required. Must be 'csv' or 'excel'.");
+  }
+
+  const mongoQuery: any = {};
+  
+  if (startDate || endDate) {
+    mongoQuery.createdAt = {};
+    if (startDate) mongoQuery.createdAt.$gte = new Date(startDate as string);
+    if (endDate) {
+       const end = new Date(endDate as string);
+       end.setUTCHours(23, 59, 59, 999);
+       mongoQuery.createdAt.$lte = end;
+    }
+  }
+
+  const payments = await Payment.find(mongoQuery)
+    .populate('customer', 'name email contact')
+    .populate('provider', 'name email contact')
+    .populate('service', 'category subCategory price')
+    .sort('-createdAt')
+    .lean();
+
+  const workbook = new exceljs.Workbook();
+  const worksheet = workbook.addWorksheet('Payments');
+
+  worksheet.columns = [
+    { header: 'Payment ID', key: 'id', width: 25 },
+    { header: 'Date', key: 'date', width: 20 },
+    { header: 'Customer', key: 'customer', width: 20 },
+    { header: 'Provider', key: 'provider', width: 20 },
+    { header: 'Service Category', key: 'service', width: 20 },
+    { header: 'Service Price', key: 'price', width: 15 },
+    { header: 'VAT', key: 'vat', width: 10 },
+    { header: 'Platform Fee', key: 'platformFee', width: 15 },
+    { header: 'Gateway Fee', key: 'gatewayFee', width: 15 },
+    { header: 'Provider Pay', key: 'providerPay', width: 15 },
+    { header: 'Refund Amount', key: 'refundAmount', width: 15 },
+    { header: 'Status', key: 'status', width: 15 },
+  ];
+
+  payments.forEach((p: any) => {
+    worksheet.addRow({
+      id: p.customId || p._id.toString(),
+      date: p.createdAt ? new Date(p.createdAt).toLocaleString() : 'N/A',
+      customer: p.customer?.name || 'N/A',
+      provider: p.provider?.name || 'N/A',
+      service: p.service?.category || 'N/A',
+      price: p.servicePrice,
+      vat: p.vat,
+      platformFee: p.platformFee,
+      gatewayFee: p.paystackGatewayFee,
+      providerPay: p.providerPay,
+      refundAmount: p.refundAmount,
+      status: p.paymentStatus,
+    });
+  });
+
+  worksheet.getRow(1).font = { bold: true };
+
+  let buffer: Buffer;
+  let contentType: string;
+  let fileExtension: string;
+
+  if (format === 'excel') {
+    buffer = (await workbook.xlsx.writeBuffer()) as any as Buffer;
+    contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    fileExtension = 'xlsx';
+  } else {
+    buffer = (await workbook.csv.writeBuffer()) as any as Buffer;
+    contentType = 'text/csv';
+    fileExtension = 'csv';
+  }
+
+  return { buffer, contentType, fileExtension };
+};
+
 export const PaymentServices = {
   generateRecipient,
   webhook,
@@ -438,4 +520,5 @@ export const PaymentServices = {
   getPaymentHistory,
   getPaymentDetails,
   withdraw,
+  downloadPayments,
 };

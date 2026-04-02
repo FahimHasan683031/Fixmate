@@ -26,4 +26,10 @@ router.get(
   PenaltyController.getMyPenalties
 );
 
+router.get(
+  '/download',
+  auth(USER_ROLES.ADMIN),
+  PenaltyController.downloadPenalties
+);
+
 export const PenaltyRoutes = router;

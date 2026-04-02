@@ -27,4 +27,10 @@ router.get(
 
 router.post('/withdraw', auth(USER_ROLES.PROVIDER), PaymentControllers.withdraw);
 
+router.get(
+  '/download',
+  auth(USER_ROLES.ADMIN),
+  PaymentControllers.downloadPayments
+);
+
 export const PaymentRoutes = router;

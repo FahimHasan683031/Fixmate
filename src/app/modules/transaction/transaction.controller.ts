@@ -16,6 +16,16 @@ const getAllTransactions = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const downloadTransactions = catchAsync(async (req: Request, res: Response) => {
+  const result = await TransactionService.downloadTransactions(req.query);
+
+  res.setHeader('Content-Disposition', `attachment; filename="transactions_${Date.now()}.${result.fileExtension}"`);
+  res.setHeader('Content-Type', result.contentType);
+  
+  res.send(result.buffer);
+});
+
 export const TransactionController = {
   getAllTransactions,
+  downloadTransactions,
 };

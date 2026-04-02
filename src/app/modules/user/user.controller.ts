@@ -74,9 +74,19 @@ const deleteProfile = catchAsync(async (req: Request | any, res: Response) => {
   });
 });
 
+const downloadUsers = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.downloadUsers(req.query);
+
+  res.setHeader('Content-Disposition', `attachment; filename="users_${Date.now()}.${result.fileExtension}"`);
+  res.setHeader('Content-Type', result.contentType);
+  
+  res.send(result.buffer);
+});
+
 export const UserController = {
   getProfile,
   updateUserProfile,
   updateProviderProfile,
   deleteProfile,
+  downloadUsers,
 };

@@ -37,8 +37,18 @@ const getMyPenalties = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const downloadPenalties = catchAsync(async (req: Request, res: Response) => {
+  const result = await PenaltyService.downloadPenalties(req.query);
+
+  res.setHeader('Content-Disposition', `attachment; filename="penalties_${Date.now()}.${result.fileExtension}"`);
+  res.setHeader('Content-Type', result.contentType);
+  
+  res.send(result.buffer);
+});
+
 export const PenaltyController = {
   createPenaltyByAdmin,
   getAllPenalties,
   getMyPenalties,
+  downloadPenalties,
 };

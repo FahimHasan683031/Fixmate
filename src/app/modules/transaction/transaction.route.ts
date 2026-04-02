@@ -12,4 +12,11 @@ router.get(
   TransactionController.getAllTransactions
 );
 
+// Download transactions (Admin only)
+router.get(
+  '/download',
+  auth(USER_ROLES.ADMIN),
+  TransactionController.downloadTransactions
+);
+
 export const TransactionRoutes = router;

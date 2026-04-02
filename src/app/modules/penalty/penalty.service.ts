@@ -8,6 +8,7 @@ import { Booking } from '../booking/booking.model';
 import { NotificationService } from '../notification/notification.service';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { TransactionService } from '../transaction/transaction.service';
+import exceljs from 'exceljs';
 
 // crete penalty by admin
 const createPenaltyByAdmin = async (payload: {
@@ -129,9 +130,83 @@ const getMyPenalties = async (user: JwtPayload, query: Record<string, unknown>) 
   return { meta, data };
 };
 
+const downloadPenalties = async (query: Record<string, unknown>) => {
+  const { startDate, endDate, format } = query;
+
+  if (!format || !['csv', 'excel'].includes((format as string).toLowerCase())) {
+     throw new ApiError(StatusCodes.BAD_REQUEST, "File 'format' is required. Must be 'csv' or 'excel'.");
+  }
+
+  const mongoQuery: any = {};
+  
+  if (startDate || endDate) {
+    mongoQuery.createdAt = {};
+    if (startDate) mongoQuery.createdAt.$gte = new Date(startDate as string);
+    if (endDate) {
+       const end = new Date(endDate as string);
+       end.setUTCHours(23, 59, 59, 999);
+       mongoQuery.createdAt.$lte = end;
+    }
+  }
+
+  const penalties = await Penalty.find(mongoQuery)
+    .sort('-createdAt')
+    .lean();
+
+  const workbook = new exceljs.Workbook();
+  const worksheet = workbook.addWorksheet('Penalties');
+
+  worksheet.columns = [
+    { header: 'Penalty ID', key: 'id', width: 25 },
+    { header: 'Date', key: 'date', width: 20 },
+    { header: 'User Custom ID', key: 'user', width: 20 },
+    { header: 'Booking ID', key: 'booking', width: 20 },
+    { header: 'Type', key: 'type', width: 15 },
+    { header: 'Amount', key: 'amount', width: 15 },
+    { header: 'Taken', key: 'taken', width: 15 },
+    { header: 'Due', key: 'due', width: 15 },
+    { header: 'Status', key: 'status', width: 15 },
+    { header: 'Reason', key: 'reason', width: 30 },
+  ];
+
+  penalties.forEach((p: any) => {
+    worksheet.addRow({
+      id: p.customId || p._id.toString(),
+      date: p.createdAt ? new Date(p.createdAt).toLocaleString() : 'N/A',
+      user: p.user || 'N/A',
+      booking: p.booking || 'N/A',
+      type: p.type,
+      amount: p.amount,
+      taken: p.taken,
+      due: p.due,
+      status: p.status,
+      reason: p.reason || '',
+    });
+  });
+
+  worksheet.getRow(1).font = { bold: true };
+
+  let buffer: Buffer;
+  let contentType: string;
+  let fileExtension: string;
+
+  if (format === 'excel') {
+    buffer = (await workbook.xlsx.writeBuffer()) as any as Buffer;
+    contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    fileExtension = 'xlsx';
+  } else {
+    buffer = (await workbook.csv.writeBuffer()) as any as Buffer;
+    contentType = 'text/csv';
+    fileExtension = 'csv';
+  }
+
+  return { buffer, contentType, fileExtension };
+};
+
 export const PenaltyService = {
   createPenaltyByAdmin,
   getAllPenalties,
   getMyPenalties,
+  downloadPenalties,
 };
 
