@@ -13,14 +13,6 @@ const usersAdminSchema = z.object({
     .strict(),
 });
 
-const idParamsAdminSchema = z.object({
-  params: z
-    .object({
-      id: z.string({ invalid_type_error: 'User id is required' }),
-    })
-    .strict(),
-});
-
 const addNewCategorySchema = z.object({
   body: z
     .object({
@@ -66,15 +58,6 @@ const updateTermsSchema = z.object({
   body: z
     .object({
       content: z.string({ invalid_type_error: 'Terms content is required' }).optional(),
-    })
-    .strict(),
-});
-
-const blockAndUnblockUserSchema = z.object({
-  params: z
-    .object({
-      id: z.string({ invalid_type_error: 'User id is required' }),
-      status: z.enum(['block', 'unblock', 'delete'], { required_error: 'Status is required' }),
     })
     .strict(),
 });
@@ -143,14 +126,12 @@ const generateMultiInvoicesSchema = z.object({
 
 export const AdminValidation = {
   usersAdminSchema,
-  idParamsAdminSchema,
   addNewCategorySchema,
   getCategoriesSchema,
   updateCategorySchema,
   updatePolicySchema,
   updateTermsSchema,
   getBookingsSchema,
-  blockAndUnblockUserSchema,
   getRequestsSchema,
   approveOrRejectSchema,
   findSchema,

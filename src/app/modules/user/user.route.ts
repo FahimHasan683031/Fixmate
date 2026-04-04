@@ -42,4 +42,24 @@ router.get(
   UserController.downloadUsers,
 );
 
+router.get(
+  '/users',
+  auth(USER_ROLES.ADMIN),
+  UserController.getUsers,
+);
+
+router.get(
+  '/users/:id',
+  auth(USER_ROLES.ADMIN),
+  validateRequest(UserValidation.idParamsSchema),
+  UserController.getUser,
+);
+
+router.delete(
+  '/users/:id/:status',
+  auth(USER_ROLES.ADMIN),
+  validateRequest(UserValidation.blockAndUnblockUserSchema),
+  UserController.blockAndUnblockUser,
+);
+
 export const UserRoutes = router;

@@ -52,7 +52,26 @@ const updateProviderProfileZodSchema = z.object({
     .strict(),
 });
 
+const idParamsSchema = z.object({
+  params: z
+    .object({
+      id: z.string({ invalid_type_error: 'User id is required' }),
+    })
+    .strict(),
+});
+
+const blockAndUnblockUserSchema = z.object({
+  params: z
+    .object({
+      id: z.string({ invalid_type_error: 'User id is required' }),
+      status: z.enum(['block', 'unblock', 'delete'], { required_error: 'Status is required' }),
+    })
+    .strict(),
+});
+
 export const UserValidation = {
   updateUserProfileZodSchema,
   updateProviderProfileZodSchema,
+  idParamsSchema,
+  blockAndUnblockUserSchema,
 };

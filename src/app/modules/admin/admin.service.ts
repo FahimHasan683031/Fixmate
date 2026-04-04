@@ -1,7 +1,4 @@
-// Admin Service
-import { StatusCodes } from 'http-status-codes';
-import ApiError from '../../../errors/ApiError';
-import { USER_ROLES, USER_STATUS } from '../../../enum/user';
+import { USER_ROLES } from '../../../enum/user';
 import { User } from '../user/user.model';
 import { Booking } from '../booking/booking.model';
 import { Payment } from '../payment/payment.model';
@@ -9,7 +6,6 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { BOOKING_STATUS } from '../../../enum/booking';
 
 import { Review } from '../review/review.model';
-import { Verification } from '../verification/verification.model';
 import { PAYMENT_STATUS } from '../../../enum/payment';
 import { Penalty } from '../penalty/penalty.model';
 
@@ -163,113 +159,6 @@ export const overview = async (yearChart: string) => {
   };
 };
 
-// Retrieve a paginated list of non-admin users
-export const getUsers = async (query: Record<string, unknown>) => {
-  const userQuery = new QueryBuilder(User.find({ role: { $ne: USER_ROLES.ADMIN }, status: { $ne: USER_STATUS.DELETED } }), query)
-    .search(['name', 'email', 'address'])
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
-
-  const result = await userQuery.modelQuery.lean().exec();
-  const meta = await userQuery.getPaginationInfo();
-  return { meta, data: result };
-};
-
-// Get details of a single user by ID
-export const getUser = async (id: string) => {
-  const result: any = await User.findById(id).lean().exec();
-  if (!result) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
-
-  if (result.role === USER_ROLES.CLIENT) {
-    return {
-      role: result.role,
-      name: result.name,
-      image: result.image,
-      category: result.category,
-      gender: result.gender,
-      dateOfBirth: result.dateOfBirth,
-      nationality: result.nationality,
-      email: result.email,
-      whatsapp: result.whatsApp,
-      contact: result.contact,
-      address: result.address,
-    };
-  }
-
-  if (result.role === USER_ROLES.PROVIDER) {
-    const reviews = await Review.find({ provider: result._id })
-      .select('-updatedAt -__v -provider -service')
-      .populate({ path: 'creator', select: 'name image' })
-      .lean()
-      .exec();
-
-    const averageRating =
-      reviews.length > 0 ? reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviews.length : 0;
-
-    const [completedWork, upCommingWork, cancelWork] = await Promise.all([
-      Booking.countDocuments({
-        provider: result._id,
-        bookingStatus: { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.CONFIRMED_BY_CLIENT, BOOKING_STATUS.SETTLED] },
-      }),
-      Booking.countDocuments({ provider: result._id, bookingStatus: BOOKING_STATUS.ACCEPTED }),
-      Booking.countDocuments({ provider: result._id, bookingStatus: BOOKING_STATUS.CANCELLED }),
-    ]);
-
-    const verificationFile: any = await Verification.findOne({ user: result._id }).lean().exec();
-
-    return {
-      name: result.name,
-      role: result.role,
-      image: result.image,
-      category: result.category,
-      gender: result.gender,
-      dateOfBirth: result.dateOfBirth,
-      nationality: result.nationality,
-      email: result.email,
-      whatsapp: result.whatsApp,
-      contact: result.contact,
-      address: result.address,
-
-      completedWork,
-      upCommingWork,
-      cancelWork,
-
-      experience: result.providerDetails?.experience,
-      totalDoneWork: completedWork,
-      review: averageRating,
-
-      expertise: result.providerDetails?.category,
-      country: result.nationality,
-      serviceArea: result.address,
-      serviceDistance: result.providerDetails?.distance,
-      availableTime: {
-        startTime: result.providerDetails?.startTime ?? '',
-        endTime: result.providerDetails?.endTime ?? '',
-      },
-      availableDay: result.providerDetails?.availableDay,
-      overview: result.providerDetails?.overView,
-
-      licenses: verificationFile ? [verificationFile.license, verificationFile.nid] : [],
-    };
-  }
-
-  return result;
-};
-
-// Block, unblock, or soft-delete a user
-export const blockAndUnblockUser = async (id: string, status: string) => {
-  const user = await User.findById(id);
-  if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
-
-  if (status === 'block') user.status = USER_STATUS.BLOCKED;
-  else if (status === 'unblock') user.status = USER_STATUS.ACTIVE;
-  else if (status === 'delete') user.status = USER_STATUS.DELETED;
-
-  await user.save();
-  return user;
-};
 
 // Generic find function for users or verification requests
 export const find = async (query: any) => {
@@ -326,9 +215,6 @@ export const getRevenueTracking = async () => {
 
 export const AdminServices = {
   overview,
-  getUsers,
-  getUser,
-  blockAndUnblockUser,
   find,
   generateMultiInvoices,
   getRevenueTracking,

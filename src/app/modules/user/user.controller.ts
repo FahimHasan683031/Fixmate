@@ -83,10 +83,49 @@ const downloadUsers = catchAsync(async (req: Request, res: Response) => {
   res.send(result.buffer);
 });
 
+// Controller to list users with filtering
+const getUsers = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.getUsers(req.query as any);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Users retrieved successfully',
+    data: result,
+  });
+});
+
+// Controller to get a single user's detail
+const getUser = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.getUser(req.params.id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'User retrieved successfully',
+    data: result,
+  });
+});
+
+// Controller to change user status (block/unblock/delete)
+const blockAndUnblockUser = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.blockAndUnblockUser(req.params.id, req.params.status as any);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: `User ${req.params.status}ed successfully`,
+    data: result,
+  });
+});
+
 export const UserController = {
   getProfile,
   updateUserProfile,
   updateProviderProfile,
   deleteProfile,
   downloadUsers,
+  getUsers,
+  getUser,
+  blockAndUnblockUser,
 };

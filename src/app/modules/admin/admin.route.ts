@@ -9,25 +9,6 @@ const router = Router();
 
 router.get('/overview', auth(USER_ROLES.ADMIN), AdminController.overview);
 
-router.get(
-  '/users',
-  auth(USER_ROLES.ADMIN),
-  AdminController.getUsers,
-);
-
-router.get(
-  '/users/:id',
-  auth(USER_ROLES.ADMIN),
-  validateRequest(AdminValidation.idParamsAdminSchema),
-  AdminController.getUser,
-);
-
-router.delete(
-  '/users/:id/:status',
-  auth(USER_ROLES.ADMIN),
-  validateRequest(AdminValidation.blockAndUnblockUserSchema),
-  AdminController.blockAndUnblockUser,
-);
 
 router.get(
   '/find',

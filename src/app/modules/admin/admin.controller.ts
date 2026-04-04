@@ -22,30 +22,6 @@ const overview = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Controller to list users with filtering
-const getUsers = catchAsync(async (req: Request, res: Response) => {
-  const result = await AdminServices.getUsers(req.query as any);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'Users retrieved successfully',
-    data: result,
-  });
-});
-
-// Controller to get a single user's detail
-const getUser = catchAsync(async (req: Request, res: Response) => {
-  const result = await AdminServices.getUser(req.params.id);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'User retrieved successfully',
-    data: result,
-  });
-});
-
 const addNewCategory = CategoryController.addNewCategory;
 const getCategories = CategoryController.getCategories;
 const updateCategory = CategoryController.updateCategory;
@@ -55,18 +31,6 @@ const getPolicy = TermsAndPolicyController.getPolicy;
 const upsertPolicy = TermsAndPolicyController.upsertPolicy;
 const getTerms = TermsAndPolicyController.getTerms;
 const upsertTerms = TermsAndPolicyController.upsertTerms;
-
-// Controller to change user status (block/unblock/delete)
-const blockAndUnblockUser = catchAsync(async (req: Request, res: Response) => {
-  const result = await AdminServices.blockAndUnblockUser(req.params.id, req.params.status as any);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: `User ${req.params.status}ed successfully`,
-    data: result,
-  });
-});
 
 const getRequests = VerificationController.getAllRequests;
 const approveOrReject = VerificationController.updateStatus;
@@ -125,8 +89,6 @@ const getRevenueTracking = catchAsync(async (_req: Request, res: Response) => {
 });
 
 export const AdminController = {
-  getUsers,
-  getUser,
   addNewCategory,
   getCategories,
   updateCategory,
@@ -135,7 +97,6 @@ export const AdminController = {
   upsertPolicy,
   getTerms,
   upsertTerms,
-  blockAndUnblockUser,
   getRequests,
   approveOrReject,
   overview,
