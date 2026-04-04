@@ -43,4 +43,10 @@ router.post(
   AdminController.generateMultiInvoices,
 );
 
+router.get(
+  '/revenue-tracking',
+  auth(USER_ROLES.ADMIN),
+  AdminController.getRevenueTracking,
+);
+
 export const AdminRoutes = router;

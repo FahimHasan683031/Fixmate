@@ -113,6 +113,17 @@ const generateMultiInvoices = catchAsync(async (req: Request, res: Response) => 
   await pdfMaker.streamMultiPDFToResponse(res, orders as any, 'combined-invoices.pdf');
 });
 
+// Controller to fetch exact profit breakdowns
+const getRevenueTracking = catchAsync(async (_req: Request, res: Response) => {
+  const result = await AdminServices.getRevenueTracking();
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Revenue tracking statistics retrieved successfully',
+    data: result,
+  });
+});
+
 export const AdminController = {
   getUsers,
   getUser,
@@ -131,4 +142,5 @@ export const AdminController = {
   find,
   getBookings,
   generateMultiInvoices,
+  getRevenueTracking,
 };

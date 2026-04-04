@@ -11,6 +11,7 @@ import { BOOKING_STATUS } from '../../../enum/booking';
 import { Review } from '../review/review.model';
 import { Verification } from '../verification/verification.model';
 import { PAYMENT_STATUS } from '../../../enum/payment';
+import { Penalty } from '../penalty/penalty.model';
 
 // Get platform overview statistics (users, providers, bookings, revenue)
 export const overview = async (yearChart: string) => {
@@ -81,44 +82,75 @@ export const overview = async (yearChart: string) => {
     };
   });
 
-  const [{ totalRevenue = 0 } = {}] = await Payment.aggregate([
-    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.CLIENT_PAID, PAYMENT_STATUS.SETTLED] } } },
-    {
-      $group: { _id: null, totalRevenue: { $sum: '$platformFee' } },
-    },
+  const [{ totalPlatformFee = 0 } = {}] = await Payment.aggregate([
+    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.CLIENT_PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
+    { $group: { _id: null, totalPlatformFee: { $sum: '$platformFee' } } },
   ]);
+
+  const [{ totalClientPenalty = 0 } = {}] = await Payment.aggregate([
+    { $group: { _id: null, totalClientPenalty: { $sum: '$clientPenalty' } } },
+  ]);
+
+  const [{ totalProviderPenalty = 0 } = {}] = await Penalty.aggregate([
+    { $group: { _id: null, totalProviderPenalty: { $sum: '$taken' } } },
+  ]);
+
+  const totalRevenue = totalPlatformFee + totalClientPenalty + totalProviderPenalty;
 
   const year = Number(yearChart) || new Date().getFullYear();
 
-  const monthly = await Payment.aggregate([
+  const monthlyPlatformFees = await Payment.aggregate([
     {
       $match: {
-        paymentStatus: { $in: [PAYMENT_STATUS.CLIENT_PAID, PAYMENT_STATUS.SETTLED] },
+        paymentStatus: { $in: [PAYMENT_STATUS.CLIENT_PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] },
         createdAt: {
           $gte: new Date(`${year}-01-01`),
           $lte: new Date(`${year}-12-31`),
         },
       },
     },
+    { $group: { _id: { $month: '$createdAt' }, totalProfit: { $sum: '$platformFee' } } },
+  ]);
+
+  const monthlyClientPenalties = await Payment.aggregate([
     {
-      $group: {
-        _id: { $month: '$createdAt' },
-        totalProfit: { $sum: '$platformFee' },
+      $match: {
+        clientPenalty: { $gt: 0 },
+        createdAt: {
+          $gte: new Date(`${year}-01-01`),
+          $lte: new Date(`${year}-12-31`),
+        },
       },
     },
-    { $sort: { _id: 1 } },
+    { $group: { _id: { $month: '$createdAt' }, totalProfit: { $sum: '$clientPenalty' } } },
+  ]);
+
+  const monthlyProviderPenalties = await Penalty.aggregate([
+    {
+      $match: {
+        taken: { $gt: 0 },
+        createdAt: {
+          $gte: new Date(`${year}-01-01`),
+          $lte: new Date(`${year}-12-31`),
+        },
+      },
+    },
+    { $group: { _id: { $month: '$createdAt' }, totalProfit: { $sum: '$taken' } } },
   ]);
 
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   const monthlyEarning = monthNames.map((name, index) => {
     const monthIndex = index + 1;
-    const found = monthly.find((m) => m._id === monthIndex);
+    const pf = monthlyPlatformFees.find((m) => m._id === monthIndex)?.totalProfit || 0;
+    const cp = monthlyClientPenalties.find((m) => m._id === monthIndex)?.totalProfit || 0;
+    const pp = monthlyProviderPenalties.find((m) => m._id === monthIndex)?.totalProfit || 0;
     return {
       month: name,
-      profit: found ? found.totalProfit : 0,
+      profit: pf + cp + pp,
     };
   });
+
 
   return {
     totalUsers,
@@ -265,6 +297,33 @@ export const generateMultiInvoices = async (body: { bookingIds: string[] }) => {
   return payments;
 };
 
+// Advanced Endpoint for direct mathematical breakdown mapping platform profit logic
+export const getRevenueTracking = async () => {
+  const [{ totalPlatformFee = 0 } = {}] = await Payment.aggregate([
+    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.CLIENT_PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
+    { $group: { _id: null, totalPlatformFee: { $sum: '$platformFee' } } },
+  ]);
+
+  const [{ totalClientPenalty = 0 } = {}] = await Payment.aggregate([
+    { $group: { _id: null, totalClientPenalty: { $sum: '$clientPenalty' } } },
+  ]);
+
+  const [{ totalProviderPenalty = 0 } = {}] = await Penalty.aggregate([
+    { $group: { _id: null, totalProviderPenalty: { $sum: '$taken' } } },
+  ]);
+
+  const totalRevenue = totalPlatformFee + totalClientPenalty + totalProviderPenalty;
+
+  return {
+    breakdown: {
+      platformFees: totalPlatformFee,
+      clientPenalties: totalClientPenalty,
+      providerPenaltiesCollected: totalProviderPenalty
+    },
+    netPlatformRevenue: totalRevenue
+  };
+};
+
 export const AdminServices = {
   overview,
   getUsers,
@@ -272,4 +331,5 @@ export const AdminServices = {
   blockAndUnblockUser,
   find,
   generateMultiInvoices,
+  getRevenueTracking,
 };

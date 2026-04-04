@@ -36,6 +36,10 @@ router.post(
   ClientControllers.acceptBooking,
 );
 
-router.get('/download-pdf/:id', generateInvoiceAPI);
+router.get(
+  '/download-pdf/:id',
+  auth(USER_ROLES.ADMIN, USER_ROLES.CLIENT, USER_ROLES.PROVIDER),
+  generateInvoiceAPI
+);
 
 export const ClientRoutes = router;

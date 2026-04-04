@@ -39,6 +39,10 @@ type PaymentData = {
   // SETTLEMENT fields
   settledAmount?: number;
   settlementType?: string;
+
+  // Added logic fields
+  requestingRole?: string;
+  vat?: number;
 };
 
 export class PDFInvoiceMaker {
@@ -214,30 +218,37 @@ export class PDFInvoiceMaker {
     this.doc.text(`Payment Type: ${data.paymentType || 'N/A'}`, leftColX, startY + 50);
     this.doc.text(`Status: ${data.paymentStatus || 'N/A'}`, leftColX, startY + 75);
 
+    const userRole = data.requestingRole || 'ADMIN';
+    let rightY = startY;
+
     if (data.customer) {
       this.doc
         .fontSize(14)
         .font('Helvetica-Bold')
         .fillColor('#0062EB')
-        .text('CUSTOMER INFORMATION', rightColX, startY);
+        .text('CUSTOMER INFORMATION', rightColX, rightY);
       this.doc.fontSize(12).font('Helvetica').fillColor('#2c3e50');
-      this.doc.text(`Name: ${data.customer.name || 'N/A'}`, rightColX, startY + 25);
-      this.doc.text(`Email: ${data.customer.email || 'N/A'}`, rightColX, startY + 50);
-      this.doc.text(`Address: ${data.customer.address || 'N/A'}`, rightColX, startY + 75, {
+      this.doc.text(`Name: ${data.customer.name || 'N/A'}`, rightColX, rightY + 25);
+      this.doc.text(`Email: ${data.customer.email || 'N/A'}`, rightColX, rightY + 50);
+      this.doc.text(`Address: ${data.customer.address || 'N/A'}`, rightColX, rightY + 75, {
         width: this.pageWidth / 2 - 20,
       });
-    } else if (data.provider) {
+      rightY += 105;
+    }
+
+    if (data.provider && (userRole === 'PROVIDER' || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN')) {
       this.doc
         .fontSize(14)
         .font('Helvetica-Bold')
         .fillColor('#0062EB')
-        .text('PROVIDER INFORMATION', rightColX, startY);
+        .text('PROVIDER INFORMATION', rightColX, rightY);
       this.doc.fontSize(12).font('Helvetica').fillColor('#2c3e50');
-      this.doc.text(`Name: ${data.provider.name || 'N/A'}`, rightColX, startY + 25);
-      this.doc.text(`Email: ${data.provider.email || 'N/A'}`, rightColX, startY + 50);
+      this.doc.text(`Name: ${data.provider.name || 'N/A'}`, rightColX, rightY + 25);
+      this.doc.text(`Email: ${data.provider.email || 'N/A'}`, rightColX, rightY + 50);
+      rightY += 80;
     }
 
-    this.currentY = startY + 115;
+    this.currentY = Math.max(startY + 115, rightY + 15);
     this.addSpacing(15);
     this.addHorizontalLine();
 
@@ -266,33 +277,40 @@ export class PDFInvoiceMaker {
     if (data.paymentType === 'SERVICE_PAYMENT') {
       addBreakdownRow('Total Service Price', this.formatCurrency(data.amount || 0), nextY);
       nextY += 28;
-      addBreakdownRow(
-        'Fixmate Commission (18%)',
-        this.formatCurrency(data.platformFee || 0),
-        nextY,
-      );
+
+      addBreakdownRow('VAT', this.formatCurrency(data.vat || 0), nextY);
       nextY += 28;
-      addBreakdownRow(
-        'Payment Gateway Cost (3%)',
-        this.formatCurrency(data.gatewayFee || 0),
-        nextY,
-      );
-      nextY += 28;
+
+      if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+        addBreakdownRow('Fixmate Commission (18%)', this.formatCurrency(data.platformFee || 0), nextY);
+        nextY += 28;
+        addBreakdownRow('Payment Gateway Cost (3%)', this.formatCurrency(data.gatewayFee || 0), nextY);
+        nextY += 28;
+      } else if (userRole === 'PROVIDER') {
+        addBreakdownRow('Fixmate Commission (18%)', this.formatCurrency(data.platformFee || 0), nextY);
+        nextY += 28;
+      }
 
       this.addSpacing(nextY - this.currentY + 15);
       this.addHorizontalLine();
+      
+      const isClient = userRole === 'CLIENT';
+      
       this.doc
         .fontSize(16)
         .font('Helvetica-Bold')
         .fillColor('#27ae60')
-        .text('Net Provider Earnings', leftColX, this.currentY);
+        .text(isClient ? 'Net Total Paid' : 'Net Provider Earnings', leftColX, this.currentY);
       this.doc
         .fontSize(16)
         .font('Helvetica-Bold')
         .fillColor('#27ae60')
-        .text(this.formatCurrency(data.providerAmount || 0), rightColX, this.currentY, {
-          align: 'right',
-          width: this.pageWidth / 2,
+        .text(
+          this.formatCurrency(isClient ? (data.amount || 0) + (data.vat || 0) : data.providerAmount || 0),
+          rightColX, 
+          this.currentY, {
+            align: 'right',
+            width: this.pageWidth / 2,
         });
       this.currentY += 30;
     } else if (data.paymentType === 'CANCELLATION_REFUND') {
@@ -308,7 +326,7 @@ export class PDFInvoiceMaker {
         nextY,
       );
       nextY += 28;
-      if (data.providerDeduction) {
+      if (data.providerDeduction && (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || userRole === 'PROVIDER')) {
         addBreakdownRow(
           'Provider Penalty Fine',
           this.formatCurrency(data.providerDeduction),
@@ -467,10 +485,12 @@ export async function generateInvoiceAPI(req: Request, res: Response) {
     if (!data) throw new ApiError(StatusCodes.NOT_FOUND, 'Payment details not found!');
 
     const paymentData: PaymentData = {
+      requestingRole: (req as any).user?.role || 'ADMIN',
       customId: data.customId,
       paymentType: data.paymentType,
       paymentStatus: data.paymentStatus || 'PENDING',
       createdAt: data.createdAt || new Date(),
+      vat: data.vat || 0,
 
       service: data.service
         ? {

@@ -1,13 +1,10 @@
 import cron from 'node-cron';
 import { Booking } from '../app/modules/booking/booking.model';
-import { User } from '../app/modules/user/user.model';
 import { BOOKING_STATUS } from '../enum/booking';
 import { BookingStateMachine } from '../app/modules/booking/bookingStateMachine';
 import { logger } from '../shared/logger';
 import { Payment } from '../app/modules/payment/payment.model';
 import { PAYMENT_STATUS } from '../enum/payment';
-import { NotificationService } from '../app/modules/notification/notification.service';
-import { IUser } from '../app/modules/user/user.interface';
 
 export const bookingAutoSettleJob = () => {
   const SETTLE_THRESHOLD_HOURS = 48;
@@ -49,17 +46,7 @@ export const bookingAutoSettleJob = () => {
           await Payment.findByIdAndUpdate(payment._id, {
             paymentStatus: PAYMENT_STATUS.SETTLED,
           });
-
-          const provider = (await User.findById(booking.provider).select('providerDetails').lean()) as IUser;
-          if (provider) {
-            // Wait, we don't need to credit the wallet here anymore. It's done at checkout!
-            // But we should log that we swapped the state.
-          }
-
-          await NotificationService.insertNotification({
-            for: booking.provider,
-            message: `Your booking for ${(booking.service as any)?.subCategory || 'service'} has been automatically settled as the client took no action within ${SETTLE_THRESHOLD_HOURS} hours. Payment is now in your wallet.`,
-          });
+          
         } catch (bookingError) {
           logger.error(`Auto-Settle Job: Error processing booking ${booking._id}:`, bookingError);
         }
