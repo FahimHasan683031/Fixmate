@@ -116,14 +116,6 @@ const getBookingsSchema = z.object({
     .strict(),
 });
 
-const generateMultiInvoicesSchema = z.object({
-  body: z
-    .object({
-      bookingIds: z.array(z.string({ invalid_type_error: 'Booking id is required' })),
-    })
-    .strict(),
-});
-
 export const AdminValidation = {
   usersAdminSchema,
   addNewCategorySchema,
@@ -135,5 +127,4 @@ export const AdminValidation = {
   getRequestsSchema,
   approveOrRejectSchema,
   findSchema,
-  generateMultiInvoicesSchema,
 };

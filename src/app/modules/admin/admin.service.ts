@@ -79,7 +79,7 @@ export const overview = async (yearChart: string) => {
   });
 
   const [{ totalPlatformFee = 0 } = {}] = await Payment.aggregate([
-    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.CLIENT_PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
+    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
     { $group: { _id: null, totalPlatformFee: { $sum: '$platformFee' } } },
   ]);
 
@@ -98,7 +98,7 @@ export const overview = async (yearChart: string) => {
   const monthlyPlatformFees = await Payment.aggregate([
     {
       $match: {
-        paymentStatus: { $in: [PAYMENT_STATUS.CLIENT_PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] },
+        paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] },
         createdAt: {
           $gte: new Date(`${year}-01-01`),
           $lte: new Date(`${year}-12-31`),
@@ -177,19 +177,12 @@ export const find = async (query: any) => {
   return { meta, data };
 };
 
-// Fetch payment data for multiple bookings to generate invoices
-export const generateMultiInvoices = async (body: { bookingIds: string[] }) => {
-  const payments = await Payment.find({ booking: { $in: body.bookingIds } })
-    .populate('customer provider service')
-    .lean()
-    .exec();
-  return payments;
-};
+
 
 // Advanced Endpoint for direct mathematical breakdown mapping platform profit logic
 export const getRevenueTracking = async () => {
   const [{ totalPlatformFee = 0 } = {}] = await Payment.aggregate([
-    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.CLIENT_PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
+    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
     { $group: { _id: null, totalPlatformFee: { $sum: '$platformFee' } } },
   ]);
 
@@ -216,6 +209,5 @@ export const getRevenueTracking = async () => {
 export const AdminServices = {
   overview,
   find,
-  generateMultiInvoices,
   getRevenueTracking,
 };

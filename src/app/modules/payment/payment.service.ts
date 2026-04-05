@@ -6,6 +6,7 @@ import { FilterQuery, Types } from 'mongoose';
 import {
   createTransferRecipient,
   initiateTransfer,
+  createPaystackCheckout
 } from '../../../helpers/paystackHelper';
 import crypto from 'crypto';
 import { PAYMENT_STATUS } from '../../../enum/payment';
@@ -71,7 +72,7 @@ const handlePaymentSuccessLogic = async (
     const paystackGatewayFee = Number((servicePrice * 0.03).toFixed(2));
 
     await Payment.create({
-      paymentStatus: PAYMENT_STATUS.CLIENT_PAID,
+      paymentStatus: PAYMENT_STATUS.PAID,
       customer: booking.customer,
       provider: booking.provider,
       service: booking.service,
@@ -109,7 +110,7 @@ export const handleBookingSettlement = async (bookingId: string) => {
   try {
     const payment = await Payment.findOne({ booking: new MongooseTypes.ObjectId(bookingId) });
     if (!payment || !payment.provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Payment record not found for this booking');
-    
+
     if (payment.paymentStatus === PAYMENT_STATUS.SETTLED) {
       return; // Already settled
     }
@@ -224,14 +225,14 @@ const generateRecipient = async (req: Request) => {
   }
 
   const recipient = await createTransferRecipient(name, accountNumber, bankCode);
-  
-  await User.findByIdAndUpdate(userOnDB._id, { 
+
+  await User.findByIdAndUpdate(userOnDB._id, {
     'providerDetails.paystackRecipientCode': recipient.recipient_code,
     'providerDetails.bankName': bankCode,
     'providerDetails.accountNumber': accountNumber,
   });
 
-  return { 
+  return {
     recipientCode: recipient.recipient_code,
     bankName: bankCode,
     accountNumber: accountNumber
@@ -240,7 +241,8 @@ const generateRecipient = async (req: Request) => {
 
 // Handle Paystack webhooks
 const webhook = async (req: Request) => {
-  const payload = req.body; // Buffer from express.raw
+  console.log("hit webhook")
+  const payload = req.body;
   const hash = crypto.createHmac('sha512', config.paystack.secretKey || 'sk_test_placeholder').update(payload).digest('hex');
   if (hash !== req.headers['x-paystack-signature']) {
     throw new ApiError(StatusCodes.UNAUTHORIZED, 'Invalid Signature!');
@@ -356,10 +358,10 @@ const getPaymentDetails = async (id: string) => {
       : null,
     service: info.service
       ? {
-          category: info.service.category,
-          subCategory: info.service.subCategory,
-          price: info.service.price,
-        }
+        category: info.service.category,
+        subCategory: info.service.subCategory,
+        price: info.service.price,
+      }
       : null,
   };
 
@@ -437,18 +439,18 @@ const downloadPayments = async (query: Record<string, unknown>) => {
   const { startDate, endDate, format } = query;
 
   if (!format || !['csv', 'excel'].includes((format as string).toLowerCase())) {
-     throw new ApiError(StatusCodes.BAD_REQUEST, "File 'format' is required. Must be 'csv' or 'excel'.");
+    throw new ApiError(StatusCodes.BAD_REQUEST, "File 'format' is required. Must be 'csv' or 'excel'.");
   }
 
   const mongoQuery: any = {};
-  
+
   if (startDate || endDate) {
     mongoQuery.createdAt = {};
     if (startDate) mongoQuery.createdAt.$gte = new Date(startDate as string);
     if (endDate) {
-       const end = new Date(endDate as string);
-       end.setUTCHours(23, 59, 59, 999);
-       mongoQuery.createdAt.$lte = end;
+      const end = new Date(endDate as string);
+      end.setUTCHours(23, 59, 59, 999);
+      mongoQuery.createdAt.$lte = end;
     }
   }
 
@@ -513,6 +515,41 @@ const downloadPayments = async (query: Record<string, unknown>) => {
   return { buffer, contentType, fileExtension };
 };
 
+// Dedicated API to create Paystack Checkout for a specific booking
+const checkoutBooking = async (req: Request, bookingId: string) => {
+  const booking = await Booking.findById(bookingId).lean().exec();
+  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
+
+  if (booking.isPaid) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Booking is already paid!');
+  }
+
+  const service = await Service.findById(booking.service).lean().exec();
+  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'Service not found!');
+
+  const provider = await User.findById(booking.provider).lean().exec();
+  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
+
+  const customer = await User.findById(booking.customer).lean().exec();
+  if (!customer) throw new ApiError(StatusCodes.NOT_FOUND, 'Customer not found!');
+
+  const url = await createPaystackCheckout(
+    req,
+    service.price,
+    {
+      bookingId: booking._id.toString(),
+      providerId: provider._id.toString(),
+      serviceId: service._id.toString(),
+      customerId: customer._id.toString(),
+    },
+    customer.email || 'customer@example.com',
+  );
+
+  await Booking.findByIdAndUpdate(booking._id, { transactionId: url.id });
+
+  return url;
+};
+
 export const PaymentServices = {
   generateRecipient,
   webhook,
@@ -521,4 +558,5 @@ export const PaymentServices = {
   getPaymentDetails,
   withdraw,
   downloadPayments,
+  checkoutBooking,
 };

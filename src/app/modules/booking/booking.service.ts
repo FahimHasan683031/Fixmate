@@ -133,9 +133,9 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
   if (role === 'client') {
     if (originalAmount > 0) {
       if (currentStatus === BOOKING_STATUS.ACCEPTED) {
-        penaltyFee = originalAmount * 0.05; 
+        penaltyFee = originalAmount * 0.05;
       } else if (currentStatus === BOOKING_STATUS.IN_PROGRESS) {
-        penaltyFee = originalAmount * 0.10; 
+        penaltyFee = originalAmount * 0.10;
       }
 
       await applyClientCancellationPenalty(

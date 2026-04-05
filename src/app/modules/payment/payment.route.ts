@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PaymentControllers } from './payment.controller';
 import { USER_ROLES } from '../../../enum/user';
 import auth from '../../middleware/auth';
+import { generateInvoiceAPI } from '../../../helpers/pdfMaker';
 
 const router = Router();
 
@@ -31,6 +32,18 @@ router.get(
   '/download',
   auth(USER_ROLES.ADMIN),
   PaymentControllers.downloadPayments
+);
+
+router.post(
+  '/checkout/:bookingId',
+  auth(USER_ROLES.CLIENT),
+  PaymentControllers.checkoutBooking
+);
+
+router.get(
+  '/download-invoice/:id',
+  auth(USER_ROLES.ADMIN, USER_ROLES.CLIENT, USER_ROLES.PROVIDER),
+  generateInvoiceAPI
 );
 
 export const PaymentRoutes = router;

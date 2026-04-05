@@ -4,6 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import { PaymentServices } from './payment.service';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
+import ApiError from '../../../errors/ApiError';
 
 // Controller to create provider transfer recipient
 const generateRecipient = catchAsync(async (req: Request, res: Response) => {
@@ -81,8 +82,25 @@ const downloadPayments = catchAsync(async (req: Request, res: Response) => {
 
   res.setHeader('Content-Disposition', `attachment; filename="payments_${Date.now()}.${result.fileExtension}"`);
   res.setHeader('Content-Type', result.contentType);
-  
+
   res.send(result.buffer);
+});
+
+// Dedicated controller to initiate booking payment
+const checkoutBooking = catchAsync(async (req: Request, res: Response) => {
+  const { bookingId } = req.params;
+  if (!bookingId) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Booking ID is required');
+  }
+  
+  const result = await PaymentServices.checkoutBooking(req, bookingId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Booking checkout initialized successfully',
+    data: result,
+  });
 });
 
 export const PaymentControllers = {
@@ -93,4 +111,5 @@ export const PaymentControllers = {
   getPaymentDetails,
   withdraw,
   downloadPayments,
+  checkoutBooking,
 };

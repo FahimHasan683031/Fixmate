@@ -1,0 +1,13 @@
+{Sat Apr 04 2026 10:00:01} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/chckout 404 - 1.576 ms
+{Sat Apr 04 2026 10:00:50} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/checkout 404 - 4.834 ms
+{Sat Apr 04 2026 10:10:32} [APP 🐞] error: ::1 - POST /api/v1/webhook 400 - 36.164 ms
+{Sat Apr 04 2026 10:16:16} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=0s2jauwzgr&reference=0s2jauwzgr 404 - 2.137 ms
+{Sat Apr 04 2026 10:16:17} [APP 🐞] error: ::ffff:10.10.7.94 - GET /favicon.ico 404 - 1.085 ms
+{Sat Apr 04 2026 10:17:40} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/webhook 404 - 1.798 ms
+{Sat Apr 04 2026 10:18:37} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/webhook 500 - 9.981 ms
+{Sat Apr 04 2026 10:31:21} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=lz637oppvx&reference=lz637oppvx 404 - 2.030 ms
+{Sat Apr 04 2026 10:46:52} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=syzvfodc7c&reference=syzvfodc7c 404 - 1.551 ms
+{Sat Apr 04 2026 10:57:01} [APP 🐞] error: ::1 - GET /favicon.ico 404 - 0.359 ms
+{Sat Apr 04 2026 10:57:37} [APP 🐞] error: ::1 - GET /api/v1/webhook 400 - 3.086 ms
+{Sat Apr 04 2026 10:59:05} [APP 🐞] error: ::1 - POST /api/v1/webhook 400 - 52.079 ms
+{Sat Apr 04 2026 10:59:06} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=y7rq3pren5&reference=y7rq3pren5 404 - 1.231 ms

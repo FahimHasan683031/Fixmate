@@ -4,7 +4,6 @@ import { ClientValidation } from './client.validation';
 import auth from '../../middleware/auth';
 import { USER_ROLES } from '../../../enum/user';
 import validateRequest from '../../middleware/validateRequest';
-import { generateInvoiceAPI } from '../../../helpers/pdfMaker';
 
 const router = Router();
 
@@ -34,12 +33,6 @@ router.post(
   auth(USER_ROLES.ADMIN, USER_ROLES.CLIENT),
   validateRequest(ClientValidation.acceptBookingZodSchema),
   ClientControllers.acceptBooking,
-);
-
-router.get(
-  '/download-pdf/:id',
-  auth(USER_ROLES.ADMIN, USER_ROLES.CLIENT, USER_ROLES.PROVIDER),
-  generateInvoiceAPI
 );
 
 export const ClientRoutes = router;

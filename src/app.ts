@@ -14,8 +14,8 @@ app.use(Morgan.errorHandler);
 
 app.use(cors());
 
-// Stripe/Paystack webhook requires raw body
-app.post('/api/v1/webhook', express.raw({ type: 'application/json' }), PaymentControllers.webhook);
+//Paystack webhook requires raw body
+app.use('/api/v1/webhook', express.raw({ type: 'application/json' }), PaymentControllers.webhook);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

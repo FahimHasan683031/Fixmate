@@ -1,0 +1,7 @@
+{Sat Apr 04 2026 11:00:16} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/checkout/69d086c1979f4ebe9996a5dc 400 - 15.041 ms
+{Sat Apr 04 2026 11:14:15} [APP 🐞] error: ::1 - GET /favicon.ico 404 - 0.447 ms
+{Sat Apr 04 2026 11:34:50} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/download 404 - 10.997 ms
+{Sat Apr 04 2026 11:34:59} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/download 400 - 2.310 ms
+{Sat Apr 04 2026 11:38:02} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/admin/generate-multi-invoices 404 - 9.984 ms
+{Sat Apr 04 2026 11:52:03} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/admin/generate-multi-invoices 404 - 70.263 ms
+{Sat Apr 04 2026 11:52:29} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client/download-pdf/69d09a992a0438dd6901c9d1 404 - 1.521 ms

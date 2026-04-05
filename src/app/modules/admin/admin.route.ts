@@ -17,12 +17,6 @@ router.get(
   AdminController.find,
 );
 
-router.post(
-  '/generate-multi-invoices',
-  auth(USER_ROLES.ADMIN),
-  validateRequest(AdminValidation.generateMultiInvoicesSchema),
-  AdminController.generateMultiInvoices,
-);
 
 router.get(
   '/revenue-tracking',
