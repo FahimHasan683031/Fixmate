@@ -112,6 +112,7 @@ const getMyPenalties = async (user: JwtPayload, query: Record<string, unknown>) 
   const userId = user.id || user.authId;
 
   const authUser = await User.findById(userId).select('customId').lean();
+
   if (!authUser?.customId) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
 
   const penaltyQuery = new QueryBuilder(

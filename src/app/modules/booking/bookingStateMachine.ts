@@ -17,7 +17,6 @@ const VALID_TRANSITIONS: Record<string, BOOKING_STATUS[]> = {
   ],
   [BOOKING_STATUS.REQUESTED]: [
     BOOKING_STATUS.ACCEPTED,
-    BOOKING_STATUS.DECLINED,
     BOOKING_STATUS.EXPIRED,
     BOOKING_STATUS.CANCELLED,
   ],
@@ -29,6 +28,7 @@ const VALID_TRANSITIONS: Record<string, BOOKING_STATUS[]> = {
   ],
   [BOOKING_STATUS.COMPLETED_BY_PROVIDER]: [
     BOOKING_STATUS.CONFIRMED_BY_CLIENT,
+    BOOKING_STATUS.SETTLED,
     BOOKING_STATUS.DISPUTED,
     BOOKING_STATUS.AUTO_SETTLED,
   ],
@@ -36,7 +36,6 @@ const VALID_TRANSITIONS: Record<string, BOOKING_STATUS[]> = {
   [BOOKING_STATUS.SETTLED]: [BOOKING_STATUS.DISPUTED],
   [BOOKING_STATUS.AUTO_SETTLED]: [BOOKING_STATUS.DISPUTED],
 
-  [BOOKING_STATUS.DECLINED]: [],
   [BOOKING_STATUS.EXPIRED]: [],
   [BOOKING_STATUS.CANCELLED]: [],
   [BOOKING_STATUS.DISPUTED]: [
@@ -78,6 +77,20 @@ export class BookingStateMachine {
     if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found');
 
     const currentState = booking.bookingStatus as BOOKING_STATUS;
+    const allowedTransitions = VALID_TRANSITIONS[currentState] || [];
+
+    // Validation
+    if (!isForce && !allowedTransitions.includes(targetState)) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        `Invalid status change: Cannot move from ${currentState} to ${targetState}.`
+      );
+    }
+
+    // Update Status
+    booking.bookingStatus = targetState;
+    booking.currentStats = booking.currentStats || {};
+
     const strictProgression = [
       BOOKING_STATUS.CREATED,
       BOOKING_STATUS.PAID,
@@ -90,32 +103,14 @@ export class BookingStateMachine {
       BOOKING_STATUS.AUTO_SETTLED,
     ];
 
-    const currentIndex = strictProgression.indexOf(currentState);
     const targetIndex = strictProgression.indexOf(targetState);
     const isExceptionState = targetIndex === -1;
 
-    if (!isForce) {
-      if (!isExceptionState && targetIndex <= currentIndex) {
-        throw new ApiError(
-          StatusCodes.BAD_REQUEST,
-          `Invalid state transition: Cannot change booking backwards from ${currentState} to ${targetState}`,
-        );
-      } else if (
-        isExceptionState &&
-        !(VALID_TRANSITIONS[currentState] || []).includes(targetState)
-      ) {
-        throw new ApiError(
-          StatusCodes.BAD_REQUEST,
-          `Invalid state transition: Exception state ${targetState} not allowed from ${currentState}`,
-        );
-      }
-    }
-
-    booking.bookingStatus = targetState;
-    booking.currentStats = booking.currentStats || {};
-
+    // Fill previous step indicators if it's a standard progression state
     if (!isExceptionState) {
-      for (let i = 0; i <= targetIndex; i++) booking.currentStats[strictProgression[i]] = true;
+      for (let i = 0; i <= targetIndex; i++) {
+        booking.currentStats[strictProgression[i]] = true;
+      }
     } else {
       booking.currentStats[targetState] = true;
     }
@@ -130,17 +125,18 @@ export class BookingStateMachine {
       metricsUpdate.$inc['providerDetails.metrics.totalResponseTime'] = responseTime;
       metricsUpdate.$inc['providerDetails.metrics.totalResponseCount'] = 1;
       booking.respondedAt = now;
-    } else if (targetState === BOOKING_STATUS.DECLINED) {
-      metricsUpdate.$inc['providerDetails.metrics.declinedJobs'] = 1;
-      metricsUpdate.$inc['providerDetails.metrics.totalResponseTime'] = responseTime;
-      metricsUpdate.$inc['providerDetails.metrics.totalResponseCount'] = 1;
-      booking.respondedAt = now;
     } else if (targetState === BOOKING_STATUS.EXPIRED) {
       metricsUpdate.$inc['providerDetails.metrics.declinedJobs'] = 1;
     } else if (targetState === BOOKING_STATUS.COMPLETED_BY_PROVIDER) {
       metricsUpdate.$inc['providerDetails.metrics.completedJobs'] = 1;
     } else if (targetState === BOOKING_STATUS.DISPUTED) {
       metricsUpdate.$inc['providerDetails.metrics.disputedJobs'] = 1;
+    } else if (targetState === BOOKING_STATUS.CANCELLED && currentState === BOOKING_STATUS.REQUESTED && _role === 'provider') {
+      // If provider cancels at the requested stage, it counts as a decline
+      metricsUpdate.$inc['providerDetails.metrics.declinedJobs'] = 1;
+      metricsUpdate.$inc['providerDetails.metrics.totalResponseTime'] = responseTime;
+      metricsUpdate.$inc['providerDetails.metrics.totalResponseCount'] = 1;
+      booking.respondedAt = now;
     }
 
     if (Object.keys(metricsUpdate.$inc).length > 0 || Object.keys(metricsUpdate.$set).length > 0) {
@@ -177,10 +173,6 @@ export class BookingStateMachine {
         case BOOKING_STATUS.ACCEPTED:
           notificationTarget = booking.customer;
           message = `Your booking for ${serviceName} has been accepted.`;
-          break;
-        case BOOKING_STATUS.DECLINED:
-          notificationTarget = booking.customer;
-          message = `Your booking for ${serviceName} was declined by the provider. ${reason ? `Reason: ${reason}` : ''}`;
           break;
         case BOOKING_STATUS.IN_PROGRESS:
           notificationTarget = booking.customer;

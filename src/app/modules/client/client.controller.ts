@@ -53,7 +53,6 @@ const updateBooking = catchAsync(async (req: Request | any, res: Response) => {
     data: result,
   });
 });
-const cancelBooking = BookingController.cancelBooking;
 const getBookings = BookingController.getBookings;
 
 const bookScreen = ServiceController.getServiceById;
@@ -78,17 +77,7 @@ const getFavorites = FavoritesController.getFavorites;
 
 const giveReview = ReviewController.createReview;
 
-// Controller for the client to accept/confirm a booking
-const acceptBooking = catchAsync(async (req: Request | any, res: Response) => {
-  const result = await ClientServices.acceptBooking(req.user, req.params.id);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'Successfully accept Booking',
-    data: result,
-  });
-});
+const updateBookingStatus = BookingController.updateBookingStatus;
 
 const getPaymentHistory = PaymentControllers.getPaymentHistory;
 const getPaymentHistoryPage = PaymentControllers.getPaymentDetails;
@@ -104,12 +93,11 @@ export const ClientControllers = {
   removeFavorite,
   createBooking,
   updateBooking,
-  cancelBooking,
+  updateBookingStatus,
   getBookings,
   bookScreen,
   seeBooking,
   getCategories,
-  acceptBooking,
   giveReview,
   getPaymentHistory,
   getPaymentHistoryPage,

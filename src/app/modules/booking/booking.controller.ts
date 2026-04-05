@@ -42,15 +42,15 @@ const getBookingById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Controller to cancel an existing booking
-const cancelBooking = catchAsync(async (req: Request | any, res: Response) => {
-  const role = req.user.role.toLowerCase() as 'client' | 'provider';
-  const result = await BookingService.cancelBooking(req.user, req.params.id, role);
+// Controller to update a booking's status (Accept, Reject, Cancel, Start, Complete, etc.)
+const updateBookingStatus = catchAsync(async (req: Request | any, res: Response) => {
+  const { status, reason } = req.body;
+  const result = await BookingService.updateBookingStatus(req.user, req.params.id, status, reason);
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: 'Booking cancelled successfully',
+    message: result.message,
     data: result,
   });
 });
@@ -59,5 +59,5 @@ export const BookingController = {
   createBooking,
   getBookings,
   getBookingById,
-  cancelBooking,
+  updateBookingStatus,
 };

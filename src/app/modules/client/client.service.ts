@@ -6,8 +6,6 @@ import { User } from '../user/user.model';
 import { Booking } from '../booking/booking.model';
 import { CustomerFavorite } from '../favorites/customer.favorite.model';
 import { BOOKING_STATUS } from '../../../enum/booking';
-import { BookingStateMachine } from '../booking/bookingStateMachine';
-
 import { Service } from '../service/service.model';
 import { Review } from '../review/review.model';
 import { Verification } from '../verification/verification.model';
@@ -135,15 +133,8 @@ const updateBooking = async (_user: JwtPayload, id: string, data: any) => {
   return result;
 };
 
-// Handle client-side acceptance of a booking to confirm it
-const acceptBooking = async (_user: JwtPayload, id: string) => {
-  await BookingStateMachine.transitionState(id, 'client', BOOKING_STATUS.CONFIRMED_BY_CLIENT);
-  return { message: 'Booking accepted successfully' };
-};
-
 export const ClientServices = {
   getProviderById,
   seeBooking,
   updateBooking,
-  acceptBooking,
 };

@@ -71,9 +71,13 @@ const bookingSchema = new Schema<IBooking>(
       unique: true,
       sparse: true,
     },
-    rejectReason: {
+    cancelReason: {
       type: String,
       default: '',
+    },
+    cancelledBy: {
+      type: String,
+      enum: ['CLIENT', 'PROVIDER'],
     },
     isPaid: {
       type: Boolean,

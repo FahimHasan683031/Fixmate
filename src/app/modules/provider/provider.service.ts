@@ -6,11 +6,7 @@ import ApiError from '../../../errors/ApiError';
 import { User } from '../user/user.model';
 import { Booking } from '../booking/booking.model';
 import { BOOKING_STATUS } from '../../../enum/booking';
-import { BookingStateMachine } from '../booking/bookingStateMachine';
 import QueryBuilder from '../../builder/QueryBuilder';
-import { refundPaystackTransaction } from '../../../helpers/paystackHelper';
-import { Payment } from '../payment/payment.model';
-import { PAYMENT_STATUS } from '../../../enum/payment';
 import { Review } from '../review/review.model';
 import { IPaginationOptions } from '../../../interfaces/pagination';
 
@@ -100,44 +96,6 @@ export const seeBooking = async (user: JwtPayload, id: string) => {
   };
 };
 
-// Process status transitions (accept, reject, start, complete) for a booking from the provider side
-const actionBooking = async (
-  _user: JwtPayload,
-  data: { bookId: string; action: 'accept' | 'reject' | 'start' | 'complete'; reason?: string },
-) => {
-  const bookingInfo: any = await Booking.findById(data.bookId).lean().exec();
-  if (!bookingInfo) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
-
-  if (data.action == 'accept') {
-    await BookingStateMachine.transitionState(data.bookId, 'provider', BOOKING_STATUS.ACCEPTED);
-  } else if (data.action == 'reject') {
-    await BookingStateMachine.transitionState(
-      data.bookId,
-      'provider',
-      BOOKING_STATUS.DECLINED,
-      data.reason,
-    );
-    if (bookingInfo.isPaid && bookingInfo.transactionId) {
-      await refundPaystackTransaction(bookingInfo.transactionId);
-    }
-    await Payment.findOneAndUpdate(
-      { booking: new Types.ObjectId(data.bookId) },
-      { paymentStatus: PAYMENT_STATUS.REFUNDED },
-      { new: true },
-    )
-      .lean()
-      .exec();
-  } else if (data.action == 'start') {
-    await BookingStateMachine.transitionState(data.bookId, 'provider', BOOKING_STATUS.IN_PROGRESS);
-  } else if (data.action == 'complete') {
-    await BookingStateMachine.transitionState(
-      data.bookId,
-      'provider',
-      BOOKING_STATUS.COMPLETED_BY_PROVIDER,
-    );
-  }
-};
-
 // Retrieve and summarize all reviews and ratings received by the provider
 const myReviews = async (user: JwtPayload, query: IPaginationOptions) => {
   const reviewQuery = new QueryBuilder(
@@ -181,6 +139,5 @@ export const ProviderServices = {
   providerHome,
   getCustomer,
   seeBooking,
-  actionBooking,
   myReviews,
 };

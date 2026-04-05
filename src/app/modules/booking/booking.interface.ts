@@ -17,7 +17,8 @@ export interface IBooking {
   address: string;
   specialNote: string;
   isPaid: boolean;
-  rejectReason: string;
+  cancelReason: string;
+  cancelledBy?: 'CLIENT' | 'PROVIDER';
   paymentId: string;
   isDeleted: boolean;
   transactionId: string;

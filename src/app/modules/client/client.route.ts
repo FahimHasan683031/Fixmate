@@ -28,11 +28,5 @@ router.get(
   ClientControllers.seeBooking,
 );
 
-router.post(
-  '/book/accept/:id',
-  auth(USER_ROLES.ADMIN, USER_ROLES.CLIENT),
-  validateRequest(ClientValidation.acceptBookingZodSchema),
-  ClientControllers.acceptBooking,
-);
 
 export const ClientRoutes = router;

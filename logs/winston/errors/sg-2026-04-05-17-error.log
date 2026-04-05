@@ -1,0 +1,8 @@
+{Sun Apr 05 2026 17:38:53} [APP 🐞] error: ::1 - POST /api/v1/webhook 400 - 16.311 ms
+{Sun Apr 05 2026 17:38:53} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=wre3rnxj2g&reference=wre3rnxj2g 404 - 3.343 ms
+{Sun Apr 05 2026 17:39:36} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/bookings/69d249ba4b5a990bdbba4595/status 400 - 4.204 ms
+{Sun Apr 05 2026 17:41:34} [APP 🐞] error: ::1 - POST /api/v1/webhook 400 - 6.905 ms
+{Sun Apr 05 2026 17:41:34} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=h3mukiaf07&reference=h3mukiaf07 404 - 0.659 ms
+{Sun Apr 05 2026 17:44:06} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/bookings/69d24a5a4b5a990bdbba45b2/status 400 - 3.729 ms
+{Sun Apr 05 2026 17:44:25} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/bookings/69d24a5a4b5a990bdbba45b2/status 400 - 2.681 ms
+{Sun Apr 05 2026 17:45:26} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/bookings/69d24a5a4b5a990bdbba45b2/status 400 - 3.073 ms

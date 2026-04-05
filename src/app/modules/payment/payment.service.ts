@@ -154,10 +154,14 @@ export const createCancellationRefundRecord = async (
   clientPenalty: number = 0,
   providerPenalty: number = 0,
 ) => {
+  const status = (clientPenalty > 0 || providerPenalty > 0) 
+    ? PAYMENT_STATUS.PARTIAL_REFUNDED 
+    : PAYMENT_STATUS.REFUNDED;
+
   return Payment.findOneAndUpdate(
     { booking: new MongooseTypes.ObjectId(bookingId) },
     {
-      paymentStatus: PAYMENT_STATUS.REFUNDED,
+      paymentStatus: status,
       refundAmount: refundedAmount,
       clientPenalty,
       providerPenalty,

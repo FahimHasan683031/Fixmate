@@ -172,11 +172,13 @@ export const settlePendingPenaltyDues = async (
     if (incomingAmount >= totalDue) {
       remainingForProvider = incomingAmount - totalDue;
 
-      await Penalty.updateMany(
-        { user: providerCustomId, status: 'PENDING' },
-        { $set: { status: 'COMPLETED', due: 0 } },
-        { session }
-      );
+      for (const penalty of pendingPenalties) {
+        await Penalty.findByIdAndUpdate(
+          penalty._id,
+          { $set: { status: 'COMPLETED', due: 0, taken: penalty.amount } },
+          { session }
+        );
+      }
 
       const currentWallet = (provider as any)?.providerDetails?.wallet || 0;
       await User.findByIdAndUpdate(
@@ -192,9 +194,10 @@ export const settlePendingPenaltyDues = async (
         if (budget <= 0) break;
         const deductible = Math.min(budget, penalty.due || 0);
         const newDue = (penalty.due || 0) - deductible;
+        const newTaken = (penalty.amount || 0) - newDue;
         await Penalty.findByIdAndUpdate(
           penalty._id,
-          { $set: { due: newDue, status: newDue === 0 ? 'COMPLETED' : 'PENDING' } },
+          { $set: { due: newDue, taken: newTaken, status: newDue === 0 ? 'COMPLETED' : 'PENDING' } },
           { session }
         );
         budget -= deductible;

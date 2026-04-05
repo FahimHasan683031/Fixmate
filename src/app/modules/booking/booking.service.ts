@@ -12,7 +12,27 @@ import { BookingStateMachine } from './bookingStateMachine';
 import { createPaystackCheckout } from '../../../helpers/paystackHelper';
 import { Request } from 'express';
 import { Payment } from '../payment/payment.model';
+import { createCancellationRefundRecord } from '../payment/payment.service';
 import { applyClientCancellationPenalty, applyProviderCancellationPenalty } from '../penalty/penalty.utils';
+import { refundPaystackTransaction } from '../../../helpers/paystackHelper';
+import { PAYMENT_STATUS } from '../../../enum/payment';
+import { USER_ROLES } from '../../../enum/user';
+
+const STATUS_PERMISSIONS: Partial<Record<string, BOOKING_STATUS[]>> = {
+  [USER_ROLES.PROVIDER]: [
+    BOOKING_STATUS.ACCEPTED,
+    BOOKING_STATUS.IN_PROGRESS,
+    BOOKING_STATUS.COMPLETED_BY_PROVIDER,
+    BOOKING_STATUS.CANCELLED,
+    BOOKING_STATUS.DISPUTED,
+  ],
+  [USER_ROLES.CLIENT]: [
+    BOOKING_STATUS.CONFIRMED_BY_CLIENT,
+    BOOKING_STATUS.CANCELLED,
+    BOOKING_STATUS.DISPUTED,
+  ],
+  [USER_ROLES.ADMIN]: Object.values(BOOKING_STATUS),
+};
 
 // Create a new booking and initialize Paystack checkout
 const createBooking = async (user: JwtPayload, data: IBooking, req: Request) => {
@@ -114,28 +134,42 @@ const updateBooking = async (id: string, data: Partial<IBooking>) => {
 };
 
 // Transition booking status to CANCELLED and handle fees if applicable
-const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'provider') => {
-  const booking = await Booking.findById(id).populate('service').lean().exec();
+const cancelBooking = async (user: JwtPayload, id: string, reason?: string) => {
+  const role = user.role.toLowerCase() as 'client' | 'provider';
+  const booking = await Booking.findById(id).populate('service').exec();
   if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
 
   const originalPayment: any = await Payment.findOne({
     booking: booking._id,
-    paymentStatus: 'CLIENT_PAID',
+    paymentStatus: PAYMENT_STATUS.PAID,
   }).lean();
 
-  const originalAmount = originalPayment
-    ? originalPayment.servicePrice || 0
-    : 0;
+  const originalAmount = originalPayment ? originalPayment.servicePrice || 0 : 0;
   let penaltyFee = 0;
 
   const currentStatus = booking.bookingStatus as BOOKING_STATUS;
+
+  // Set cancellation details
+  booking.cancelReason = reason || '';
+  booking.cancelledBy = user.role.toUpperCase() as 'CLIENT' | 'PROVIDER';
+  await booking.save();
+
+  // No penalty if cancelled at the REQUESTED stage
+  if (currentStatus === BOOKING_STATUS.REQUESTED) {
+    if (originalAmount > 0) {
+      await createCancellationRefundRecord(id, originalAmount, 0, 0);
+      await refundPaystackTransaction(booking.transactionId, originalAmount);
+    }
+    await BookingStateMachine.transitionState(id, role, BOOKING_STATUS.CANCELLED, reason);
+    return { message: 'Booking request cancelled successfully' };
+  }
 
   if (role === 'client') {
     if (originalAmount > 0) {
       if (currentStatus === BOOKING_STATUS.ACCEPTED) {
         penaltyFee = originalAmount * 0.05;
       } else if (currentStatus === BOOKING_STATUS.IN_PROGRESS) {
-        penaltyFee = originalAmount * 0.10;
+        penaltyFee = originalAmount * 0.1;
       }
 
       await applyClientCancellationPenalty(
@@ -143,11 +177,11 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
         booking.transactionId,
         booking.customer.toString(),
         originalAmount,
-        penaltyFee
+        penaltyFee,
       );
     }
 
-    await BookingStateMachine.transitionState(id, 'client', BOOKING_STATUS.CANCELLED);
+    await BookingStateMachine.transitionState(id, 'client', BOOKING_STATUS.CANCELLED, reason);
   } else {
     if (originalAmount > 0) {
       if (currentStatus === BOOKING_STATUS.ACCEPTED || currentStatus === BOOKING_STATUS.IN_PROGRESS) {
@@ -159,14 +193,49 @@ const cancelBooking = async (_user: JwtPayload, id: string, role: 'client' | 'pr
         booking.transactionId,
         booking.provider.toString(),
         originalAmount,
-        penaltyFee
+        penaltyFee,
       );
     }
 
-    await BookingStateMachine.transitionState(id, 'provider', BOOKING_STATUS.CANCELLED);
+    await BookingStateMachine.transitionState(id, 'provider', BOOKING_STATUS.CANCELLED, reason);
   }
 
   return { message: 'Booking cancelled successfully' };
+};
+
+// Centralized status update logic with role-based validation
+const updateBookingStatus = async (
+  user: JwtPayload,
+  id: string,
+  status: BOOKING_STATUS,
+  reason?: string,
+) => {
+  const role = user.role as string;
+  const allowedStatuses = STATUS_PERMISSIONS[role] || [];
+
+  let finalStatus = status;
+
+  // If client confirms completion, move directly to SETTLED to trigger payout
+  if (finalStatus === BOOKING_STATUS.CONFIRMED_BY_CLIENT) {
+    finalStatus = BOOKING_STATUS.SETTLED;
+  }
+
+  if (!allowedStatuses.includes(status)) {
+    throw new ApiError(
+      StatusCodes.FORBIDDEN,
+      `You are not authorized to change the booking status to ${status}`,
+    );
+  }
+
+  // Handle Cancellation specially due to penalty logic
+  if (finalStatus === BOOKING_STATUS.CANCELLED) {
+    return await cancelBooking(user, id, reason);
+  }
+
+  // General transition for other statuses (ACCEPTED, IN_PROGRESS, COMPLETED, CONFIRMED, etc.)
+  await BookingStateMachine.transitionState(id, role.toLowerCase() as any, finalStatus, reason);
+
+  return { message: `Booking status updated to ${finalStatus} successfully` };
 };
 
 export const BookingService = {
@@ -175,4 +244,5 @@ export const BookingService = {
   getBookingById,
   updateBooking,
   cancelBooking,
+  updateBookingStatus,
 };

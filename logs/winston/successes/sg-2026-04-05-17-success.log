@@ -1,0 +1,66 @@
+{Sun Apr 05 2026 17:00:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:01:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:02:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:03:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:04:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:05:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:06:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:07:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:08:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:09:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:10:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:11:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:12:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:13:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:14:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:15:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:16:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:17:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:18:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:19:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:20:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:21:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:22:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:23:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:23:37} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Apr 05 2026 17:23:37} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Apr 05 2026 17:23:37} [APP 🚀] info: Unverified account cleanup job scheduled to run every minute.
+{Sun Apr 05 2026 17:23:37} [APP 🚀] info: Booking SLA job scheduled to run every 15 minutes (Threshold: 5 hours).
+{Sun Apr 05 2026 17:23:37} [APP 🚀] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Sun Apr 05 2026 17:23:37} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Apr 05 2026 17:23:37} [APP 🚀] info: [33m♻️  Application listening on port:5001[39m
+{Sun Apr 05 2026 17:24:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:25:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:26:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:27:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:28:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:29:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:30:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:31:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:32:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:33:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:34:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:35:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:36:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:37:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:38:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:38:36} [APP 🚀] info: ::ffff:10.10.7.94 - POST /api/v1/bookings/create 200 - 1508.562 ms
+{Sun Apr 05 2026 17:39:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:39:04} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/bookings 200 - 16.994 ms
+{Sun Apr 05 2026 17:40:01} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:40:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/bookings 200 - 6.708 ms
+{Sun Apr 05 2026 17:40:19} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/bookings 200 - 5.881 ms
+{Sun Apr 05 2026 17:41:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:41:15} [APP 🚀] info: ::ffff:10.10.7.94 - POST /api/v1/bookings/create 200 - 1023.983 ms
+{Sun Apr 05 2026 17:41:45} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/bookings 200 - 9.494 ms
+{Sun Apr 05 2026 17:41:57} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/bookings 200 - 6.637 ms
+{Sun Apr 05 2026 17:42:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:42:16} [APP 🚀] info: ::1 - POST /api/v1/webhook 200 - 2.712 ms
+{Sun Apr 05 2026 17:43:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:43:26} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/bookings 200 - 7.865 ms
+{Sun Apr 05 2026 17:43:49} [APP 🚀] info: ::ffff:10.10.7.94 - PATCH /api/v1/bookings/69d24a5a4b5a990bdbba45b2/status 200 - 31.339 ms
+{Sun Apr 05 2026 17:44:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:45:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 05 2026 17:45:01} [APP 🚀] info: ::ffff:10.10.7.94 - PATCH /api/v1/bookings/69d24a5a4b5a990bdbba45b2/status 200 - 14.080 ms
+{Sun Apr 05 2026 17:45:14} [APP 🚀] info: ::1 - POST /api/v1/webhook 200 - 2.353 ms
+{Sun Apr 05 2026 17:45:16} [APP 🚀] info: ::ffff:10.10.7.94 - PATCH /api/v1/bookings/69d24a5a4b5a990bdbba45b2/status 200 - 23.616 ms

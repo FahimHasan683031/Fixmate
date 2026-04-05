@@ -37,17 +37,6 @@ const viewService = ServiceController.getServiceById;
 
 const getBookings = BookingController.getBookings;
 
-// Controller to process status-related actions on a booking from the provider
-const actionBooking = catchAsync(async (req: Request, res: Response) => {
-  const result = await ProviderServices.actionBooking(req.user, req.body as any);
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'Bookings action processed successfully',
-    data: result,
-  });
-});
-
 // Controller for the provider to see specific booking details
 const seeBooking = catchAsync(async (req: Request, res: Response) => {
   const result = await ProviderServices.seeBooking(req.user, req.params.id);
@@ -72,7 +61,7 @@ const getCustomer = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const cancelBooking = BookingController.cancelBooking;
+const updateBookingStatus = BookingController.updateBookingStatus;
 
 const wallet = PaymentControllers.getWallet;
 const withdraw = PaymentControllers.withdraw;
@@ -102,11 +91,10 @@ export const ProviderControllers = {
   updateService,
   viewService,
   getBookings,
-  actionBooking,
   seeBooking,
   getCategories,
   getCustomer,
-  cancelBooking,
+  updateBookingStatus,
   wallet,
   withdraw,
   ratings,
