@@ -43,14 +43,14 @@ router.get(
 );
 
 router.get(
-  '/users',
+  '/',
   auth(USER_ROLES.ADMIN),
   UserController.getUsers,
 );
 
 router.get(
-  '/users/:id',
-  auth(USER_ROLES.ADMIN),
+  '/:id',
+  auth(USER_ROLES.ADMIN, USER_ROLES.CLIENT, USER_ROLES.PROVIDER),
   validateRequest(UserValidation.idParamsSchema),
   UserController.getUser,
 );

@@ -33,7 +33,18 @@ const updateUserProfile = async (user: JwtPayload, payload: Partial<IUser>) => {
 
   if (payload.image && existingUser.image) unlinkFile(existingUser.image!);
 
-  const updatedUser = await User.findByIdAndUpdate(userId, payload, { new: true })
+  const updateData: any = { ...payload };
+
+  if (updateData.longitude && updateData.latitude) {
+    updateData.location = {
+      type: 'Point',
+      coordinates: [Number(updateData.longitude), Number(updateData.latitude)],
+    };
+    delete updateData.longitude;
+    delete updateData.latitude;
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true })
     .select('-password -authentication')
     .lean()
     .exec();
@@ -56,6 +67,15 @@ const updateProviderProfile = async (user: JwtPayload, payload: any) => {
       updateData[`providerDetails.${key}`] = updateData.providerDetails[key];
     }
     delete updateData.providerDetails;
+  }
+
+  if (updateData.longitude && updateData.latitude) {
+    updateData.location = {
+      type: 'Point',
+      coordinates: [Number(updateData.longitude), Number(updateData.latitude)],
+    };
+    delete updateData.longitude;
+    delete updateData.latitude;
   }
 
   const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true })

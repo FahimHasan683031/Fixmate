@@ -137,6 +137,10 @@ const createUserZodSchema = z.object({
     role: z.enum([USER_ROLES.PROVIDER, USER_ROLES.CLIENT], {
       message: 'Role must be one of admin, user',
     }),
+    location: z.object({
+      type: z.literal('Point'),
+      coordinates: z.array(z.number()),
+    }).optional(),
   }),
 });
 

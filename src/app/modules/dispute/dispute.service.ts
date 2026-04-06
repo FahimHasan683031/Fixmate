@@ -33,6 +33,8 @@ const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
 
   const raisedBy = isClient ? 'client' : 'provider';
 
+  const previousBookingStatus = booking.bookingStatus;
+
   // Transition booking to DISPUTED
   await BookingStateMachine.transitionState(
     booking._id,
@@ -46,6 +48,7 @@ const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
     user: user.id,
     raisedBy,
     status: 'open',
+    previousBookingStatus,
   };
 
   const result = await Dispute.create(disputeData);
@@ -82,7 +85,7 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
     throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the dispute record.');
   }
 
-  if (dispute.status === 'resolved' || dispute.status === 'rejected') {
+  if (dispute.status === 'resolved') {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'This dispute has already been resolved or closed.');
   }
 
@@ -268,6 +271,20 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
       payment.paymentStatus = PAYMENT_STATUS.PARTIAL_REFUNDED;
       payment.refundAmount = refundAmount;
       await payment.save({ session });
+    } else if (payload.type === 'rejected') {
+      // Revert booking status back to previous state
+      if (dispute.previousBookingStatus) {
+        await BookingStateMachine.adminForceState(
+          bookingId,
+          dispute.previousBookingStatus as any,
+          payload.note || 'Dispute rejected: reverting to previous status'
+        );
+      }
+
+      await NotificationService.insertNotification({
+        for: dispute.user as any,
+        message: `Your dispute request has been reviewed and was not accepted at this time. Note: ${payload.note}`,
+      });
     }
 
     dispute.status = 'resolved';
@@ -289,28 +306,9 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
   return dispute;
 };
 
-const rejectDispute = async (id: string, note: string) => {
-    const dispute = await Dispute.findByIdAndUpdate(id, {
-        status: 'rejected',
-        'resolution.note': note
-    }, { new: true });
-    
-    if (!dispute) {
-        throw new ApiError(StatusCodes.NOT_FOUND, 'Dispute not found');
-    }
-
-    await NotificationService.insertNotification({
-      for: dispute.user as any,
-      message: `Your dispute request has been reviewed and was not accepted at this time. Note: ${note}`,
-    });
-    
-    return dispute;
-};
-
 export const DisputeService = {
   createDispute,
   getAllDisputes,
   getDisputeById,
   resolveDispute,
-  rejectDispute
 };

@@ -32,13 +32,16 @@ const disputeSchema = new Schema<IDispute>(
     },
     status: {
       type: String,
-      enum: ['open', 'in_review', 'resolved', 'rejected'],
+      enum: ['open', 'in_review', 'resolved'],
       default: 'open',
+    },
+    previousBookingStatus: {
+      type: String,
     },
     resolution: {
       type: {
         type: String,
-        enum: ['refund', 'partial_refund', 'release_payment', null],
+        enum: ['refund', 'partial_refund', 'release_payment', 'rejected', null],
         default: null,
       },
       amount: {

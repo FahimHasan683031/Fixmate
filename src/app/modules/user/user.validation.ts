@@ -9,11 +9,12 @@ const updateUserProfileZodSchema = z.object({
       dateOfBirth: z.string().optional(),
       whatsApp: z.string().optional(),
       contact: z.string().optional(),
-      longitude: z.coerce.number().optional(),
-      latitude: z.coerce.number().optional(),
+      location: z.object({
+        type: z.literal('Point'),
+        coordinates: z.array(z.number()),
+      }).optional(),
       image: z.string().optional(),
-    })
-    .strict(),
+    }),
 });
 
 const updateProviderProfileZodSchema = z.object({
@@ -25,8 +26,10 @@ const updateProviderProfileZodSchema = z.object({
       dateOfBirth: z.string().optional(),
       whatsApp: z.string().optional(),
       contact: z.string().optional(),
-      longitude: z.coerce.number().optional(),
-      latitude: z.coerce.number().optional(),
+      location: z.object({
+        type: z.literal('Point'),
+        coordinates: z.array(z.number()),
+      }).optional(),
       image: z.string().optional(),
       providerDetails: z
         .object({
@@ -46,11 +49,8 @@ const updateProviderProfileZodSchema = z.object({
           bankName: z.string().optional(),
           accountNumber: z.string().optional(),
           paystackAccountId: z.string().optional(),
-        })
-        .strict()
-        .optional(),
-    })
-    .strict(),
+        }).optional(),
+    }),
 });
 
 const idParamsSchema = z.object({

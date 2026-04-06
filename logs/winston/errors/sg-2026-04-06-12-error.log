@@ -1,0 +1,6 @@
+{Mon Apr 06 2026 12:26:20} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/user/ 404 - 3.270 ms
+{Mon Apr 06 2026 12:27:05} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/users 404 - 1.374 ms
+{Mon Apr 06 2026 12:27:08} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/users 404 - 0.547 ms
+{Mon Apr 06 2026 12:27:15} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/user/users 404 - 4.807 ms
+{Mon Apr 06 2026 12:50:22} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/user/update-profile 404 - 3.606 ms
+{Mon Apr 06 2026 12:50:57} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/user/update-user-profile 500 - 44.129 ms

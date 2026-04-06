@@ -129,6 +129,11 @@
             "date": 1775451708521,
             "name": "D:\\Fahim\\Projects\\Fixmate\\logs\\winston\\errors\\sg-2026-04-06-11-error.log",
             "hash": "85062f7563e2e8d3b3760ccb2888aba73c33834b90c9d69a0128d699e58f39fe"
+        },
+        {
+            "date": 1775455994062,
+            "name": "D:\\Fahim\\Projects\\Fixmate\\logs\\winston\\errors\\sg-2026-04-06-12-error.log",
+            "hash": "5f657eacde7a0293473db13d535610ddec0b04930871adeb2d6f69e9b3ee93b7"
         }
     ],
     "hashType": "sha256"

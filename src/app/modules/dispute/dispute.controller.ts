@@ -44,20 +44,10 @@ const resolveDispute = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const rejectDispute = catchAsync(async (req: Request, res: Response) => {
-    const result = await DisputeService.rejectDispute(req.params.id, req.body.note);
-    sendResponse(res, {
-        statusCode: StatusCodes.OK,
-        success: true,
-        message: 'Dispute rejected successfully',
-        data: result,
-    });
-});
 
 export const DisputeController = {
   createDispute,
   getAllDisputes,
   getDisputeById,
   resolveDispute,
-  rejectDispute,
 };

@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { DisputeController } from './dispute.controller';
 import auth from '../../middleware/auth';
 import { USER_ROLES } from '../../../enum/user';
+import validateRequest from '../../middleware/validateRequest';
+import { DisputeValidation } from './dispute.validation';
 import { fileAndBodyProcessorUsingDiskStorage } from '../../middleware/processReqBody';
 
 const router = Router();
@@ -10,6 +12,7 @@ router.post(
   '/',
   auth(USER_ROLES.CLIENT, USER_ROLES.PROVIDER),
   fileAndBodyProcessorUsingDiskStorage(),
+  validateRequest(DisputeValidation.createDisputeSchema),
   DisputeController.createDispute
 );
 
@@ -28,13 +31,9 @@ router.get(
 router.patch(
   '/:id/resolve',
   auth(USER_ROLES.ADMIN),
+  validateRequest(DisputeValidation.resolveDisputeSchema),
   DisputeController.resolveDispute
 );
 
-router.patch(
-  '/:id/reject',
-  auth(USER_ROLES.ADMIN),
-  DisputeController.rejectDispute
-);
 
 export const DisputeRoutes = router;

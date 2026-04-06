@@ -23,13 +23,6 @@ const updateUserProfile = catchAsync(async (req: Request | any, res: Response) =
   const image = getSingleFilePath(req.files, 'image');
   if (image) req.body.image = image;
 
-  if (req.body.longitude && req.body.latitude) {
-    req.body.location = {
-      type: 'Point',
-      coordinates: [Number(req.body.longitude), Number(req.body.latitude)],
-    };
-  }
-
   const result = await UserService.updateUserProfile(req.user, req.body);
 
   sendResponse(res, {
@@ -44,13 +37,6 @@ const updateUserProfile = catchAsync(async (req: Request | any, res: Response) =
 const updateProviderProfile = catchAsync(async (req: Request | any, res: Response) => {
   const image = getSingleFilePath(req.files, 'image');
   if (image) req.body.image = image;
-
-  if (req.body.longitude && req.body.latitude) {
-    req.body.location = {
-      type: 'Point',
-      coordinates: [Number(req.body.longitude), Number(req.body.latitude)],
-    };
-  }
 
   const result = await UserService.updateProviderProfile(req.user, req.body);
 
