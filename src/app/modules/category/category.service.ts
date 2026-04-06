@@ -9,7 +9,7 @@ import { Category } from './category.model';
 // Create a new service category
 const addNewCategory = async (category: ICategory) => {
   if (!category.image) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Category image is required');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Please upload an image for the category.');
   }
   return Category.create(category);
 };
@@ -38,7 +38,7 @@ const updateCategory = async (id: string, category: ICategory) => {
   })
     .lean()
     .exec();
-  if (!result) throw new ApiError(StatusCodes.BAD_REQUEST, 'Category not found');
+  if (!result) throw new ApiError(StatusCodes.BAD_REQUEST, 'We couldn\'t find the category you\'re looking for.');
   return result;
 };
 

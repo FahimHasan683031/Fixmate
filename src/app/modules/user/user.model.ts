@@ -348,7 +348,7 @@ UserSchema.pre('save', async function (this: IUser & mongoose.Document, next) {
 
       if (isExist) {
         return next(
-          new ApiError(StatusCodes.BAD_REQUEST, 'An account with this email already exists'),
+          new ApiError(StatusCodes.BAD_REQUEST, 'An account with this email address already exists. Please use a different email or log in to your account.'),
         );
       }
     }

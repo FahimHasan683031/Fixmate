@@ -14,12 +14,12 @@ import QueryBuilder from '../../builder/QueryBuilder';
 // Create and send a new message within a chat room, triggering push and socket notifications
 const create = async (user: JwtPayload, payload: Partial<IMessage>) => {
   if (!payload.message && !payload.image) {
-    throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'You must give at last one message');
+    throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Please enter a message or attach an image to send.');
   }
 
   const chat = await Chat.findById(new Types.ObjectId(payload.chatId)).lean().exec();
   if (!chat) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Chat not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the conversation you\'re trying to message.');
   }
 
   payload.sender = new Types.ObjectId(user.authId);
@@ -65,7 +65,7 @@ const updateMessage = async (user: JwtPayload, id: string, payload: Partial<IMes
     .exec();
 
   if (!result) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Message not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the message you want to update.');
   }
 
   const socket = global.io;
@@ -88,7 +88,7 @@ const messagesOfChat = async (user: JwtPayload, query: IPaginationOptions, chatI
     .populate<{ participants: any[] }>('participants', 'name image whatsApp')
     .lean();
 
-  if (!chat) throw new ApiError(StatusCodes.NOT_FOUND, 'Requested chat not found.');
+  if (!chat) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the requested conversation.');
 
   let otherParticipant = null;
   if (Array.isArray(chat.participants)) {
@@ -133,7 +133,7 @@ const deleteMessage = async (user: JwtPayload, id: string) => {
     .exec();
 
   if (!result.deletedCount) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Message not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the message you want to delete.');
   }
   return result;
 };

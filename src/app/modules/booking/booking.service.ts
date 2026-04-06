@@ -37,15 +37,15 @@ const STATUS_PERMISSIONS: Partial<Record<string, BOOKING_STATUS[]>> = {
 // Create a new booking and initialize Paystack checkout
 const createBooking = async (user: JwtPayload, data: IBooking, req: Request) => {
   const service = await Service.findById(data.service).lean().exec();
-  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'Service not found!');
+  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the requested service. Please try selecting it again.');
 
   const provider = await User.findById(service.creator).lean().exec();
-  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
+  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We\'re having trouble locating the service provider. Please try again in a moment.');
 
   const customer = await User.findById(user.id || user.authId)
     .lean()
     .exec();
-  if (!customer) throw new ApiError(StatusCodes.NOT_FOUND, 'Customer not found!');
+  if (!customer) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account details. Please ensure you are logged in correctly.');
 
   const booking = await Booking.create({
     customer: customer._id,
@@ -122,14 +122,14 @@ const getBookingById = async (id: string) => {
     .lean()
     .exec();
 
-  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
+  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the details for this booking.');
   return booking;
 };
 
 // Update booking information using its ID
 const updateBooking = async (id: string, data: Partial<IBooking>) => {
   const booking = await Booking.findByIdAndUpdate(id, data, { new: true }).lean().exec();
-  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
+  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the details for this booking.');
   return booking;
 };
 
@@ -137,7 +137,7 @@ const updateBooking = async (id: string, data: Partial<IBooking>) => {
 const cancelBooking = async (user: JwtPayload, id: string, reason?: string) => {
   const role = user.role.toLowerCase() as 'client' | 'provider';
   const booking = await Booking.findById(id).populate('service').exec();
-  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
+  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the booking record in our system.');
 
   const originalPayment: any = await Payment.findOne({
     booking: booking._id,
@@ -223,7 +223,7 @@ const updateBookingStatus = async (
   if (!allowedStatuses.includes(status)) {
     throw new ApiError(
       StatusCodes.FORBIDDEN,
-      `You are not authorized to change the booking status to ${status}`,
+      `You don't have permission to update this booking status to "${status}".`,
     );
   }
 

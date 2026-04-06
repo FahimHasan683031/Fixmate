@@ -90,7 +90,7 @@ const downloadPayments = catchAsync(async (req: Request, res: Response) => {
 const checkoutBooking = catchAsync(async (req: Request, res: Response) => {
   const { bookingId } = req.params;
   if (!bookingId) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Booking ID is required');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Please provide a valid booking ID to proceed with the payment.');
   }
   
   const result = await PaymentServices.checkoutBooking(req, bookingId);

@@ -25,7 +25,7 @@ const addFavorite = async (user: JwtPayload, providerId: string) => {
   console.log(providerId)
 
   const providerDef = await User.findById(providerId).lean().exec();
-  if (!providerDef) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
+  if (!providerDef) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service provider you\'re looking for.');
 
   const favorite = await CustomerFavorite.create({
     customer: new Types.ObjectId(userId),
@@ -42,7 +42,7 @@ const removeFavorite = async (user: JwtPayload, providerId: string) => {
   })
     .lean()
     .exec();
-  if (!favorite) throw new ApiError(StatusCodes.NOT_FOUND, 'Favorite not found!');
+  if (!favorite) throw new ApiError(StatusCodes.NOT_FOUND, 'This provider is not in your favorites list.');
   return favorite.provider;
 };
 

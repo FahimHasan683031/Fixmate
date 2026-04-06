@@ -20,7 +20,7 @@ import { TransactionService } from '../transaction/transaction.service';
 const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
   const booking = await Booking.findById(payload.bookingId);
   if (!booking) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the booking record for this dispute.');
   }
 
   // Check if user is part of the booking
@@ -28,7 +28,7 @@ const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
   const isProvider = booking.provider.toString() === user.id;
 
   if (!isClient && !isProvider) {
-    throw new ApiError(StatusCodes.FORBIDDEN, 'You are not authorized to dispute this booking');
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You don\'t have permission to raise a dispute for this booking.');
   }
 
   const raisedBy = isClient ? 'client' : 'provider';
@@ -71,7 +71,7 @@ const getAllDisputes = async (query: Record<string, unknown>) => {
 const getDisputeById = async (id: string) => {
   const result = await Dispute.findById(id).populate('user').populate('bookingId');
   if (!result) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Dispute not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the dispute record.');
   }
   return result;
 };
@@ -79,17 +79,17 @@ const getDisputeById = async (id: string) => {
 const resolveDispute = async (id: string, payload: { type: string; amount?: number; note?: string }) => {
   const dispute = await Dispute.findById(id);
   if (!dispute) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Dispute not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the dispute record.');
   }
 
   if (dispute.status === 'resolved' || dispute.status === 'rejected') {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Dispute is already closed');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'This dispute has already been resolved or closed.');
   }
 
   const bookingId = dispute.bookingId;
   const payment = await Payment.findOne({ booking: bookingId });
   if (!payment) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Payment record not found for this booking');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find a payment record associated with this booking.');
   }
 
   const session = await mongoose.startSession();
@@ -189,7 +189,7 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
       // partial refund to client, rest to provider
       const refundAmount = payload.amount || 0;
       if (refundAmount > payment.servicePrice) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, 'Refund amount cannot exceed service price');
+        throw new ApiError(StatusCodes.BAD_REQUEST, 'The refund amount must be less than or equal to the total service price.');
       }
 
       await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.SETTLED, payload.note || `Resolved by admin: partial refund of ${refundAmount}`);

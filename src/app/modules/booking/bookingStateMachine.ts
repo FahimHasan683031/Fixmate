@@ -62,7 +62,7 @@ export class BookingStateMachine {
     reason: string,
   ) {
     if (!reason?.trim())
-      throw new ApiError(StatusCodes.BAD_REQUEST, 'Reason required for admin force.');
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Please provide a reason why you are manually changing the booking status.');
     return this.executeTransition(bookingId, 'admin', targetState, `[ADMIN FORCE] ${reason}`, true);
   }
 
@@ -74,7 +74,7 @@ export class BookingStateMachine {
     isForce: boolean,
   ) {
     const booking = await Booking.findById(bookingId);
-    if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found');
+    if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the booking record in our system.');
 
     const currentState = booking.bookingStatus as BOOKING_STATUS;
     const allowedTransitions = VALID_TRANSITIONS[currentState] || [];
@@ -83,7 +83,7 @@ export class BookingStateMachine {
     if (!isForce && !allowedTransitions.includes(targetState)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        `Invalid status change: Cannot move from ${currentState} to ${targetState}.`
+        `This booking cannot be moved from its current status (${currentState}) to the requested status (${targetState}). Please refresh and try again.`
       );
     }
 

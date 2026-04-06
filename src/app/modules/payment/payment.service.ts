@@ -36,7 +36,7 @@ const handlePaymentSuccessLogic = async (
 ) => {
   try {
     const booking = await Booking.findById(bookingID);
-    if (!booking) throw new ApiError(StatusCodes.BAD_REQUEST, 'Booking not found');
+    if (!booking) throw new ApiError(StatusCodes.BAD_REQUEST, 'We couldn\'t find the booking for this payment.');
     if (booking.isPaid) return;
 
     const updatedBooking = await Booking.findOneAndUpdate(
@@ -59,7 +59,7 @@ const handlePaymentSuccessLogic = async (
     const customerData = await User.findById(booking.customer).lean();
 
     if (!serviceData || !providerData || !customerData) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, 'Related data not found');
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'We couldn\'t find some of the information needed for this payment. Please refresh and try again.');
     }
 
     const servicePrice = serviceData.price;
@@ -109,7 +109,7 @@ const handlePaymentSuccessLogic = async (
 export const handleBookingSettlement = async (bookingId: string) => {
   try {
     const payment = await Payment.findOne({ booking: new MongooseTypes.ObjectId(bookingId) });
-    if (!payment || !payment.provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Payment record not found for this booking');
+    if (!payment || !payment.provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find a payment record for this booking.');
 
     if (payment.paymentStatus === PAYMENT_STATUS.SETTLED) {
       return; // Already settled
@@ -220,12 +220,12 @@ const generateRecipient = async (req: Request) => {
   const { name, accountNumber, bankCode } = req.body;
 
   if (!name || !accountNumber || !bankCode) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Name, Account Number and Bank Code are required');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Please provide your full name, account number, and bank code to continue.');
   }
 
   const userOnDB = await User.findById(user.authId || user.id);
   if (!userOnDB) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'User not found');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'We couldn\'t find your account details. Please try logging in again.');
   }
 
   const recipient = await createTransferRecipient(name, accountNumber, bankCode);
@@ -249,7 +249,7 @@ const webhook = async (req: Request) => {
   const payload = req.body;
   const hash = crypto.createHmac('sha512', config.paystack.secretKey || 'sk_test_placeholder').update(payload).digest('hex');
   if (hash !== req.headers['x-paystack-signature']) {
-    throw new ApiError(StatusCodes.UNAUTHORIZED, 'Invalid Signature!');
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'We couldn\'t verify the security signature for this request.');
   }
 
   const event = JSON.parse(req.body.toString());
@@ -295,7 +295,7 @@ const webhook = async (req: Request) => {
 const getWallet = async (user: JwtPayload, query: any) => {
   const userId = user.id || user.authId;
   const provider = (await User.findById(userId).lean().exec()) as IUser;
-  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
+  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your service provider profile.');
 
   const walletQuery = new QueryBuilder(
     Transaction.find({ user: new Types.ObjectId(userId) }),
@@ -313,7 +313,7 @@ const getPaymentHistory = async (user: JwtPayload, query: any) => {
   const { startTime, endTime, paymentType, ...rest } = query;
   const userId = user.id || user.authId;
   const userData = (await User.findById(userId).lean().exec()) as IUser;
-  if (!userData) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found!');
+  if (!userData) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account details.');
 
   const isProvider = userData.role === 'PROVIDER';
 
@@ -348,7 +348,7 @@ const getPaymentHistory = async (user: JwtPayload, query: any) => {
 const getPaymentDetails = async (id: string) => {
   const info: any = await Payment.findById(id).populate('customer service provider').lean().exec();
 
-  if (!info) throw new ApiError(StatusCodes.NOT_FOUND, 'Payment details not found!');
+  if (!info) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the requested payment details.');
 
   const base = {
     customId: info.customId,
@@ -388,13 +388,13 @@ const withdraw = async (
   const provider = (await User.findById(user.id || user.authId)
     .lean()
     .exec()) as IUser;
-  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
+  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your service provider profile to process the withdrawal.');
 
   const maxWithdrawable = (provider.providerDetails?.wallet || 0) * 0.9;
   if (data.amount > maxWithdrawable)
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      `Insufficient balance! You can withdraw up to ${maxWithdrawable.toFixed(2)}`,
+      `You don't have enough balance. You can withdraw up to ${maxWithdrawable.toFixed(2)} at this time.`,
     );
 
   let recipientCode = provider.providerDetails?.paystackRecipientCode;
@@ -406,7 +406,7 @@ const withdraw = async (
     if (!bankCode || !accountNumber) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        'Bank details are required for first-time withdrawal.',
+        'Please provide your bank details for your first-time withdrawal.',
       );
     }
 
@@ -443,7 +443,7 @@ const downloadPayments = async (query: Record<string, unknown>) => {
   const { startDate, endDate, format } = query;
 
   if (!format || !['csv', 'excel'].includes((format as string).toLowerCase())) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "File 'format' is required. Must be 'csv' or 'excel'.");
+    throw new ApiError(StatusCodes.BAD_REQUEST, "Please specify a valid file format (CSV or Excel) for your download.");
   }
 
   const mongoQuery: any = {};
@@ -522,20 +522,20 @@ const downloadPayments = async (query: Record<string, unknown>) => {
 // Dedicated API to create Paystack Checkout for a specific booking
 const checkoutBooking = async (req: Request, bookingId: string) => {
   const booking = await Booking.findById(bookingId).lean().exec();
-  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
+  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the booking session.');
 
   if (booking.isPaid) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Booking is already paid!');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'This booking has already been paid for.');
   }
 
   const service = await Service.findById(booking.service).lean().exec();
-  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'Service not found!');
+  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service details for this booking.');
 
   const provider = await User.findById(booking.provider).lean().exec();
-  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
+  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service provider for this booking.');
 
   const customer = await User.findById(booking.customer).lean().exec();
-  if (!customer) throw new ApiError(StatusCodes.NOT_FOUND, 'Customer not found!');
+  if (!customer) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account details. Please try logging in again.');
 
   const url = await createPaystackCheckout(
     req,

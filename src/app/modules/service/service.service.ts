@@ -16,7 +16,7 @@ const addService = async (user: JwtPayload, payload: Partial<IService>) => {
 // Update an existing service's details and handle image replacement
 const updateService = async (id: string, payload: Partial<IService>) => {
   const existingService = await Service.findById(id).lean().exec();
-  if (!existingService) throw new ApiError(StatusCodes.NOT_FOUND, 'Service not found!');
+  if (!existingService) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service details you\'re looking for.');
 
   if (payload.image && existingService.image) {
     unlinkFile(existingService.image);
@@ -31,7 +31,7 @@ const deleteService = async (id: string) => {
   const service = await Service.findByIdAndUpdate(id, { isDeleted: true }, { new: true })
     .lean()
     .exec();
-  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'Service not found!');
+  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service you want to delete.');
   return service;
 };
 
@@ -163,7 +163,7 @@ const getServiceById = async (id: string) => {
     .populate('creator', 'name image email contact location')
     .lean()
     .exec();
-  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'Service not found!');
+  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service details in our system.');
   return service;
 };
 

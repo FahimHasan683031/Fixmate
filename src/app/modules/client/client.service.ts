@@ -18,7 +18,7 @@ export const getProviderById = async (user: JwtPayload, id: string, query: any) 
     )
     .lean()
     .exec();
-  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
+  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service provider you\'re looking for.');
 
   const services = await Service.find({ creator: id, isDeleted: false })
     .select('creator category image price expertise subCategory')
@@ -111,7 +111,7 @@ export const seeBooking = async (_user: JwtPayload, id: string) => {
     .lean()
     .exec();
 
-  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
+  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the details for this booking.');
 
   return {
     service: { ...booking.service, date: booking.date },
@@ -129,7 +129,7 @@ export const seeBooking = async (_user: JwtPayload, id: string) => {
 // Update a booking's core information from the client side
 const updateBooking = async (_user: JwtPayload, id: string, data: any) => {
   const result = await Booking.findByIdAndUpdate(id, data, { new: true }).lean().exec();
-  if (!result) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
+  if (!result) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the booking you want to update.');
   return result;
 };
 

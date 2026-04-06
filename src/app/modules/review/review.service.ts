@@ -20,7 +20,7 @@ const createReview = async (user: JwtPayload, payload: any) => {
       .session(session)
       .lean()
       .exec();
-    if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
+    if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the booking you want to review.');
 
     const review = await Review.create(
       [

@@ -53,7 +53,7 @@ const downloadTransactions = async (query: Record<string, unknown>) => {
   const { startDate, endDate, format } = query;
 
   if (!format || !['csv', 'excel'].includes((format as string).toLowerCase())) {
-     throw new ApiError(StatusCodes.BAD_REQUEST, "File 'format' is required. Must be 'csv' or 'excel'.");
+     throw new ApiError(StatusCodes.BAD_REQUEST, "Please specify a valid file format (CSV or Excel) to download your transactions.");
   }
 
   const mongoQuery: any = {};

@@ -21,7 +21,7 @@ const getProfile = async (user: JwtPayload) => {
     .lean()
     .exec();
 
-  if (!existingUser) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found!');
+  if (!existingUser) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account information.');
   return existingUser;
 };
 
@@ -29,7 +29,7 @@ const getProfile = async (user: JwtPayload) => {
 const updateUserProfile = async (user: JwtPayload, payload: Partial<IUser>) => {
   const userId = user.id || user.authId;
   const existingUser = await User.findById(userId).lean().exec();
-  if (!existingUser) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found!');
+  if (!existingUser) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account information.');
 
   if (payload.image && existingUser.image) unlinkFile(existingUser.image!);
 
@@ -45,7 +45,7 @@ const updateUserProfile = async (user: JwtPayload, payload: Partial<IUser>) => {
 const updateProviderProfile = async (user: JwtPayload, payload: any) => {
   const userId = user.id || user.authId;
   const existingUser = await User.findById(userId).lean().exec();
-  if (!existingUser) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found!');
+  if (!existingUser) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account information.');
 
   if (payload.image && existingUser.image) unlinkFile(existingUser.image!);
 
@@ -70,12 +70,12 @@ const updateProviderProfile = async (user: JwtPayload, payload: any) => {
 const deleteProfile = async (user: JwtPayload, payload: { password: string }) => {
   const userId = user.id || user.authId;
   const existingUser = await User.findById(userId).select('+password').lean().exec();
-  if (!existingUser) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found!');
+  if (!existingUser) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account information.');
 
   const isMatch =
     payload.password && (await bcrypt.compare(payload.password, existingUser.password));
   if (!isMatch) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Password does not match!');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'The password you entered is incorrect. Please try again.');
   }
 
   await User.findByIdAndUpdate(existingUser._id, { status: USER_STATUS.DELETED }).lean().exec();
@@ -85,7 +85,7 @@ const downloadUsers = async (query: Record<string, unknown>) => {
   const { startDate, endDate, format } = query;
 
   if (!format || !['csv', 'excel'].includes((format as string).toLowerCase())) {
-     throw new ApiError(StatusCodes.BAD_REQUEST, "File 'format' is required. Must be 'csv' or 'excel'.");
+     throw new ApiError(StatusCodes.BAD_REQUEST, "Please specify a valid file format (CSV or Excel) for the download.");
   }
 
   const mongoQuery: any = {};
@@ -169,7 +169,7 @@ const getUsers = async (query: Record<string, unknown>) => {
 // Get details of a single user by ID
 const getUser = async (id: string) => {
   const result: any = await User.findById(id).lean().exec();
-  if (!result) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+  if (!result) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the user you\'re looking for.');
 
   if (result.role === USER_ROLES.CLIENT) {
     return {
@@ -250,7 +250,7 @@ const getUser = async (id: string) => {
 // Block, unblock, or soft-delete a user
 const blockAndUnblockUser = async (id: string, status: string) => {
   const user = await User.findById(id);
-  if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+  if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the user profile.');
 
   if (status === 'block') user.status = USER_STATUS.BLOCKED;
   else if (status === 'unblock') user.status = USER_STATUS.ACTIVE;

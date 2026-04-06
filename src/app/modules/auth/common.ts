@@ -49,13 +49,13 @@ const handleLoginLogic = async (
   }
 
   if (status === USER_STATUS.DELETED) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'No account found with this email');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'We couldn\'t find an account associated with this email address. Please check your entry or sign up for a new account.');
   }
 
   if (status === USER_STATUS.BLOCKED) {
     throw new ApiError(
       StatusCodes.FORBIDDEN,
-      'Your account has been blocked. Please contact support.',
+      'Your account has been temporarily disabled. Please reach out to our support team for assistance.',
     );
   }
 
@@ -63,7 +63,7 @@ const handleLoginLogic = async (
   const isPasswordMatched = await User.isPasswordMatched(payload.password, password);
 
   if (!isPasswordMatched) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Incorrect password, please try again.');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'The password you entered is incorrect. Please double-check and try again.');
   }
 
   await User.findByIdAndUpdate(

@@ -29,7 +29,7 @@ const getById = async (id: string, payload: JwtPayload) => {
     .lean()
     .exec();
 
-  if (!result) throw new ApiError(StatusCodes.NOT_FOUND, 'Chat not found!');
+  if (!result) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the conversation you\'re looking for.');
 
   return {
     _id: result._id,
@@ -94,13 +94,13 @@ const allChats = async (payload: JwtPayload, query: any) => {
 // Delete a chat room and all its associated messages
 const deleteOneChat = async (payload: JwtPayload, id: string) => {
   const chat = await Chat.findById(new Types.ObjectId(id)).lean().exec();
-  if (!chat) throw new ApiError(StatusCodes.NOT_FOUND, 'Chat not found!');
+  if (!chat) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the conversation you\'re trying to delete.');
 
   const isParticipant = chat.participants.some(
     participant => participant.toString() === payload.authId,
   );
   if (!isParticipant)
-    throw new ApiError(StatusCodes.UNAUTHORIZED, 'You are not a participant of this chat!');
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'You don\'t have access to this conversation.');
 
   const deletedChat = await Chat.findByIdAndDelete(id).lean().exec();
   if (deletedChat) {

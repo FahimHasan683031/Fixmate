@@ -87,11 +87,11 @@ const getSupports = async (query: Record<string, unknown>) => {
 const markAsResolve = async (_user: JwtPayload, supportId: string) => {
   const support = await Support.findById(new Types.ObjectId(supportId)).populate('user');
   if (!support) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Support not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the support ticket you\'re looking for.');
   }
 
   if(support.status === SupportStatus.COMPLETED){
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Support already resolved');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'This support ticket has already been marked as resolved.');
   }
 
 

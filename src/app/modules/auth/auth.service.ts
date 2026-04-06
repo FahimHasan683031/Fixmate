@@ -27,7 +27,7 @@ export const createUser = async (payload: IUser) => {
     session.startTransaction();
 
     if (payload.role === USER_ROLES.ADMIN) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, `Admin account creation is not allowed.`);
+      throw new ApiError(StatusCodes.BAD_REQUEST, `Admin accounts cannot be created this way. Please contact the administrator.`);
     }
 
     const isUserExist = await User.findOne({
@@ -36,7 +36,7 @@ export const createUser = async (payload: IUser) => {
     }).session(session);
 
     if (isUserExist) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, `An account with this email already exists.`);
+      throw new ApiError(StatusCodes.BAD_REQUEST, `An account is already registered with this email address. Try logging in instead.`);
     }
 
     const otp = generateOtp();
@@ -72,7 +72,7 @@ export const createUser = async (payload: IUser) => {
 
     const user = await User.create([userData], { session });
 
-    if (!user[0]) throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user.');
+    if (!user[0]) throw new ApiError(StatusCodes.BAD_REQUEST, 'We were unable to create your account at this time. Please try again or contact support.');
 
     const createdUser = user[0];
 
@@ -110,7 +110,7 @@ const login = async (payload: ILoginData): Promise<IAuthResponse> => {
   if (!isUserExist) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      `No account found with this ${email ? 'email' : 'phone'}`,
+      `We couldn't find an account with that ${email ? 'email address' : 'phone number'}. Please check your entry or sign up for a new account.`,
     );
   }
 
@@ -132,12 +132,12 @@ const adminLogin = async (payload: ILoginData): Promise<IAuthResponse> => {
   if (!isUserExist) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      `No account found with this ${email ? 'email' : 'phone'}`,
+      `We couldn't find an account with that ${email ? 'email address' : 'phone number'}. Please check your entry or sign up for a new account.`,
     );
   }
 
   if (isUserExist.role !== USER_ROLES.ADMIN) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'You are not authorized to login as admin');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'You do not have the necessary permissions to log in as an administrator.');
   }
 
   const isPasswordMatch = await AuthHelper.isPasswordMatched(
@@ -146,7 +146,7 @@ const adminLogin = async (payload: ILoginData): Promise<IAuthResponse> => {
   );
 
   if (!isPasswordMatch) {
-    throw new ApiError(StatusCodes.UNAUTHORIZED, 'Please try again with correct credentials.');
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'The password you entered is incorrect. Please try again.');
   }
 
   const tokens = AuthHelper.createToken(
@@ -174,7 +174,7 @@ const forgetPassword = async (email?: string, phone?: string) => {
   });
 
   if (!isUserExist) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'No account found with this email or phone');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'We couldn\'t find an account matching that email or phone number.');
   }
 
   const otp = generateOtp();
@@ -217,7 +217,7 @@ const forgetPassword = async (email?: string, phone?: string) => {
 const resetPassword = async (resetToken: string, payload: IResetPassword) => {
   const { newPassword, confirmPassword } = payload;
   if (newPassword !== confirmPassword) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Passwords do not match');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'The passwords you entered don\'t match. Please make sure they are exactly the same.');
   }
 
   const isTokenExist = await Token.isExistToken(resetToken);
@@ -225,7 +225,7 @@ const resetPassword = async (resetToken: string, payload: IResetPassword) => {
   if (!isTokenExist) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      "You don't have authorization to reset your password, please verify your account first.",
+      "To reset your password, please verify your account first for your security.",
     );
   }
 
@@ -235,7 +235,7 @@ const resetPassword = async (resetToken: string, payload: IResetPassword) => {
   if (!isUserExist) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'Requested user not found, please try again or contact support.',
+      'We couldn\'t find your account. Please try again or reach out to our support team.',
     );
   }
 
@@ -243,13 +243,13 @@ const resetPassword = async (resetToken: string, payload: IResetPassword) => {
   if (!authentication?.resetPassword) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'You don\'t have permission to change the password. Please click again to "Forgot Password"',
+      'You\'ll need to request a new password reset to proceed. Please click on "Forgot Password" again.',
     );
   }
 
   const isTokenValid = await Token.isExpireToken(resetToken);
   if (!isTokenValid) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Your reset token has expired, please try again.');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'This password reset link has expired. Please request a new one to continue.');
   }
 
   const hashPassword = await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
@@ -275,7 +275,7 @@ const resetPassword = async (resetToken: string, payload: IResetPassword) => {
 // Verify user account or reset code using OTP
 const verifyAccount = async (email: string, onetimeCode: string): Promise<IAuthResponse> => {
   if (!onetimeCode) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'OTP is required.');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Please enter the verification code to continue.');
   }
   const isUserExist = await User.findOne({
     email: email.toLowerCase().trim(),
@@ -287,19 +287,19 @@ const verifyAccount = async (email: string, onetimeCode: string): Promise<IAuthR
   if (!isUserExist) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      `No account found with this ${email}, please register first.`,
+      `We couldn't find an account associated with ${email}. Please sign up for a new account to continue.`,
     );
   }
 
   const { authentication } = isUserExist;
 
   if (authentication?.oneTimeCode !== onetimeCode) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid OTP, please try again.');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'The verification code you entered is incorrect. Please double-check it and try again.');
   }
 
   const currentDate = new Date();
   if (authentication?.expiresAt! < currentDate) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'OTP has expired, please try again.');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'This verification code has expired for your security. Please request a new code to continue.');
   }
 
   if (!isUserExist.verified) {
@@ -354,7 +354,7 @@ const verifyAccount = async (email: string, onetimeCode: string): Promise<IAuthR
     console.log(token.token);
 
     if (!token) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, ' please try again. or contact support.');
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'We encountered a problem during verification. Please try again or reach out to support.');
     }
 
     return authResponse(
@@ -371,7 +371,7 @@ const verifyAccount = async (email: string, onetimeCode: string): Promise<IAuthR
 // Generate a new access token using a refresh token
 const getAccessToken = async (token: string) => {
   if (!token) {
-    throw new ApiError(StatusCodes.UNAUTHORIZED, 'Refresh Token is required');
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'Your session has expired. Please log in again to continue safely.');
   }
 
   try {
@@ -386,9 +386,9 @@ const getAccessToken = async (token: string) => {
     };
   } catch (error) {
     if (error instanceof Error && error.name === 'TokenExpiredError') {
-      throw new ApiError(StatusCodes.UNAUTHORIZED, 'Refresh Token has expired');
+      throw new ApiError(StatusCodes.UNAUTHORIZED, 'Your session has expired. Please log in again.');
     }
-    throw new ApiError(StatusCodes.FORBIDDEN, 'Invalid Refresh Token');
+    throw new ApiError(StatusCodes.FORBIDDEN, 'Your session is no longer valid. Please log in again.');
   }
 };
 
@@ -407,7 +407,7 @@ const resendOtpToPhoneOrEmail = async (
   if (!isUserExist) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      `No account found with this ${email ? 'email' : 'phone'}`,
+      `We couldn't find an account with that ${email ? 'email address' : 'phone number'}. Please check your entry or sign up for a new account.`,
     );
   }
 
@@ -415,7 +415,7 @@ const resendOtpToPhoneOrEmail = async (
   if (authentication?.requestCount! >= 5) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'You have exceeded the maximum number of requests. Please try again later.',
+      'You have exceeded the maximum number of requests for a code. Please wait a little while before trying again.',
     );
   }
 
@@ -465,11 +465,11 @@ const deleteAccount = async (user: JwtPayload, password: string) => {
   const isUserExist = await User.findById(authId).select('+password');
 
   if (!isUserExist) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to delete account. Please try again.');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'We were unable to delete your account. Please check your account details and try again.');
   }
 
   if (isUserExist.status === USER_STATUS.DELETED) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Requested user is already deleted.');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'This account has already been deleted.');
   }
 
   const isPasswordMatched = await bcrypt.compare(password, isUserExist.password);
@@ -477,7 +477,7 @@ const deleteAccount = async (user: JwtPayload, password: string) => {
   if (!isPasswordMatched) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'Please provide a valid password to delete your account.',
+      'To verify and delete your account, please enter your correct password.',
     );
   }
 
@@ -502,7 +502,7 @@ const resendOtp = async (email: string, authType: 'createAccount' | 'resetPasswo
   if (!isUserExist) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      `No account found with this ${email}, please try again.`,
+      `We couldn't find an account registered with ${email}. Please check the email and try again.`,
     );
   }
 
@@ -520,7 +520,7 @@ const resendOtp = async (email: string, authType: 'createAccount' | 'resetPasswo
   if (authenticationPayload.requestCount! >= 5) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'You have exceeded the maximum number of requests. Please try again later.',
+      'You have reached the limit for code requests. Please wait and try again in a few minutes for your security.',
     );
   }
 
@@ -553,7 +553,7 @@ const changePassword = async (user: JwtPayload, currentPassword: string, newPass
   const isUserExist = await User.findById(user.authId).select('+password').lean();
 
   if (!isUserExist) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'We were unable to locate your account details.');
   }
 
   const isPasswordMatch = await AuthHelper.isPasswordMatched(
@@ -562,7 +562,7 @@ const changePassword = async (user: JwtPayload, currentPassword: string, newPass
   );
 
   if (!isPasswordMatch) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Current password is incorrect');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'The current password you entered is incorrect. Please check and try again.');
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
@@ -580,7 +580,7 @@ const refreshFcmToken = async (user: JwtPayload, token: string) => {
     { new: true },
   );
   if (!result) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found!');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account to update your notifications.');
   }
 };
 

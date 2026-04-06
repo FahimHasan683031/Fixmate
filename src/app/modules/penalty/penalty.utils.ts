@@ -124,13 +124,15 @@ export const applyProviderCancellationPenalty = async (
       { session }
     );
 
-    await TransactionService.recordTransaction({
-      type: 'PENALTY',
-      user: providerId,
-      booking: bookingId,
-      amount: penaltyFee,
-      status: 'COMPLETED',
-    });
+    if (taken > 0) {
+      await TransactionService.recordTransaction({
+        type: 'PENALTY',
+        user: providerId,
+        booking: bookingId,
+        amount: taken,
+        status: 'COMPLETED',
+      });
+    }
 
     await session.commitTransaction();
   } catch (error) {
@@ -178,6 +180,18 @@ export const settlePendingPenaltyDues = async (
           { $set: { status: 'COMPLETED', due: 0, taken: penalty.amount } },
           { session }
         );
+
+        // Find the booking ID from customId to record as ObjectId in transaction
+        const booking = await Booking.findOne({ customId: penalty.booking }).select('_id').lean();
+
+        // Record individual transaction for each settled penalty
+        await TransactionService.recordTransaction({
+          type: 'PENALTY',
+          user: providerId as any,
+          booking: booking?._id as any,
+          amount: penalty.due || 0,
+          status: 'COMPLETED',
+        });
       }
 
       const currentWallet = (provider as any)?.providerDetails?.wallet || 0;
@@ -200,6 +214,19 @@ export const settlePendingPenaltyDues = async (
           { $set: { due: newDue, taken: newTaken, status: newDue === 0 ? 'COMPLETED' : 'PENDING' } },
           { session }
         );
+
+        // Find the booking ID from customId to record as ObjectId in transaction
+        const booking = await Booking.findOne({ customId: penalty.booking }).select('_id').lean();
+
+        // Record individual transaction for the partial deduction
+        await TransactionService.recordTransaction({
+          type: 'PENALTY',
+          user: providerId as any,
+          booking: booking?._id as any,
+          amount: deductible,
+          status: 'COMPLETED',
+        });
+
         budget -= deductible;
       }
 

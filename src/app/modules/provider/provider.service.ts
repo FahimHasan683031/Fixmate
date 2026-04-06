@@ -61,7 +61,7 @@ export const getCustomer = async (id: string) => {
     .select('name image address gender dateOfBirth nationality contact whatsApp')
     .lean()
     .exec();
-  if (!customer) throw new ApiError(StatusCodes.NOT_FOUND, 'Customer not found!');
+  if (!customer) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the customer\'s profile details.');
   return customer;
 };
 
@@ -70,7 +70,7 @@ export const seeBooking = async (user: JwtPayload, id: string) => {
   const provider = await User.findById(user.id || user.authId)
     .lean()
     .exec();
-  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found!');
+  if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your service provider account details.');
 
   const booking: any = await Booking.findById(id)
     .populate([
@@ -80,7 +80,7 @@ export const seeBooking = async (user: JwtPayload, id: string) => {
     .lean()
     .exec();
 
-  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found!');
+  if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the booking details for this request.');
 
   return {
     service: { ...booking.service, date: booking.date },

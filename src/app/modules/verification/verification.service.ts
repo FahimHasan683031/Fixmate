@@ -13,7 +13,7 @@ import { NotificationService } from '../notification/notification.service';
 const sendRequest = async (user: JwtPayload, payload: Partial<IVerificaiton>) => {
   const existingRequest = await Verification.findOne({ user: user.id || user.authId });
   if (existingRequest && existingRequest.status === VERIFICATION_STATUS.PENDING) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'A verification request is already pending.');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'You already have a verification request in progress. Please wait for our team to review it.');
   }
 
   if (existingRequest) {
@@ -61,7 +61,7 @@ const updateStatus = async (id: string, status: VERIFICATION_STATUS) => {
   const verification = await Verification.findByIdAndUpdate(id, { status }, { new: true })
     .lean()
     .exec();
-  if (!verification) throw new ApiError(StatusCodes.NOT_FOUND, 'Verification request not found!');
+  if (!verification) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the verification request details.');
 
   if (status === VERIFICATION_STATUS.APPROVED) {
     await User.findByIdAndUpdate(verification.user, {

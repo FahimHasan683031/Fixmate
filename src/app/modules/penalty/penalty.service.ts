@@ -24,8 +24,8 @@ const createPenaltyByAdmin = async (payload: {
     Booking.findOne({ customId: booking }).select('customId').lean(),
   ]);
 
-  if (!providerObj) throw new ApiError(StatusCodes.NOT_FOUND, 'Provider not found');
-  if (!bookingObj) throw new ApiError(StatusCodes.NOT_FOUND, 'Booking not found');
+  if (!providerObj) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service provider\'s account.');
+  if (!bookingObj) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the booking record in our system.');
 
   const currentWallet = (providerObj as any)?.providerDetails?.wallet || 0;
   const taken = currentWallet > 0 ? Math.min(currentWallet, amount) : 0;
@@ -64,13 +64,15 @@ const createPenaltyByAdmin = async (payload: {
       { session }
     );
 
-    await TransactionService.recordTransaction({
-      type: 'PENALTY',
-      user: (providerObj as any)._id,
-      booking: (bookingObj as any)._id,
-      amount: amount,
-      status: 'COMPLETED',
-    });
+    if (taken > 0) {
+      await TransactionService.recordTransaction({
+        type: 'PENALTY',
+        user: (providerObj as any)._id,
+        booking: (bookingObj as any)._id,
+        amount: taken,
+        status: 'COMPLETED',
+      });
+    }
 
     await session.commitTransaction();
   } catch (error) {
@@ -113,7 +115,7 @@ const getMyPenalties = async (user: JwtPayload, query: Record<string, unknown>) 
 
   const authUser = await User.findById(userId).select('customId').lean();
 
-  if (!authUser?.customId) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+  if (!authUser?.customId) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account information.');
 
   const penaltyQuery = new QueryBuilder(
     Penalty.find({ user: authUser.customId }).sort('-createdAt'),
@@ -135,7 +137,7 @@ const downloadPenalties = async (query: Record<string, unknown>) => {
   const { startDate, endDate, format } = query;
 
   if (!format || !['csv', 'excel'].includes((format as string).toLowerCase())) {
-     throw new ApiError(StatusCodes.BAD_REQUEST, "File 'format' is required. Must be 'csv' or 'excel'.");
+     throw new ApiError(StatusCodes.BAD_REQUEST, "Please specify a valid file format (CSV or Excel) for your download.");
   }
 
   const mongoQuery: any = {};
