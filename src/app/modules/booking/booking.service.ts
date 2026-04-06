@@ -1,4 +1,3 @@
-// Booking Service
 import { JwtPayload } from 'jsonwebtoken';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';

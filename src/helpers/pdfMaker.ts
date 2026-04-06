@@ -16,8 +16,6 @@ export enum USER_ROLE {
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
-
-
 export enum PAYMENT_TYPE {
   SERVICE_PAYMENT = 'SERVICE_PAYMENT',
   CANCELLATION_REFUND = 'CANCELLATION_REFUND',
@@ -25,8 +23,6 @@ export enum PAYMENT_TYPE {
   WITHDRAWAL = 'WITHDRAWAL',
   SETTLEMENT = 'SETTLEMENT',
 }
-
-
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -39,7 +35,8 @@ type PaymentData = {
 
   // Populated relations
   customer?: { name: string; address: string; email: string };
-  provider?: { name: string; email?: string; address?: string };
+  provider?: { name: string; email?: string; address?: string; companyName?: string };
+  service?: { customId?: string; name?: string; subCategory?: string };
   serviceId?: string;
 
   // SERVICE_PAYMENT fields (mapped from IPayment)
@@ -75,7 +72,7 @@ export class PDFInvoiceMaker {
   private currentY: number;
   private readonly margins = 50;
   private pageWidth: number;
-  private headerHeight = 90;
+  private headerHeight = 65;
 
   constructor() {
     this.doc = new PDFDocument({ size: 'A4', margin: this.margins });
@@ -118,13 +115,13 @@ export class PDFInvoiceMaker {
       .font(bold ? 'Helvetica-Bold' : 'Helvetica')
       .fillColor(color)
       .text(text, this.margins, this.currentY, { align, width: this.pageWidth });
-    this.currentY += fontSize + 8;
+    this.currentY += fontSize + 6;
     return this;
   }
 
   private addSectionHeader(title: string) {
-    this.addText(title, { fontSize: 14, bold: true, color: '#2c3e50' });
-    this.currentY += 5;
+    this.addText(title, { fontSize: 13, bold: true, color: '#2c3e50' });
+    this.currentY += 3;
     return this;
   }
 
@@ -169,13 +166,13 @@ export class PDFInvoiceMaker {
     const col1 = this.margins;
     const col2 = this.margins + this.pageWidth / 2;
 
-    this.doc.fontSize(16).font('Helvetica-Bold').fillColor('#27ae60').text(label, col1, this.currentY);
+    this.doc.fontSize(14).font('Helvetica-Bold').fillColor('#27ae60').text(label, col1, this.currentY);
     this.doc
-      .fontSize(16)
+      .fontSize(14)
       .font('Helvetica-Bold')
       .fillColor('#27ae60')
       .text(value, col2, this.currentY, { align: 'right', width: this.pageWidth / 2 });
-    this.currentY += 30;
+    this.currentY += 24;
   }
 
   // ── Header ───────────────────────────────────────────────────────────────
@@ -211,10 +208,10 @@ export class PDFInvoiceMaker {
     await this.drawHeader();
 
     // Title block
-    this.addText('PAYMENT RECEIPT', { fontSize: 22, bold: true, align: 'center', color: '#0062EB' });
-    this.addSpacing(2);
-    this.addText('Thank you for choosing Fixmate', { fontSize: 12, align: 'center', color: '#7f8c8d' });
-    this.addSpacing(15);
+    this.addText('PAYMENT RECEIPT', { fontSize: 20, bold: true, align: 'center', color: '#0062EB' });
+    this.addSpacing(1);
+    this.addText('Thank you for choosing Fixmate', { fontSize: 11, align: 'center', color: '#7f8c8d' });
+    this.addSpacing(8);
     this.addHorizontalLine();
 
     // ── Two-column info block ────────────────────────────────────────────
@@ -222,31 +219,57 @@ export class PDFInvoiceMaker {
     const rightColX = this.margins + this.pageWidth / 2;
     const infoStartY = this.currentY;
 
-    const displayStatus =
-      data.paymentStatus === PAYMENT_STATUS.PAID ? 'PAID' : (data.paymentStatus || 'N/A');
-
     // Left: payment information
-    this.doc.fontSize(14).font('Helvetica-Bold').fillColor('#0062EB').text('PAYMENT INFORMATION', leftColX, infoStartY);
-    this.doc.fontSize(12).font('Helvetica').fillColor('#2c3e50');
-    this.doc.text(`Invoice ID: ${data.customId || 'N/A'}`, leftColX, infoStartY + 25);
-    this.doc.text(`Service ID: ${data.serviceId || 'N/A'}`, leftColX, infoStartY + 50);
-    this.doc.text(`Status: ${displayStatus}`, leftColX, infoStartY + 75);
+    this.doc.fontSize(13).font('Helvetica-Bold').fillColor('#0062EB').text('PAYMENT INFORMATION', leftColX, infoStartY);
+    this.doc.fontSize(11).font('Helvetica').fillColor('#2c3e50');
+    this.doc.text(`Invoice ID: ${data.customId || 'N/A'}`, leftColX, infoStartY + 20);
+    this.doc.text(`Status: ${data.paymentStatus || 'N/A'}`, leftColX, infoStartY + 40);
 
     // Right: customer information
     let rightY = infoStartY;
     if (data.customer) {
-      this.doc.fontSize(14).font('Helvetica-Bold').fillColor('#0062EB').text('CUSTOMER INFORMATION', rightColX, rightY);
-      this.doc.fontSize(12).font('Helvetica').fillColor('#2c3e50');
-      this.doc.text(`Name: ${data.customer.name}`, rightColX, rightY + 25);
-      this.doc.text(`Email: ${data.customer.email}`, rightColX, rightY + 50);
-      this.doc.text(`Address: ${data.customer.address}`, rightColX, rightY + 75, {
+      this.doc.fontSize(13).font('Helvetica-Bold').fillColor('#0062EB').text('CUSTOMER INFORMATION', rightColX, rightY);
+      this.doc.fontSize(11).font('Helvetica').fillColor('#2c3e50');
+      this.doc.text(`Name: ${data.customer.name}`, rightColX, rightY + 20);
+      this.doc.text(`Email: ${data.customer.email}`, rightColX, rightY + 40);
+      this.doc.text(`Address: ${data.customer.address}`, rightColX, rightY + 60, {
         width: this.pageWidth / 2 - 20,
       });
-      rightY += 105;
+      rightY += 85;
     }
 
-    this.currentY = Math.max(infoStartY + 110, rightY + 10);
+    this.currentY = Math.max(infoStartY + 60, rightY + 8);
     this.addHorizontalLine();
+
+    // ── Provider Information Block ────────────────────────────────────────
+    if (data.provider) {
+      const providerStartY = this.currentY;
+      const providerRightColX = this.margins + this.pageWidth / 2;
+
+      // Left: provider info
+      this.doc.fontSize(13).font('Helvetica-Bold').fillColor('#0062EB').text('PROVIDER INFORMATION', leftColX, providerStartY);
+      this.doc.fontSize(11).font('Helvetica').fillColor('#2c3e50');
+      this.doc.text(`Name: ${data.provider.name}`, leftColX, providerStartY + 20);
+      if (data.provider.email) {
+        this.doc.text(`Email: ${data.provider.email}`, leftColX, providerStartY + 40);
+      }
+      if (data.provider.companyName) {
+        this.doc.text(`Company: ${data.provider.companyName}`, leftColX, providerStartY + 60);
+      }
+
+      // Right: service info
+      if (data.service) {
+        this.doc.fontSize(13).font('Helvetica-Bold').fillColor('#0062EB').text('SERVICE INFORMATION', providerRightColX, providerStartY);
+        this.doc.fontSize(11).font('Helvetica').fillColor('#2c3e50');
+        this.doc.text(`Service Name: ${data.service.subCategory || 'N/A'}`, providerRightColX, providerStartY + 20);
+        this.doc.text(`Service ID: ${data.service.customId || data.serviceId || 'N/A'}`, providerRightColX, providerStartY + 40, {
+          width: this.pageWidth / 2 - 20,
+        });
+      }
+
+      this.currentY = providerStartY + 85;
+      this.addHorizontalLine();
+    }
 
     // ── Payment breakdown ────────────────────────────────────────────────
     this.addSectionHeader('PAYMENT BREAKDOWN');
@@ -283,7 +306,7 @@ export class PDFInvoiceMaker {
       align: 'right',
     });
 
-    this.addSpacing(30);
+    this.addSpacing(15);
     this.addHorizontalLine();
 
     // Legal footer
@@ -324,23 +347,23 @@ export class PDFInvoiceMaker {
 
     // Fields visible to ALL roles
     this.addBreakdownRow('Service Price', this.formatCurrency(data.servicePrice), y);
-    y += 22;
+    y += 18;
     this.addBreakdownRow('VAT (inc.)', this.formatCurrency(data.vat), y);
-    y += 22;
+    y += 18;
 
     if (role === USER_ROLE.PROVIDER || role === USER_ROLE.ADMIN || role === USER_ROLE.SUPER_ADMIN) {
       this.addBreakdownRow('Provider Share', this.formatCurrency(data.providerPay), y);
-      y += 22;
+      y += 18;
       this.addBreakdownRow('Platform Commission', this.formatCurrency(data.platformFee), y);
-      y += 22;
+      y += 18;
     }
 
     if (role === USER_ROLE.ADMIN || role === USER_ROLE.SUPER_ADMIN) {
       this.addBreakdownRow('Gateway Fee', this.formatCurrency(data.paystackGatewayFee), y);
-      y += 22;
+      y += 18;
     }
 
-    this.currentY = y + 10;
+    this.currentY = y + 8;
     this.addHorizontalLine();
 
     // Total row — what the role cares about most
@@ -367,7 +390,7 @@ export class PDFInvoiceMaker {
     let y = this.currentY;
 
     this.addBreakdownRow('Original Service Price', this.formatCurrency(data.servicePrice), y);
-    y += 28;
+    y += 22;
 
     if (role === USER_ROLE.CLIENT || role === USER_ROLE.ADMIN || role === USER_ROLE.SUPER_ADMIN) {
       this.addBreakdownRow(
@@ -375,7 +398,7 @@ export class PDFInvoiceMaker {
         this.formatCurrency(data.clientPenalty || 0),
         y,
       );
-      y += 28;
+      y += 22;
     }
 
     if (role === USER_ROLE.PROVIDER || role === USER_ROLE.ADMIN || role === USER_ROLE.SUPER_ADMIN) {
@@ -384,7 +407,7 @@ export class PDFInvoiceMaker {
         this.formatCurrency(data.providerPenalty || 0),
         y,
       );
-      y += 28;
+      y += 22;
     }
 
     if (data.cancellationReason) {
@@ -393,10 +416,10 @@ export class PDFInvoiceMaker {
         .font('Helvetica-Oblique')
         .fillColor('#e74c3c')
         .text(`Reason: ${data.cancellationReason}`, this.margins, y);
-      y += 28;
+      y += 22;
     }
 
-    this.currentY = y + 10;
+    this.currentY = y + 8;
     this.addHorizontalLine();
 
     if (role === USER_ROLE.CLIENT) {
@@ -422,7 +445,7 @@ export class PDFInvoiceMaker {
     let y = this.currentY;
 
     this.addBreakdownRow('Original Service Price', this.formatCurrency(data.servicePrice), y);
-    y += 28;
+    y += 22;
 
     if (data.disputeReason) {
       this.doc
@@ -430,10 +453,10 @@ export class PDFInvoiceMaker {
         .font('Helvetica-Oblique')
         .fillColor('#e74c3c')
         .text(`Dispute Reason: ${data.disputeReason}`, this.margins, y);
-      y += 28;
+      y += 22;
     }
 
-    this.currentY = y + 10;
+    this.currentY = y + 8;
     this.addHorizontalLine();
     this.addTotalRow('Net Refunded Amount', this.formatCurrency(data.refundAmount || 0));
   }
@@ -445,11 +468,11 @@ export class PDFInvoiceMaker {
     let y = this.currentY;
 
     this.addBreakdownRow('Withdrawal Request Amount', this.formatCurrency(data.withdrawAmount || 0), y);
-    y += 28;
+    y += 22;
     this.addBreakdownRow('Withdrawal Processing Fee', this.formatCurrency(data.withdrawalFee || 0), y);
-    y += 28;
+    y += 22;
 
-    this.currentY = y + 10;
+    this.currentY = y + 8;
     this.addHorizontalLine();
     this.addTotalRow('Net Bank Payout', this.formatCurrency(data.netPayout || 0));
   }
@@ -461,9 +484,9 @@ export class PDFInvoiceMaker {
     let y = this.currentY;
 
     this.addBreakdownRow('Settlement Method', data.settlementType || 'AUTO', y);
-    y += 28;
+    y += 22;
 
-    this.currentY = y + 10;
+    this.currentY = y + 8;
     this.addHorizontalLine();
     this.addTotalRow('Total Settled Amount', this.formatCurrency(data.settledAmount || 0));
   }
@@ -514,7 +537,19 @@ function mapPaymentToData(data: any, requestingRole: string): PaymentData {
       : undefined,
 
     provider: data.provider
-      ? { name: data.provider.name || 'N/A', email: data.provider.email || 'N/A' }
+      ? {
+          name: data.provider.name || 'N/A',
+          email: data.provider.email || 'N/A',
+          companyName: data.provider.providerDetails?.companyName || undefined,
+        }
+      : undefined,
+
+    service: data.service && typeof data.service === 'object'
+      ? {
+          customId: data.service.customId || undefined,
+          name: data.service.name || undefined,
+          subCategory: data.service.subCategory || undefined,
+        }
       : undefined,
 
     // Core price fields — mapped directly from IPayment

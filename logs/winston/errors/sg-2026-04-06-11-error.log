@@ -1,0 +1,1 @@
+{Mon Apr 06 2026 11:18:26} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/download-invoice/69d1eddee9edadfb8faf5dd6 500 - 17.145 ms
