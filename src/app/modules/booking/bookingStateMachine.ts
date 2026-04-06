@@ -89,31 +89,6 @@ export class BookingStateMachine {
 
     // Update Status
     booking.bookingStatus = targetState;
-    booking.currentStats = booking.currentStats || {};
-
-    const strictProgression = [
-      BOOKING_STATUS.CREATED,
-      BOOKING_STATUS.PAID,
-      BOOKING_STATUS.REQUESTED,
-      BOOKING_STATUS.ACCEPTED,
-      BOOKING_STATUS.IN_PROGRESS,
-      BOOKING_STATUS.COMPLETED_BY_PROVIDER,
-      BOOKING_STATUS.CONFIRMED_BY_CLIENT,
-      BOOKING_STATUS.SETTLED,
-      BOOKING_STATUS.AUTO_SETTLED,
-    ];
-
-    const targetIndex = strictProgression.indexOf(targetState);
-    const isExceptionState = targetIndex === -1;
-
-    // Fill previous step indicators if it's a standard progression state
-    if (!isExceptionState) {
-      for (let i = 0; i <= targetIndex; i++) {
-        booking.currentStats[strictProgression[i]] = true;
-      }
-    } else {
-      booking.currentStats[targetState] = true;
-    }
 
     const now = new Date();
     const responseTime = now.getTime() - booking.createdAt.getTime();
@@ -144,7 +119,6 @@ export class BookingStateMachine {
       await (User as any).updateRankingScore(booking.provider);
     }
 
-    booking.markModified('currentStats');
     await booking.save();
 
     if (targetState === BOOKING_STATUS.SETTLED || targetState === BOOKING_STATUS.AUTO_SETTLED) {

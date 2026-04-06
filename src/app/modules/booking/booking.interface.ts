@@ -8,7 +8,6 @@ export interface IBooking {
   provider: Types.ObjectId;
   service: Types.ObjectId;
   bookingStatus: BOOKING_STATUS;
-  currentStats: Record<string, boolean>;
   date: Date;
   location: {
     type: 'Point';

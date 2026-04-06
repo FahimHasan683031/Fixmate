@@ -49,8 +49,8 @@ const deleteService = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Controller to fetch services for the current provider
-const getProviderServices = catchAsync(async (req: Request | any, res: Response) => {
-  const result = await ServiceService.getProviderServices(req.user, req.query);
+const getHomeServices = catchAsync(async (req: Request | any, res: Response) => {
+  const result = await ServiceService.getHomeServices(req.user, req.query);
 
   sendResponse(res, {
     success: true,
@@ -88,7 +88,7 @@ export const ServiceController = {
   addService,
   updateService,
   deleteService,
-  getProviderServices,
+  getHomeServices,
   getServices,
   getServiceById,
 };

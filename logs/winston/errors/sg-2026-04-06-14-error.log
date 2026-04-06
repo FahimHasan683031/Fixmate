@@ -1,0 +1,6 @@
+{Mon Apr 06 2026 14:32:06} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/services 500 - 9.288 ms
+{Mon Apr 06 2026 14:34:06} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/services 500 - 9.215 ms
+{Mon Apr 06 2026 14:56:41} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/services 500 - 8.095 ms
+{Mon Apr 06 2026 14:57:01} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/services 500 - 2.307 ms
+{Mon Apr 06 2026 14:58:12} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/services 403 - 8.342 ms
+{Mon Apr 06 2026 14:58:14} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/services 403 - 3.901 ms

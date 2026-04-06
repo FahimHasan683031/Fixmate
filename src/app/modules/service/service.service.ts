@@ -6,6 +6,8 @@ import { Service } from './service.model';
 import { IService } from './service.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
 import unlinkFile from '../../../shared/unlinkFile';
+import { USER_ROLE } from '../../../helpers/pdfMaker';
+import { User } from '../user/user.model';
 
 // Add a new service offered by a provider
 const addService = async (user: JwtPayload, payload: Partial<IService>) => {
@@ -36,12 +38,47 @@ const deleteService = async (id: string) => {
 };
 
 // Retrieve all services created by a specific provider
-const getProviderServices = async (user: JwtPayload, query: any) => {
+const getHomeServices = async (user: JwtPayload, query: any) => {
+  const { distance, minRating, maxRating, ...queryParams } = query;
+
+  if (distance || minRating || maxRating) {
+    const providerCriteria: any = { role: USER_ROLE.PROVIDER };
+
+    if (minRating || maxRating) {
+      providerCriteria['providerDetails.averageRating'] = {};
+      if (minRating) providerCriteria['providerDetails.averageRating'].$gte = Number(minRating);
+      if (maxRating) providerCriteria['providerDetails.averageRating'].$lte = Number(maxRating);
+    }
+
+    if (distance) {
+      const client = await User.findById(user.id || user.authId);
+      if (client && client.location && client.location.coordinates) {
+        providerCriteria.location = {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: client.location.coordinates,
+            },
+            $maxDistance: Number(distance) * 1000,
+          },
+        };
+      }
+    }
+
+    const providers = await User.find(providerCriteria).select('_id');
+    const providerIds = providers.map(p => p._id);
+    queryParams.creator = { $in: providerIds };
+  }
+
   const serviceQuery = new QueryBuilder(
-    Service.find({ creator: user.id || user.authId, isDeleted: false }),
-    query,
+    Service.find({ isDeleted: false }).populate(
+      'creator',
+      'name providerDetails.businessName location',
+    ),
+    queryParams,
   )
     .filter()
+    .search(['category', 'subCategory'])
     .sort()
     .paginate()
     .fields();
@@ -51,110 +88,28 @@ const getProviderServices = async (user: JwtPayload, query: any) => {
   return { meta, data };
 };
 
-import { Review } from '../review/review.model';
-import { User } from '../user/user.model';
-import { CustomerFavorite } from '../favorites/customer.favorite.model';
-import { calculateDistanceInKm } from '../../../helpers/calculateDistance';
 
 // Retrieve all available services across the platform with pagination and filtering
-const getServices = async (user: JwtPayload | null, query: any) => {
-  const serviceQuery = new QueryBuilder(
+const getServices = async (user: JwtPayload, query: any) => {
+  if(user.role === USER_ROLE.PROVIDER){
+    query.creator = user.authId;
+  }
+   const serviceQuery = new QueryBuilder(
     Service.find({ isDeleted: false }).populate(
       'creator',
-      'name image email contact location providerDetails.category providerDetails.experience',
+      'name providerDetails.businessName location',
     ),
     query,
   )
-    .search(['category', 'subCategory'])
     .filter()
+    .search(['category', 'subCategory',"customId"])
     .sort()
     .paginate()
     .fields();
 
-  const services = await serviceQuery.modelQuery.lean().exec();
+  const data = await serviceQuery.modelQuery.lean().exec();
   const meta = await serviceQuery.getPaginationInfo();
-
-  // Get user's favorites if authenticated
-  const favoriteProviderIds = user
-    ? (
-        await CustomerFavorite.find({
-          customer: user.id || user.authId,
-        })
-          .select('provider')
-          .lean()
-      ).map((fav) => fav.provider.toString())
-    : [];
-
-  // Enhance services with provider stats and favorite status
-  const enhancedServices = await Promise.all(
-    services.map(async (service: any) => {
-      const providerId = service.creator?._id;
-      if (!providerId) return service;
-
-      const [reviewCount, averageRatingResult] = await Promise.all([
-        Review.countDocuments({ provider: providerId }),
-        Review.aggregate([
-          { $match: { provider: providerId } },
-          { $group: { _id: null, averageRating: { $avg: '$rating' } } },
-        ]),
-      ]);
-
-      const averageRating =
-        averageRatingResult.length > 0 ? Math.round(averageRatingResult[0].averageRating * 10) / 10 : 0;
-
-      const isFavorite = favoriteProviderIds.includes(providerId.toString());
-
-      return {
-        service: {
-          _id: service._id,
-          image: service.image,
-          category: service.category,
-          price: service.price,
-          subCategory: service.subCategory,
-          expertise: service.expertise,
-        },
-        provider: {
-          _id: providerId,
-          name: service.creator?.name,
-          image: service.creator?.image,
-          reviewCount,
-          averageRating,
-          isFavorite,
-          coordinates: service.creator?.location?.coordinates || [0, 0],
-        },
-      };
-    }),
-  );
-
-  // Apply distance and rating filters manually if provided (legacy behavior)
-  let filteredData = enhancedServices;
-  const { distance, rating } = query;
-
-  if (distance || rating) {
-    const currentUser = user ? await User.findById(user.id || user.authId).select('location').lean() : null;
-    const userCoords = currentUser?.location?.coordinates;
-
-    filteredData = enhancedServices.filter((item: any) => {
-      let passRating = true;
-      let passDistance = true;
-
-      if (rating) passRating = item.provider.averageRating >= Number(rating);
-      if (distance && userCoords) {
-        const dist = calculateDistanceInKm(
-          userCoords[1],
-          userCoords[0],
-          item.provider.coordinates[1],
-          item.provider.coordinates[0],
-        );
-        passDistance = dist <= Number(distance);
-        item.distance = Math.round(dist);
-      }
-
-      return passRating && passDistance;
-    });
-  }
-
-  return { meta, data: filteredData };
+  return { meta, data };
 };
 
 // Get detailed information about a specific service by its ID
@@ -171,7 +126,7 @@ export const ServiceService = {
   addService,
   updateService,
   deleteService,
-  getProviderServices,
+  getHomeServices,
   getServices,
   getServiceById,
 };

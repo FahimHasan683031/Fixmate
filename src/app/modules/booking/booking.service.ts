@@ -108,7 +108,8 @@ const getBookings = async (user: JwtPayload, query: any, role: 'client' | 'provi
   }
 
   if (query.status) {
-    filter.bookingStatus = query.status;
+    const statusArray = (query.status as string).split(',').map(s => s.trim());
+    filter.bookingStatus = { $in: statusArray };
     delete query.status;
   }
 

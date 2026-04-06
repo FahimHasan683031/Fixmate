@@ -41,23 +41,16 @@ class QueryBuilder<T> {
     excludeFields.forEach(el => delete queryObj[el]);
 
     const filters: Record<string, any> = cleanObject(queryObj);
-
-    if (queryObj.minSalary || queryObj.maxSalary) {
-      if (queryObj.minSalary) {
-        filters.minSalary = { $gte: Number(queryObj.minSalary) };
-        delete queryObj.minSalary;
+    if (queryObj.minPrice || queryObj.maxPrice) {
+      filters.price = {};
+      if (queryObj.minPrice) {
+        filters.price.$gte = Number(queryObj.minPrice);
+        delete filters.minPrice;
       }
-      if (queryObj.maxSalary) {
-        filters.maxSalary = { $lte: Number(queryObj.maxSalary) };
-        delete queryObj.maxSalary;
+      if (queryObj.maxPrice) {
+        filters.price.$lte = Number(queryObj.maxPrice);
+        delete filters.maxPrice;
       }
-    }
-
-    if (this.query.jobLocation) {
-      filters.jobLocation = {
-        $regex: this.query.jobLocation,
-        $options: 'i',
-      };
     }
 
     this.modelQuery = this.modelQuery.find(filters as FilterQuery<T>);

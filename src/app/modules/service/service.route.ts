@@ -22,9 +22,14 @@ router.patch(
 
 router.delete('/delete-service/:id', auth(USER_ROLES.PROVIDER), ServiceController.deleteService);
 
-router.get('/provider-services', auth(USER_ROLES.PROVIDER), ServiceController.getProviderServices);
+router.get('/home',
+  auth(USER_ROLES.CLIENT),
+ ServiceController.getHomeServices
+);
 
-router.get('/', ServiceController.getServices);
+router.get('/',
+  auth(USER_ROLES.PROVIDER, USER_ROLES.ADMIN),
+  ServiceController.getServices);
 
 router.get('/:id', ServiceController.getServiceById);
 

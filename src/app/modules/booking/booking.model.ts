@@ -22,19 +22,6 @@ const bookingSchema = new Schema<IBooking>(
       enum: Object.values(BOOKING_STATUS),
       default: BOOKING_STATUS.CREATED,
     },
-    currentStats: {
-      type: Object,
-      default: {
-        [BOOKING_STATUS.CREATED]: true,
-        [BOOKING_STATUS.PAID]: false,
-        [BOOKING_STATUS.REQUESTED]: false,
-        [BOOKING_STATUS.ACCEPTED]: false,
-        [BOOKING_STATUS.IN_PROGRESS]: false,
-        [BOOKING_STATUS.COMPLETED_BY_PROVIDER]: false,
-        [BOOKING_STATUS.CONFIRMED_BY_CLIENT]: false,
-        [BOOKING_STATUS.SETTLED]: false,
-      },
-    },
     date: {
       type: Date,
       default: Date.now,
