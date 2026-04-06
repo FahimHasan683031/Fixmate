@@ -168,27 +168,27 @@ export class BookingStateMachine {
       switch (status) {
         case BOOKING_STATUS.REQUESTED:
           notificationTarget = booking.provider;
-          message = `You have a new booking request for ${serviceName}.`;
+          message = `Great news! You have a new booking request for ${serviceName}. Please check the details and respond soon.`;
           break;
         case BOOKING_STATUS.ACCEPTED:
           notificationTarget = booking.customer;
-          message = `Your booking for ${serviceName} has been accepted.`;
+          message = `Your booking for ${serviceName} has been accepted! The provider will be with you shortly.`;
           break;
         case BOOKING_STATUS.IN_PROGRESS:
           notificationTarget = booking.customer;
-          message = `The provider has started working on your ${serviceName} booking.`;
+          message = `Work has started on your ${serviceName} booking. You can track the progress through the app.`;
           break;
         case BOOKING_STATUS.COMPLETED_BY_PROVIDER:
           notificationTarget = booking.customer;
-          message = `The provider has marked your ${serviceName} booking as completed. Please confirm it.`;
+          message = `Your ${serviceName} job is finished! The provider has marked it as complete. Please take a moment to review and confirm.`;
           break;
         case BOOKING_STATUS.CONFIRMED_BY_CLIENT:
           notificationTarget = booking.provider;
-          message = `The client has confirmed the completion of the ${serviceName} booking.`;
+          message = `The client has confirmed that the ${serviceName} job is complete. Thank you for your service!`;
           break;
         case BOOKING_STATUS.CANCELLED:
           notificationTarget = role === 'client' ? booking.provider : booking.customer;
-          message = `The booking for ${serviceName} was cancelled by the ${role}. ${reason ? `Reason: ${reason}` : ''}`;
+          message = `We're sorry to inform you that your booking for ${serviceName} was cancelled by the ${role}. ${reason ? `Reason: ${reason}` : ''}`;
           break;
         case BOOKING_STATUS.DISPUTED:
           // Notify the other party when one raises a dispute
@@ -197,16 +197,16 @@ export class BookingStateMachine {
           break;
         case BOOKING_STATUS.REFUNDED:
           notificationTarget = booking.customer;
-          message = `Your booking for ${serviceName} has been fully refunded.`;
+          message = `Great news! Your refund for ${serviceName} has been processed and returned to your wallet.`;
           break;
         case BOOKING_STATUS.SETTLED:
         case BOOKING_STATUS.AUTO_SETTLED:
           notificationTarget = booking.provider;
-          message = `Your booking for ${serviceName} is now settled.`;
+          message = `Your earnings for the ${serviceName} job have been added to your wallet. Well done!`;
           break;
         case BOOKING_STATUS.EXPIRED:
           notificationTarget = booking.customer;
-          message = `Your booking request for ${serviceName} has expired.`;
+          message = `Unfortunately, your booking request for ${serviceName} has expired as it wasn't accepted in time.`;
           break;
       }
 

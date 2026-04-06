@@ -84,7 +84,7 @@ const createPenaltyByAdmin = async (payload: {
 
   await NotificationService.insertNotification({
     for: (providerObj as any)._id as any,
-    message: `Admin assessed a penalty of $${amount} — Reason: ${reason}. Withheld: $${taken}, Outstanding: $${due}.`,
+    message: `A penalty of $${amount} has been applied to your account due to: ${reason}. $${taken} was deducted from your wallet, and $${due} remains outstanding.`,
   });
 
   return result;

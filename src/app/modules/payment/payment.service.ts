@@ -140,7 +140,7 @@ export const handleBookingSettlement = async (bookingId: string) => {
 
     await NotificationService.insertNotification({
       for: payment.provider as any,
-      message: `Booking settled. You have received ${creditAmount.toFixed(2)} in your wallet (after any penalty adjustments).`,
+      message: `Great news! The booking has been settled. $${creditAmount.toFixed(2)} has been added to your wallet after any necessary adjustments.`,
     });
   } catch (error) {
     console.error('Booking Settlement Error:', error);
@@ -272,7 +272,7 @@ const webhook = async (req: Request) => {
     if (tx) {
       await NotificationService.insertNotification({
         for: tx.user,
-        message: `Your withdrawal of ${tx.amount.toFixed(2)} has been successfully completed.`,
+        message: `Your withdrawal of $${tx.amount.toFixed(2)} has been successfully processed. The funds should appear in your bank account shortly.`,
       });
     }
   } else if (event.event === 'transfer.failed' || event.event === 'transfer.reversed') {
@@ -283,7 +283,7 @@ const webhook = async (req: Request) => {
       await User.findByIdAndUpdate(tx.user, { $inc: { 'providerDetails.wallet': tx.amount } });
       await NotificationService.insertNotification({
         for: tx.user,
-        message: `Your withdrawal of ${tx.amount.toFixed(2)} failed and has been refunded to your wallet.`,
+        message: `Unfortunately, your withdrawal of $${tx.amount.toFixed(2)} could not be completed and the amount has been safely returned to your wallet.`,
       });
     }
   }

@@ -73,9 +73,13 @@ const updateStatus = async (id: string, status: VERIFICATION_STATUS) => {
     });
   }
 
+  const message = status === VERIFICATION_STATUS.APPROVED 
+    ? 'Congratulations! Your account verification has been approved. You\'re all set to start providing services.' 
+    : 'We\'re sorry, but your account verification request was not approved. Please check your documents and try again.';
+
   await NotificationService.insertNotification({
     for: verification.user as any,
-    message: `Your account verification request has been ${status.toLowerCase()}.`,
+    message,
   });
 
   return verification;

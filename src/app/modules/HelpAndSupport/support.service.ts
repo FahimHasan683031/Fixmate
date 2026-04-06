@@ -32,7 +32,7 @@ const createSupport = async (user: JwtPayload, data: Partial<ISupport>) => {
   getAdmins.forEach(async element => {
     await NotificationService.insertNotification({
       for: element._id,
-      message: `New Support Request from ${getUser?.name || getUser?.email} with title: ${data.title}`,
+      message: `New Support Request from ${getUser?.name || getUser?.email} regarding: ${data.title}. Please review it at your earliest convenience.`,
     });
   });
 

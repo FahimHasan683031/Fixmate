@@ -51,7 +51,7 @@ export const applyClientCancellationPenalty = async (
 
     await NotificationService.insertNotification({
       for: customerId as any,
-      message: `Your booking cancellation has been processed. A penalty fee of ${penaltyFee} was deducted from your refund.`,
+      message: `Your booking cancellation has been processed. A penalty fee of $${penaltyFee} was deducted from your refund as per our cancellation policy.`,
     });
   }
 };
@@ -144,7 +144,7 @@ export const applyProviderCancellationPenalty = async (
 
   await NotificationService.insertNotification({
     for: providerId as any,
-    message: `You cancelled a booking. Penalty: ${penaltyFee} assessed (Withheld: ${taken}, Outstanding: ${due}).`,
+    message: `A cancellation penalty of $${penaltyFee} has been applied. $${taken} was withheld from your wallet, and $${due} remains outstanding.`,
   });
 };
 
@@ -250,7 +250,7 @@ export const settlePendingPenaltyDues = async (
   if (deducted > 0) {
     await NotificationService.insertNotification({
       for: providerId as any,
-      message: `$${deducted.toFixed(2)} was deducted from your earnings to settle outstanding penalty dues. Credited to wallet: $${remainingForProvider.toFixed(2)}.`,
+      message: `A total of $${deducted.toFixed(2)} was deducted from your earnings to settle your outstanding penalty dues. The remaining $${remainingForProvider.toFixed(2)} has been credited to your wallet.`,
     });
   }
 

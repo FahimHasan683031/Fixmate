@@ -171,7 +171,7 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
 
             await NotificationService.insertNotification({
               for: providerData._id,
-              message: `A refund of ${reclaimAmount.toFixed(2)} was reclaimed from your wallet following a dispute resolution. (Taken: ${taken.toFixed(2)}, Due: ${due.toFixed(2)})`,
+              message: `A refund of $${reclaimAmount.toFixed(2)} was reclaimed from your wallet following a dispute resolution. ($${taken.toFixed(2)} was deducted, with $${due.toFixed(2)} remaining as outstanding).`,
             });
         }
       }
@@ -236,7 +236,7 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
 
               await NotificationService.insertNotification({
                 for: providerData._id,
-                message: `A partial refund of ${reclaimAmount.toFixed(2)} was reclaimed from your wallet following a dispute resolution. (Taken: ${taken.toFixed(2)}, Due: ${due.toFixed(2)})`,
+                message: `A partial refund of $${reclaimAmount.toFixed(2)} was reclaimed from your wallet following a dispute resolution. ($${taken.toFixed(2)} was deducted, with $${due.toFixed(2)} remaining as outstanding).`,
               });
           }
       }
@@ -301,7 +301,7 @@ const rejectDispute = async (id: string, note: string) => {
 
     await NotificationService.insertNotification({
       for: dispute.user as any,
-      message: `Your dispute for a booking has been rejected. Note: ${note}`,
+      message: `Your dispute request has been reviewed and was not accepted at this time. Note: ${note}`,
     });
     
     return dispute;
