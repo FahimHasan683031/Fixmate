@@ -51,6 +51,7 @@ export type IUser = {
     endTime?: string;
     isVatRegistered?: boolean;
     vatNumber?: string;
+    companyName?: string;
     paystackRecipientCode?: string;
     paystackAccountId?: string;
     bankName?: string;

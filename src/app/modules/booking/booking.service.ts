@@ -7,6 +7,7 @@ import { Booking } from './booking.model';
 import { BOOKING_STATUS } from '../../../enum/booking';
 import { Service } from '../service/service.model';
 import { User } from '../user/user.model';
+import { SERVICE_DAY } from '../../../enum/service';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { BookingStateMachine } from './bookingStateMachine';
 import { createPaystackCheckout } from '../../../helpers/paystackHelper';
@@ -41,6 +42,26 @@ const createBooking = async (user: JwtPayload, data: IBooking, req: Request) => 
 
   const provider = await User.findById(service.creator).lean().exec();
   if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We\'re having trouble locating the service provider. Please try again in a moment.');
+
+  const bookingDate = new Date(data.date);
+  const now = new Date();
+
+  // Validate if the selected date is in the past
+  if (bookingDate < now) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Please select a future date for your booking.');
+  }
+
+  // Validate if the selected day is among provider's available days
+  const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const bookingDay = days[bookingDate.getDay()] as SERVICE_DAY;
+  const availableDays = provider.providerDetails?.availableDay || [];
+
+  if (availableDays.length > 0 && !availableDays.includes(bookingDay)) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      `The provider is not available on ${bookingDay.toUpperCase()}. Please choose a day that matches their schedule.`,
+    );
+  }
 
   const customer = await User.findById(user.id || user.authId)
     .lean()

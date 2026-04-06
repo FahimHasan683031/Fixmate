@@ -174,6 +174,10 @@ const UserSchema = new Schema<IUser, UserModel>(
           type: String,
           required: false,
         },
+        companyName: {
+          type: String,
+          default: '',
+        },
         paystackRecipientCode: {
           type: String,
           default: '',

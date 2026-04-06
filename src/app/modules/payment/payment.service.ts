@@ -234,6 +234,7 @@ const generateRecipient = async (req: Request) => {
     'providerDetails.paystackRecipientCode': recipient.recipient_code,
     'providerDetails.bankName': bankCode,
     'providerDetails.accountNumber': accountNumber,
+    "providerDetails.paystackAccountId": recipient.account_id,
   });
 
   return {

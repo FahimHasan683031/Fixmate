@@ -42,6 +42,7 @@ const updateProviderProfileZodSchema = z.object({
           endTime: z.string().optional(),
           isVatRegistered: z.boolean().optional(),
           vatNumber: z.string().optional(),
+          companyName: z.string().optional(),
           bankName: z.string().optional(),
           accountNumber: z.string().optional(),
           paystackAccountId: z.string().optional(),

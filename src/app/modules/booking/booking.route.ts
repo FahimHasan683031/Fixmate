@@ -7,7 +7,12 @@ import { BookingController } from './booking.controller';
 
 const router = express.Router();
 
-router.post('/create', auth(USER_ROLES.CLIENT), BookingController.createBooking);
+router.post(
+  '/create', 
+  auth(USER_ROLES.CLIENT), 
+  validateRequest(BookingValidation.createBookingSchema),
+  BookingController.createBooking
+);
 
 router.get(
   '/',
