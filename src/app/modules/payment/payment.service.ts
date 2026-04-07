@@ -410,6 +410,10 @@ const withdraw = async (
 
   const transferRes = await initiateTransfer(netPayout, recipientCode, `Withdrawal for ${provider.name}`);
 
+  if (!transferRes || !transferRes.reference) {
+  throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'Transfer failed. Please try again.');
+}
+
   // Deduct the requested amount from the wallet using $inc for safety
   await User.findByIdAndUpdate(provider._id, { 
     $inc: { 'providerDetails.wallet': -data.amount } 

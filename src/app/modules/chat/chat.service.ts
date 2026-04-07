@@ -10,6 +10,11 @@ import { User } from '../user/user.model';
 
 // Initialize or retrieve an existing chat room between two users
 const create = async (payload: JwtPayload, data: { user: string }) => {
+  const isUserExist = await User.findById(new Types.ObjectId(data.user)).lean().exec();
+  if (!isUserExist) throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+
+  if (payload.authId === data.user) throw new ApiError(StatusCodes.BAD_REQUEST, 'You cannot chat with yourself');
+
   const chat = await Chat.findOne({
     participants: { $all: [new Types.ObjectId(payload.authId), new Types.ObjectId(data.user)] },
   })

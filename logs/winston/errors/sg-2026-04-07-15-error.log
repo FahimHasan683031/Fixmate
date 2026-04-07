@@ -5,3 +5,7 @@
 {Tue Apr 07 2026 15:16:12} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=wrwrt9q3mf&reference=wrwrt9q3mf 404 - 1.870 ms
 {Tue Apr 07 2026 15:24:06} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/withdraw 400 - 3.857 ms
 {Tue Apr 07 2026 15:24:20} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/withdraw 500 - 2289.832 ms
+{Tue Apr 07 2026 15:49:39} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/withdraw 500 - 681.879 ms
+{Tue Apr 07 2026 15:50:12} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/generate-recipient 500 - 466.016 ms
+{Tue Apr 07 2026 15:50:30} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/generate-recipient 500 - 813.458 ms
+{Tue Apr 07 2026 15:50:47} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/withdraw 500 - 406.253 ms
