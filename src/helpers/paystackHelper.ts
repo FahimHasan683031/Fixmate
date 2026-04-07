@@ -23,6 +23,7 @@ export const createPaystackCheckout = async (
   const response = await paystackInstance.transaction.initialize({
     email: customerEmail,
     amount: amount * 100,
+    currency: 'ZAR',
     callback_url: `${config.backend_url}/api/v1/payment/success`,
     metadata: {
       custom_fields: Object.keys(metadata).map(key => ({
@@ -41,7 +42,7 @@ export const verifyPaystackTransaction = async (reference: string) => {
 };
 
 export const refundPaystackTransaction = async (reference: string, amount?: number) => {
-  const payload: any = { transaction: reference };
+  const payload: any = { transaction: reference, currency: 'ZAR' };
   if (amount) payload.amount = amount * 100;
   return await paystackInstance.refund.create(payload);
 };
@@ -52,12 +53,13 @@ export const createTransferRecipient = async (
   bankCode: string,
 ) => {
   const response = await paystackInstance.transfer_recipient.create({
-    type: 'nuban',
+    type: 'bank_account',
     name,
     account_number: accountNumber,
     bank_code: bankCode,
-    currency: 'ZAR',
+    currency: 'ZAR', 
   });
+
   return response.data;
 };
 
@@ -65,6 +67,7 @@ export const initiateTransfer = async (amount: number, recipient: string, reason
   const response = await paystackInstance.transfer.create({
     source: 'balance',
     amount: amount * 100,
+    currency: 'ZAR',
     recipient,
     reason,
   });

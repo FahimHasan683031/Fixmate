@@ -8,7 +8,7 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { Types } from 'mongoose';
 
 // Toggle favorite status for a provider: adds if not present, removes if it is
-const addFavorite = async (user: JwtPayload, providerId: string) => {
+const addOrRemoveFavorite = async (user: JwtPayload, providerId: string) => {
   const userId = user.id || user.authId;
   const existingFavorite = await CustomerFavorite.findOne({
     customer: new Types.ObjectId(userId),
@@ -66,7 +66,7 @@ const getFavorites = async (user: JwtPayload, query: any) => {
 };
 
 export const FavoritesService = {
-  addFavorite,
+  addOrRemoveFavorite,
   removeFavorite,
   getFavorites,
 };

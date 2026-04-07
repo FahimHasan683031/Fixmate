@@ -5,7 +5,7 @@ import { FavoritesController } from './favorites.controller';
 
 const router = express.Router();
 
-router.post('/add', auth(USER_ROLES.CLIENT), FavoritesController.addFavorite);
+router.post('/add', auth(USER_ROLES.CLIENT), FavoritesController.addOrRemoveFavorite);
 
 router.post('/remove', auth(USER_ROLES.CLIENT), FavoritesController.removeFavorite);
 

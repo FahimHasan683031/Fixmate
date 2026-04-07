@@ -1,0 +1,1 @@
+{Tue Apr 07 2026 12:00:03} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/generate-recipient 500 - 15.085 ms

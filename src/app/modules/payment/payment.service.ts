@@ -18,7 +18,6 @@ import { Service } from '../service/service.model';
 import { User } from '../user/user.model';
 import { BookingStateMachine } from '../booking/bookingStateMachine';
 import exceljs from 'exceljs';
-
 import { BOOKING_STATUS } from '../../../enum/booking';
 import { JwtPayload } from 'jsonwebtoken';
 import QueryBuilder from '../../builder/QueryBuilder';
@@ -46,13 +45,6 @@ const handlePaymentSuccessLogic = async (
     );
 
     if (!updatedBooking) return;
-
-    await BookingStateMachine.transitionState(
-      bookingID,
-      'system',
-      BOOKING_STATUS.REQUESTED,
-      'Booking automatically requested to provider after successful payment',
-    );
 
     const serviceData = await Service.findById(booking.service).lean();
     const providerData = await User.findById(booking.provider).lean();
@@ -340,7 +332,7 @@ const getPaymentHistory = async (user: JwtPayload, query: any) => {
   const data = await historyQuery.modelQuery.lean().exec();
   const meta = await historyQuery.getPaginationInfo();
 
-  return { meta, balance: userData.providerDetails?.wallet || 0, data };
+  return { meta, ...(isProvider && { balance: userData.providerDetails?.wallet || 0 }), data };
 };
 
 // Get detailed information for a specific payment record
@@ -382,51 +374,46 @@ const getPaymentDetails = async (id: string) => {
 // Initiate a fund withdrawal to a bank account
 const withdraw = async (
   user: JwtPayload,
-  data: { amount: number; bankCode?: string; accountNumber?: string },
+  data: { amount: number },
 ) => {
   const provider = (await User.findById(user.id || user.authId)
     .lean()
     .exec()) as IUser;
   if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your service provider profile to process the withdrawal.');
 
-  const maxWithdrawable = (provider.providerDetails?.wallet || 0) * 0.9;
-  if (data.amount > maxWithdrawable)
+  const walletBalance = provider.providerDetails?.wallet || 0;
+  const maxWithdrawable = walletBalance * 0.9;
+  
+  if (data.amount <= 0) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'The withdrawal amount must be greater than zero.');
+  }
+
+  if (data.amount > maxWithdrawable) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      `You don't have enough balance. You can withdraw up to ${maxWithdrawable.toFixed(2)} at this time.`,
+      `You don't have enough balance. You can withdraw up to 90% of your wallet, which is ${maxWithdrawable.toFixed(2)} at this time.`,
     );
+  }
 
-  let recipientCode = provider.providerDetails?.paystackRecipientCode;
+  const recipientCode = provider.providerDetails?.paystackRecipientCode;
 
+  // Check if a transfer recipient exists in the profile
   if (!recipientCode) {
-    const bankCode = (data.bankCode || provider.providerDetails?.bankName || '').toString().trim();
-    const accountNumber = (data.accountNumber || provider.providerDetails?.accountNumber || '').toString().trim();
-
-    if (!bankCode || !accountNumber) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        'Please provide your bank details for your first-time withdrawal.',
-      );
-    }
-
-    const recipient = await createTransferRecipient(provider.name, accountNumber, bankCode);
-    recipientCode = recipient.recipient_code;
-
-    await User.findByIdAndUpdate(provider._id, {
-      'providerDetails.paystackRecipientCode': recipientCode,
-      'providerDetails.bankName': bankCode,
-      'providerDetails.accountNumber': accountNumber,
-    });
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'We couldn\'t find a verified withdrawal account in your profile. Please set up your bank details first to continue.',
+    );
   }
 
   const withdrawalFee = 0; // Configured to 0 withdrawal fee as requested
   const netPayout = data.amount;
 
-  const transferRes = await initiateTransfer(netPayout, recipientCode as string, `Withdrawal for ${provider.name}`);
+  const transferRes = await initiateTransfer(netPayout, recipientCode, `Withdrawal for ${provider.name}`);
 
-  await User.findByIdAndUpdate(provider._id, { 'providerDetails.wallet': (provider.providerDetails?.wallet || 0) - data.amount })
-    .lean()
-    .exec();
+  // Deduct the requested amount from the wallet using $inc for safety
+  await User.findByIdAndUpdate(provider._id, { 
+    $inc: { 'providerDetails.wallet': -data.amount } 
+  }).lean().exec();
 
   await TransactionService.recordTransaction({
     type: 'WITHDRAWAL',

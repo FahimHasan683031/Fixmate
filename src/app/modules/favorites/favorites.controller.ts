@@ -6,8 +6,8 @@ import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 
 // Controller to handle adding a provider to favorites
-const addFavorite = catchAsync(async (req: Request | any, res: Response) => {
-  const result = await FavoritesService.addFavorite(req.user, req.body.providerId);
+const addOrRemoveFavorite = catchAsync(async (req: Request | any, res: Response) => {
+  const result = await FavoritesService.addOrRemoveFavorite(req.user, req.body.providerId);
 
   sendResponse(res, {
     success: true,
@@ -42,7 +42,7 @@ const getFavorites = catchAsync(async (req: Request | any, res: Response) => {
 });
 
 export const FavoritesController = {
-  addFavorite,
+  addOrRemoveFavorite,
   removeFavorite,
   getFavorites,
 };

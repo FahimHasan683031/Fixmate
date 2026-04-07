@@ -78,7 +78,6 @@ const getBookingZodSchema = z.object({
       status: z
         .enum([
           'CREATED',
-          'PAID',
           'REQUESTED',
           'ACCEPTED',
           'IN_PROGRESS',

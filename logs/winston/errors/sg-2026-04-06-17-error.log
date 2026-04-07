@@ -1,2 +1,0 @@
-{Mon Apr 06 2026 17:14:52} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/bookings/69d1e28e3094d4a9653dd23b 404 - 6.377 ms
-{Mon Apr 06 2026 17:30:42} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/message/69b2445ab77e9164c129e6d2?page=1&limit=20 404 - 3.565 ms

@@ -14,7 +14,7 @@ const updateUserProfileZodSchema = z.object({
         coordinates: z.array(z.number()),
       }).optional(),
       image: z.string().optional(),
-    }),
+    }).strict(),
 });
 
 const updateProviderProfileZodSchema = z.object({
@@ -46,11 +46,8 @@ const updateProviderProfileZodSchema = z.object({
           isVatRegistered: z.boolean().optional(),
           vatNumber: z.string().optional(),
           companyName: z.string().optional(),
-          bankName: z.string().optional(),
-          accountNumber: z.string().optional(),
-          paystackAccountId: z.string().optional(),
         }).optional(),
-    }),
+    }).strict(),
 });
 
 const idParamsSchema = z.object({

@@ -1,0 +1,7 @@
+{Tue Apr 07 2026 15:00:46} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/user/update-provider-profile 500 - 5.828 ms
+{Tue Apr 07 2026 15:02:10} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/user/update-provider-profile 400 - 3.481 ms
+{Tue Apr 07 2026 15:05:29} [APP 🐞] error: ::1 - POST /api/v1/webhook 400 - 12.805 ms
+{Tue Apr 07 2026 15:05:29} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=kve3vfplwn&reference=kve3vfplwn 404 - 1.080 ms
+{Tue Apr 07 2026 15:16:12} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=wrwrt9q3mf&reference=wrwrt9q3mf 404 - 1.870 ms
+{Tue Apr 07 2026 15:24:06} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/withdraw 400 - 3.857 ms
+{Tue Apr 07 2026 15:24:20} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/withdraw 500 - 2289.832 ms
