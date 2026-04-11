@@ -46,9 +46,21 @@ const downloadPenalties = catchAsync(async (req: Request, res: Response) => {
   res.send(result.buffer);
 });
 
+const getPenaltyById = catchAsync(async (req: Request, res: Response) => {
+  const result = await PenaltyService.getPenaltyById(req.params.id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Penalty retrieved successfully',
+    data: result,
+  });
+});
+
 export const PenaltyController = {
   createPenaltyByAdmin,
   getAllPenalties,
   getMyPenalties,
+  getPenaltyById,
   downloadPenalties,
 };

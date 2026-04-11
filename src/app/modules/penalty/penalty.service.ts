@@ -211,10 +211,34 @@ const downloadPenalties = async (query: Record<string, unknown>) => {
   return { buffer, contentType, fileExtension };
 };
 
+const getPenaltyById = async (id: string) => {
+  const result = await Penalty.findById(id).lean().exec();
+
+  if (!result) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Penalty not found');
+  }
+
+  // Manually populate user and booking since they are stored as customId strings
+  const [user, booking] = await Promise.all([
+    User.findOne({ customId: result.user }).select('name email contact image role').lean(),
+    Booking.findOne({ customId: result.booking })
+      .select('customId bookingStatus service date')
+      .populate('service', 'name category price image')
+      .lean(),
+  ]);
+
+  return {
+    ...result,
+    user: user || result.user,
+    booking: booking || result.booking,
+  };
+};
+
 export const PenaltyService = {
   createPenaltyByAdmin,
   getAllPenalties,
   getMyPenalties,
+  getPenaltyById,
   downloadPenalties,
 };
 

@@ -32,4 +32,11 @@ router.get(
   PenaltyController.downloadPenalties
 );
 
+// Get single penalty details (Admin only)
+router.get(
+  '/:id',
+  auth(USER_ROLES.ADMIN),
+  PenaltyController.getPenaltyById
+);
+
 export const PenaltyRoutes = router;
