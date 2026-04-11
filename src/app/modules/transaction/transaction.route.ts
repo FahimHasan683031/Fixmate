@@ -19,4 +19,11 @@ router.get(
   TransactionController.downloadTransactions
 );
 
+// Get single transaction details (Admin only)
+router.get(
+  '/:id',
+  auth(USER_ROLES.ADMIN),
+  TransactionController.getTransactionById
+);
+
 export const TransactionRoutes = router;

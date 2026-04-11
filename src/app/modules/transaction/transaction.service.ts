@@ -129,8 +129,23 @@ const downloadTransactions = async (query: Record<string, unknown>) => {
   return { buffer, contentType, fileExtension };
 };
 
+const getTransactionById = async (id: string) => {
+  const result = await Transaction.findById(id)
+    .populate('user', 'name email contact role image')
+    .populate('booking', 'customId category subCategory price')
+    .lean()
+    .exec();
+
+  if (!result) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Transaction not found');
+  }
+
+  return result;
+};
+
 export const TransactionService = {
   recordTransaction,
   getAllTransactions,
+  getTransactionById,
   downloadTransactions,
 };

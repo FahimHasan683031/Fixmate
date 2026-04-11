@@ -11,8 +11,7 @@ const getAllTransactions = catchAsync(async (req: Request, res: Response) => {
     statusCode: StatusCodes.OK,
     success: true,
     message: 'Transactions retrieved successfully',
-    meta: result.meta,
-    data: result.data,
+    data: result,
   });
 });
 
@@ -25,7 +24,19 @@ const downloadTransactions = catchAsync(async (req: Request, res: Response) => {
   res.send(result.buffer);
 });
 
+const getTransactionById = catchAsync(async (req: Request, res: Response) => {
+  const result = await TransactionService.getTransactionById(req.params.id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Transaction retrieved successfully',
+    data: result,
+  });
+});
+
 export const TransactionController = {
   getAllTransactions,
+  getTransactionById,
   downloadTransactions,
 };
