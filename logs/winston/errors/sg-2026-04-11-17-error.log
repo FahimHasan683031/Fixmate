@@ -1,0 +1,7 @@
+{Sat Apr 11 2026 17:05:50} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/services 404 - 10.907 ms
+{Sat Apr 11 2026 17:10:22} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/user/update-provider-profile 403 - 7.170 ms
+{Sat Apr 11 2026 17:10:48} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/user/update-provider-profile 403 - 1.742 ms
+{Sat Apr 11 2026 17:12:27} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=9l59o4ljbu&reference=9l59o4ljbu 404 - 1.021 ms
+{Sat Apr 11 2026 17:12:27} [APP 🐞] error: ::ffff:10.10.7.94 - GET /favicon.ico 404 - 0.565 ms
+{Sat Apr 11 2026 17:12:30} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.534 ms
+{Sat Apr 11 2026 17:13:45} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 1.119 ms

@@ -86,7 +86,7 @@ export class PDFInvoiceMaker {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
-    return `ZAR ${formatted}`;
+    return `R ${formatted}`;
   }
 
   private formatDate(date: string | Date): string {

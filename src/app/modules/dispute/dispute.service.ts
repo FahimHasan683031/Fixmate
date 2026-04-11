@@ -71,7 +71,11 @@ const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
 
 const getAllDisputes = async (query: Record<string, unknown>) => {
   const disputeQuery = new QueryBuilder(
-    Dispute.find().populate('user').populate('bookingId'),
+    Dispute.find().populate('user', 'name email contact image role').populate({
+      path: 'bookingId',
+      select: 'customId bookingStatus service date',
+      populate: { path: 'service', select: 'name category price image' },
+    }),
     query
   )
     .filter()
@@ -86,7 +90,11 @@ const getAllDisputes = async (query: Record<string, unknown>) => {
 };
 
 const getDisputeById = async (id: string) => {
-  const result = await Dispute.findById(id).populate('user').populate('bookingId');
+  const result = await Dispute.findById(id).populate('user', 'name email contact image role address').populate({
+    path: 'bookingId',
+    select: 'customId bookingStatus service date location address',
+    populate: { path: 'service', select: 'name category price image' },
+  });
   if (!result) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the dispute record.');
   }
