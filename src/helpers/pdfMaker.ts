@@ -3,7 +3,6 @@ import { Request, Response } from 'express';
 import ApiError from '../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { Payment } from '../app/modules/payment/payment.model';
-import { Types } from 'mongoose';
 import axios from 'axios';
 import { PAYMENT_STATUS } from '../enum/payment';
 
@@ -585,7 +584,7 @@ export async function generateInvoiceAPI(req: Request, res: Response) {
       throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'You must provide a payment ID!');
     }
 
-    const docs = await Payment.find({ _id: new Types.ObjectId(req.params.id) }).populate(
+    const docs = await Payment.find({ paymentId: req.params.id }).populate(
       'customer service provider',
     );
     const doc = docs[0] as any;

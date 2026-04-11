@@ -1,0 +1,6 @@
+{Wed Apr 08 2026 11:01:47} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=k1q7n1sqac&reference=k1q7n1sqac 404 - 1.121 ms
+{Wed Apr 08 2026 11:05:39} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/dispute/69d5e1e6f7c00602c58ea971/resolve 400 - 2.948 ms
+{Wed Apr 08 2026 11:06:51} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/dispute/69d5e1e6f7c00602c58ea971/resolve 400 - 4.384 ms
+{Wed Apr 08 2026 11:12:26} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/dispute/69d5e39df7c00602c58ea9e2/resolve 500 - 1534.922 ms
+{Wed Apr 08 2026 11:22:40} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/payment/success?trxref=6sd5mitj0t&reference=6sd5mitj0t 404 - 0.668 ms
+{Wed Apr 08 2026 11:24:02} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/bookings/69d5e607f7c00602c58eaa43/status 400 - 2.459 ms

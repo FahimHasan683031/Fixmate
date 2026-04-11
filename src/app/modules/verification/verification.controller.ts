@@ -48,8 +48,21 @@ const getAllRequests = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// get single verification request
+const getSingleRequest = catchAsync(async (req: Request, res: Response) => {
+  const result = await VerificationService.getSingleRequest(req.params.id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Verification request retrieved successfully',
+    data: result,
+  });
+});
+
 // Controller for admins to approve or reject a verification request
 const updateStatus = catchAsync(async (req: Request, res: Response) => {
+  console.log("hita controller ...")
   const result = await VerificationService.updateStatus(req.params.id, req.body.status);
 
   sendResponse(res, {
@@ -64,5 +77,6 @@ export const VerificationController = {
   sendRequest,
   getStatus,
   getAllRequests,
+  getSingleRequest,
   updateStatus,
 };

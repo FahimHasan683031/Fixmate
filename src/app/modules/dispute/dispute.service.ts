@@ -18,41 +18,55 @@ import mongoose, { Types as MongooseTypes } from 'mongoose';
 import { TransactionService } from '../transaction/transaction.service';
 
 const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
-  const booking = await Booking.findById(payload.bookingId);
-  if (!booking) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the booking record for this dispute.');
+  const session = await mongoose.startSession();
+  
+  try {
+    session.startTransaction();
+
+    const booking = await Booking.findById(payload.bookingId).session(session);
+    if (!booking) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the booking record for this dispute.');
+    }
+
+    // Check if user is part of the booking
+    const isClient = booking.customer.toString() === user.authId;
+    const isProvider = booking.provider.toString() === user.authId;
+
+    if (!isClient && !isProvider) {
+      throw new ApiError(StatusCodes.FORBIDDEN, 'You don\'t have permission to raise a dispute for this booking.');
+    }
+
+    const raisedBy = isClient ? 'client' : 'provider';
+
+    const previousBookingStatus = booking.bookingStatus;
+
+    // Transition booking to DISPUTED
+    await BookingStateMachine.transitionState(
+      booking._id,
+      raisedBy,
+      BOOKING_STATUS.DISPUTED,
+      payload.reason || 'Dispute raised',
+      session
+    );
+
+    const disputeData = {
+      ...payload,
+      user: user.authId,
+      raisedBy,
+      status: 'open',
+      previousBookingStatus,
+    };
+
+    const result = await Dispute.create([disputeData], { session });
+    
+    await session.commitTransaction();
+    return result[0];
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
   }
-
-  // Check if user is part of the booking
-  const isClient = booking.customer.toString() === user.id;
-  const isProvider = booking.provider.toString() === user.id;
-
-  if (!isClient && !isProvider) {
-    throw new ApiError(StatusCodes.FORBIDDEN, 'You don\'t have permission to raise a dispute for this booking.');
-  }
-
-  const raisedBy = isClient ? 'client' : 'provider';
-
-  const previousBookingStatus = booking.bookingStatus;
-
-  // Transition booking to DISPUTED
-  await BookingStateMachine.transitionState(
-    booking._id,
-    raisedBy,
-    BOOKING_STATUS.DISPUTED,
-    payload.reason || 'Dispute raised'
-  );
-
-  const disputeData = {
-    ...payload,
-    user: user.id,
-    raisedBy,
-    status: 'open',
-    previousBookingStatus,
-  };
-
-  const result = await Dispute.create(disputeData);
-  return result;
 };
 
 const getAllDisputes = async (query: Record<string, unknown>) => {

@@ -141,7 +141,7 @@ const downloadPenalties = async (query: Record<string, unknown>) => {
   }
 
   const mongoQuery: any = {};
-  
+
   if (startDate || endDate) {
     mongoQuery.createdAt = {};
     if (startDate) mongoQuery.createdAt.$gte = new Date(startDate as string);
@@ -150,6 +150,11 @@ const downloadPenalties = async (query: Record<string, unknown>) => {
        end.setUTCHours(23, 59, 59, 999);
        mongoQuery.createdAt.$lte = end;
     }
+  }
+
+  if (query.status) {
+    const statusArray = (query.status as string).split(',').map(s => s.trim());
+    mongoQuery.status = { $in: statusArray };
   }
 
   const penalties = await Penalty.find(mongoQuery)

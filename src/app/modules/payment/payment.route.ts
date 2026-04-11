@@ -16,13 +16,13 @@ router.get('/wallet', auth(USER_ROLES.PROVIDER), PaymentControllers.getWallet);
 
 router.get(
   '/history',
-  auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT),
+  auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT, USER_ROLES.ADMIN),
   PaymentControllers.getPaymentHistory,
 );
 
 router.get(
   '/history/:id',
-  auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT),
+  auth(USER_ROLES.PROVIDER, USER_ROLES.CLIENT, USER_ROLES.ADMIN),
   PaymentControllers.getPaymentDetails,
 );
 
@@ -42,7 +42,6 @@ router.post(
 
 router.get(
   '/download-invoice/:id',
-  auth(USER_ROLES.ADMIN, USER_ROLES.CLIENT, USER_ROLES.PROVIDER),
   generateInvoiceAPI
 );
 

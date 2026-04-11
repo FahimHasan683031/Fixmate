@@ -11,6 +11,7 @@ const addNewCategory = async (category: ICategory) => {
   if (!category.image) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Please upload an image for the category.');
   }
+  console.log({ category })
   return Category.create(category);
 };
 

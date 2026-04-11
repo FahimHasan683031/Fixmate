@@ -1,4 +1,0 @@
-{Tue Apr 07 2026 16:10:31} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/payment/withdraw 500 - 1229.492 ms
-{Tue Apr 07 2026 16:11:59} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/message/69b2445ab77e9164c129e6d2?page=1&limit=20 404 - 4.255 ms
-{Tue Apr 07 2026 16:37:40} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/chat 404 - 24.428 ms
-{Tue Apr 07 2026 16:55:10} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/verification/send-request 500 - 6.539 ms

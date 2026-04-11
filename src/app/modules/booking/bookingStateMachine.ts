@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { Booking } from './booking.model';
 import { BOOKING_STATUS } from '../../../enum/booking';
 import ApiError from '../../../errors/ApiError';
@@ -47,18 +47,20 @@ export class BookingStateMachine {
     role: 'client' | 'provider' | 'admin' | 'system',
     targetState: BOOKING_STATUS,
     reason: string = '',
+    session?: mongoose.ClientSession
   ) {
-    return this.executeTransition(bookingId, role, targetState, reason, false);
+    return this.executeTransition(bookingId, role, targetState, reason, false, session);
   }
 
   static async adminForceState(
     bookingId: string | Types.ObjectId,
     targetState: BOOKING_STATUS,
     reason: string,
+    session?: mongoose.ClientSession
   ) {
     if (!reason?.trim())
       throw new ApiError(StatusCodes.BAD_REQUEST, 'Please provide a reason why you are manually changing the booking status.');
-    return this.executeTransition(bookingId, 'admin', targetState, `[ADMIN FORCE] ${reason}`, true);
+    return this.executeTransition(bookingId, 'admin', targetState, `[ADMIN FORCE] ${reason}`, true, session);
   }
 
   private static async executeTransition(
@@ -67,8 +69,11 @@ export class BookingStateMachine {
     targetState: BOOKING_STATUS,
     _reason: string,
     isForce: boolean,
+    session?: mongoose.ClientSession
   ) {
-    const booking = await Booking.findById(bookingId);
+    const query = Booking.findById(bookingId);
+    if (session) query.session(session);
+    const booking = await query;
     if (!booking) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the booking record in our system.');
 
     const currentState = booking.bookingStatus as BOOKING_STATUS;
@@ -110,11 +115,11 @@ export class BookingStateMachine {
     }
 
     if (Object.keys(metricsUpdate.$inc).length > 0 || Object.keys(metricsUpdate.$set).length > 0) {
-      await User.findByIdAndUpdate(booking.provider, metricsUpdate);
-      await (User as any).updateRankingScore(booking.provider);
+      await User.findByIdAndUpdate(booking.provider, metricsUpdate, session ? { session } : undefined);
+      await (User as any).updateRankingScore(booking.provider, session);
     }
 
-    await booking.save();
+    await booking.save(session ? { session } : undefined);
 
     if (targetState === BOOKING_STATUS.SETTLED || targetState === BOOKING_STATUS.AUTO_SETTLED) {
       await handleBookingSettlement(bookingId.toString());

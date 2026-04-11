@@ -41,6 +41,16 @@ class QueryBuilder<T> {
     excludeFields.forEach(el => delete queryObj[el]);
 
     const filters: Record<string, any> = cleanObject(queryObj);
+
+    // Automatically map comma-separated values and arrays to MongoDB $in operator
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      if (typeof value === 'string' && value.includes(',')) {
+        filters[key] = { $in: value.split(',').map(item => item.trim()) };
+      } else if (Array.isArray(value)) {
+        filters[key] = { $in: value };
+      }
+    });
     if (queryObj.minPrice || queryObj.maxPrice) {
       filters.price = {};
       if (queryObj.minPrice) {

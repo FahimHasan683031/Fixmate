@@ -55,9 +55,19 @@ const updateBookingStatus = catchAsync(async (req: Request | any, res: Response)
   });
 });
 
+const downloadBookings = catchAsync(async (req: Request, res: Response) => {
+  const result = await BookingService.downloadBookings(req.query);
+
+  res.setHeader('Content-Disposition', `attachment; filename="bookings_${Date.now()}.${result.fileExtension}"`);
+  res.setHeader('Content-Type', result.contentType);
+
+  res.send(result.buffer);
+});
+
 export const BookingController = {
   createBooking,
   getBookings,
   getBookingById,
   updateBookingStatus,
+  downloadBookings,
 };

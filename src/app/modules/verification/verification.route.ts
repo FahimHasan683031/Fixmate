@@ -17,6 +17,8 @@ router.get('/status', auth(USER_ROLES.PROVIDER), VerificationController.getStatu
 
 router.get('/all-requests', auth(USER_ROLES.ADMIN), VerificationController.getAllRequests);
 
+router.get('/single-request/:id', auth(USER_ROLES.ADMIN), VerificationController.getSingleRequest);
+
 router.patch('/update-status/:id', auth(USER_ROLES.ADMIN), VerificationController.updateStatus);
 
 export const VerificationRoutes = router;

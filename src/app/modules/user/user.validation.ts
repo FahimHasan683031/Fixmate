@@ -62,7 +62,7 @@ const blockAndUnblockUserSchema = z.object({
   params: z
     .object({
       id: z.string({ invalid_type_error: 'User id is required' }),
-      status: z.enum(['block', 'unblock', 'delete'], { required_error: 'Status is required' }),
+      status: z.enum(['BLOCKED', 'ACTIVE', 'DELETED'], { required_error: 'Status is required' }),
     })
     .strict(),
 });

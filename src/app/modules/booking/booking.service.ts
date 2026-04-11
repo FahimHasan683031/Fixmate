@@ -1,4 +1,5 @@
 import { JwtPayload } from 'jsonwebtoken';
+import exceljs from 'exceljs';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
 import { IBooking } from './booking.interface';
@@ -114,7 +115,7 @@ const getBookings = async (user: JwtPayload, query: any, role: 'client' | 'provi
   }
 
   const bookingQuery = new QueryBuilder(
-    Booking.find(filter).populate([
+    Booking.find({...filter, bookingStatus: {$ne: BOOKING_STATUS.CREATED}}).populate([
       { path: 'customer', select: 'name image address contact whatsApp' },
       { path: 'provider', select: 'name image contact whatsApp providerDetails.category' },
       { path: 'service', select: 'name image price category subCategory' },
@@ -259,6 +260,107 @@ const updateBookingStatus = async (
   return { message: `Booking status updated to ${finalStatus} successfully` };
 };
 
+const downloadBookings = async (query: Record<string, unknown>) => {
+  const { startDate, endDate, format } = query;
+
+  if (!format || !['csv', 'excel'].includes((format as string).toLowerCase())) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "Please specify a valid file format (CSV or Excel) for your download.");
+  }
+
+  const mongoQuery: any = { isDeleted: { $ne: true } };
+
+  if (startDate || endDate) {
+    mongoQuery.createdAt = {};
+    if (startDate) mongoQuery.createdAt.$gte = new Date(startDate as string);
+    if (endDate) {
+      const end = new Date(endDate as string);
+      end.setUTCHours(23, 59, 59, 999);
+      mongoQuery.createdAt.$lte = end;
+    }
+  }
+
+  if (query.bookingStatus) {
+    const statusArray = (query.bookingStatus as string).split(',').map(s => s.trim());
+    mongoQuery.bookingStatus = { $in: statusArray };
+  }
+
+  const bookings = await Booking.find(mongoQuery)
+    .populate('customer', 'name email contact address')
+    .populate('provider', 'name email contact address')
+    .populate('service', 'category subCategory price')
+    .sort('-createdAt')
+    .lean();
+
+  const workbook = new exceljs.Workbook();
+  const worksheet = workbook.addWorksheet('Bookings');
+
+  worksheet.columns = [
+    { header: 'Booking ID', key: 'customId', width: 20 },
+    { header: 'Created At', key: 'createdAt', width: 22 },
+    { header: 'Service Date', key: 'date', width: 22 },
+    { header: 'Customer Name', key: 'customerName', width: 20 },
+    { header: 'Customer Email', key: 'customerEmail', width: 25 },
+    { header: 'Customer Contact', key: 'customerContact', width: 15 },
+    { header: 'Provider Name', key: 'providerName', width: 20 },
+    { header: 'Provider Email', key: 'providerEmail', width: 25 },
+    { header: 'Provider Contact', key: 'providerContact', width: 15 },
+    { header: 'Service Category', key: 'serviceCategory', width: 25 },
+    { header: 'Service Price', key: 'servicePrice', width: 15 },
+    { header: 'Address', key: 'address', width: 30 },
+    { header: 'Special Note', key: 'specialNote', width: 30 },
+    { header: 'Booking Status', key: 'bookingStatus', width: 20 },
+    { header: 'Payment Status', key: 'isPaid', width: 15 },
+    { header: 'Payment Gateway ID', key: 'paymentId', width: 25 },
+    { header: 'Transaction ID', key: 'transactionId', width: 25 },
+    { header: 'Responded At', key: 'respondedAt', width: 22 },
+    { header: 'Cancel Reason', key: 'cancelReason', width: 25 },
+    { header: 'Cancelled By', key: 'cancelledBy', width: 15 },
+  ];
+
+  bookings.forEach((b: any) => {
+    worksheet.addRow({
+      customId: b.customId || 'N/A',
+      createdAt: b.createdAt ? new Date(b.createdAt).toLocaleString() : 'N/A',
+      date: b.date ? new Date(b.date).toLocaleString() : 'N/A',
+      customerName: b.customer?.name || 'N/A',
+      customerEmail: b.customer?.email || 'N/A',
+      customerContact: b.customer?.contact || 'N/A',
+      providerName: b.provider?.name || 'N/A',
+      providerEmail: b.provider?.email || 'N/A',
+      providerContact: b.provider?.contact || 'N/A',
+      serviceCategory: b.service?.category ? `${b.service.category} ${b.service.subCategory ? '- ' + b.service.subCategory : ''}` : 'N/A',
+      servicePrice: b.service?.price || '0',
+      address: b.address || 'N/A',
+      specialNote: b.specialNote || 'N/A',
+      bookingStatus: b.bookingStatus || 'N/A',
+      isPaid: b.isPaid ? 'Paid' : 'Unpaid',
+      paymentId: b.paymentId || 'N/A',
+      transactionId: b.transactionId || 'N/A',
+      respondedAt: b.respondedAt ? new Date(b.respondedAt).toLocaleString() : 'N/A',
+      cancelReason: b.cancelReason || 'N/A',
+      cancelledBy: b.cancelledBy || 'N/A',
+    });
+  });
+
+  worksheet.getRow(1).font = { bold: true };
+
+  let buffer: Buffer;
+  let contentType: string;
+  let fileExtension: string;
+
+  if (format === 'excel') {
+    buffer = (await workbook.xlsx.writeBuffer()) as any as Buffer;
+    contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    fileExtension = 'xlsx';
+  } else {
+    buffer = (await workbook.csv.writeBuffer()) as any as Buffer;
+    contentType = 'text/csv';
+    fileExtension = 'csv';
+  }
+
+  return { buffer, contentType, fileExtension };
+};
+
 export const BookingService = {
   createBooking,
   getBookings,
@@ -266,4 +368,5 @@ export const BookingService = {
   updateBooking,
   cancelBooking,
   updateBookingStatus,
+  downloadBookings,
 };

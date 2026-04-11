@@ -307,10 +307,13 @@ const getPaymentHistory = async (user: JwtPayload, query: any) => {
   if (!userData) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account details.');
 
   const isProvider = userData.role === 'PROVIDER';
+  const isAdmin = userData.role === 'ADMIN';
 
-  const filterOptionsQuery: FilterQuery<any> = {
-    [isProvider ? 'provider' : 'customer']: new Types.ObjectId(userId),
-  };
+  const filterOptionsQuery: FilterQuery<any> = {};
+
+  if (!isAdmin) {
+    filterOptionsQuery[isProvider ? 'provider' : 'customer'] = new Types.ObjectId(userId);
+  }
 
 
   if (startTime && endTime) {
@@ -446,6 +449,11 @@ const downloadPayments = async (query: Record<string, unknown>) => {
       end.setUTCHours(23, 59, 59, 999);
       mongoQuery.createdAt.$lte = end;
     }
+  }
+
+  if (query.paymentStatus) {
+    const statusArray = (query.paymentStatus as string).split(',').map(s => s.trim());
+    mongoQuery.paymentStatus = { $in: statusArray };
   }
 
   const payments = await Payment.find(mongoQuery)

@@ -21,6 +21,12 @@ router.get(
 );
 
 router.get(
+  '/download',
+  auth(USER_ROLES.ADMIN),
+  BookingController.downloadBookings,
+);
+
+router.get(
   '/:id',
   auth(USER_ROLES.CLIENT, USER_ROLES.PROVIDER, USER_ROLES.ADMIN),
   BookingController.getBookingById,

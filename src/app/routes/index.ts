@@ -43,7 +43,7 @@ const apiRoutes = [
   { path: '/reviews', route: ReviewRoutes },
   { path: '/favorites', route: FavoritesRoutes },
   { path: '/penalty', route: PenaltyRoutes },
-  { path: '/disputes', route: DisputeRoutes },
+  { path: '/dispute', route: DisputeRoutes },
   { path: '/transactions', route: TransactionRoutes },
 ];
 

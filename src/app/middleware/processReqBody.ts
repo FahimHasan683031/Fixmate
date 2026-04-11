@@ -12,7 +12,8 @@ type IFolderName =
   | 'license'
   | 'nidFront'
   | 'nidBack'
-  | 'other';
+  | 'other'
+  | 'evidence';
 
 interface ProcessedFiles {
   [key: string]: string | string[] | undefined;
@@ -27,7 +28,30 @@ const uploadFields = [
   { name: 'nidFront', maxCount: 1 },
   { name: 'nidBack', maxCount: 1 },
   { name: 'other', maxCount: 5 },
+  { name: 'evidence', maxCount: 5 },
 ] as const;
+
+// Helper to deeply parse JSON-stringified nested objects
+const deepParseJson = (data: any): any => {
+  if (typeof data === 'string') {
+    try {
+      if ((data.startsWith('{') && data.endsWith('}')) || (data.startsWith('[') && data.endsWith(']'))) {
+        return deepParseJson(JSON.parse(data));
+      }
+    } catch (error) {
+      // ignore
+    }
+  } else if (Array.isArray(data)) {
+    return data.map(item => deepParseJson(item));
+  } else if (data !== null && typeof data === 'object') {
+    const result: any = {};
+    for (const key in data) {
+      result[key] = deepParseJson(data[key]);
+    }
+    return result;
+  }
+  return data;
+};
 
 export const fileAndBodyProcessorUsingDiskStorage = () => {
   const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -66,7 +90,9 @@ export const fileAndBodyProcessorUsingDiskStorage = () => {
 
       try {
         if (req.body?.data) {
-          req.body = JSON.parse(req.body.data);
+          req.body = deepParseJson(JSON.parse(req.body.data));
+        } else {
+          req.body = deepParseJson(req.body);
         }
 
         if (!req.files) {
@@ -88,7 +114,7 @@ export const fileAndBodyProcessorUsingDiskStorage = () => {
                 paths.push(filePath);
 
                 if (
-                  ['image', 'nid', 'license', 'nidFront', 'nidBack', 'other'].includes(fieldName) &&
+                  ['image', 'nid', 'license', 'nidFront', 'nidBack', 'other', 'evidence'].includes(fieldName) &&
                   file.mimetype.startsWith('image/')
                 ) {
                   const fullPath = path.join(uploadsDir, fieldName, file.filename);

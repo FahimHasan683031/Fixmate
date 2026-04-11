@@ -56,7 +56,7 @@ router.get(
 );
 
 router.delete(
-  '/users/:id/:status',
+  '/:id/:status',
   auth(USER_ROLES.ADMIN),
   validateRequest(UserValidation.blockAndUnblockUserSchema),
   UserController.blockAndUnblockUser,

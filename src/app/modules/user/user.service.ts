@@ -272,9 +272,9 @@ const blockAndUnblockUser = async (id: string, status: string) => {
   const user = await User.findById(id);
   if (!user) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the user profile.');
 
-  if (status === 'block') user.status = USER_STATUS.BLOCKED;
-  else if (status === 'unblock') user.status = USER_STATUS.ACTIVE;
-  else if (status === 'delete') user.status = USER_STATUS.DELETED;
+  if (status === 'BLOCKED') user.status = USER_STATUS.BLOCKED;
+  else if (status === 'ACTIVE') user.status = USER_STATUS.ACTIVE;
+  else if (status === 'DELETED') user.status = USER_STATUS.DELETED;
 
   await user.save();
   return user;
