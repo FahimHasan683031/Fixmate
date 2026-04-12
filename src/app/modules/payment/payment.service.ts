@@ -301,7 +301,7 @@ const getWallet = async (user: JwtPayload, query: any) => {
 
 // Retrieve filtered payment history for a user
 const getPaymentHistory = async (user: JwtPayload, query: any) => {
-  const { startTime, endTime, paymentType, ...rest } = query;
+  const { startTime, endTime, paymentType, searchTerm, ...rest } = query;
   const userId = user.id || user.authId;
   const userData = (await User.findById(userId).lean().exec()) as IUser;
   if (!userData) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account details.');
@@ -309,33 +309,96 @@ const getPaymentHistory = async (user: JwtPayload, query: any) => {
   const isProvider = userData.role === 'PROVIDER';
   const isAdmin = userData.role === 'ADMIN';
 
-  const filterOptionsQuery: FilterQuery<any> = {};
+  const matchStage: FilterQuery<any> = {};
 
   if (!isAdmin) {
-    filterOptionsQuery[isProvider ? 'provider' : 'customer'] = new Types.ObjectId(userId);
+    matchStage[isProvider ? 'provider' : 'customer'] = new Types.ObjectId(userId);
   }
-
 
   if (startTime && endTime) {
-    filterOptionsQuery.createdAt = { $gte: new Date(startTime), $lte: new Date(endTime) };
+    matchStage.createdAt = { $gte: new Date(startTime), $lte: new Date(endTime) };
   }
 
-  const historyQuery = new QueryBuilder(
-    Payment.find(filterOptionsQuery).populate({
-      path: 'service',
-      select: 'image category subCategory',
-    }),
-    rest,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  if (paymentType) {
+    matchStage.paymentStatus = paymentType;
+  }
 
-  const data = await historyQuery.modelQuery.lean().exec();
-  const meta = await historyQuery.getPaginationInfo();
+  const pipeline: any[] = [{ $match: matchStage }];
 
-  return { meta, ...(isProvider && { balance: userData.providerDetails?.wallet || 0 }), data };
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'customer',
+        foreignField: '_id',
+        pipeline: [{ $project: { name: 1, image: 1, customId: 1, email: 1, contact: 1 } }],
+        as: 'customer',
+      },
+    },
+    { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'provider',
+        foreignField: '_id',
+        pipeline: [{ $project: { name: 1, image: 1, customId: 1, email: 1, contact: 1 } }],
+        as: 'provider',
+      },
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'services',
+        localField: 'service',
+        foreignField: '_id',
+        pipeline: [{ $project: { name: 1, image: 1, category: 1, subCategory: 1, customId: 1 } }],
+        as: 'service',
+      },
+    },
+    { $unwind: { path: '$service', preserveNullAndEmptyArrays: true } },
+  );
+
+  if (searchTerm) {
+    pipeline.push({
+      $match: {
+        $or: [
+          { customId: { $regex: searchTerm, $options: 'i' } },
+          { 'customer.customId': { $regex: searchTerm, $options: 'i' } },
+          { 'provider.customId': { $regex: searchTerm, $options: 'i' } },
+        ],
+      },
+    });
+  }
+
+  // Sorting
+  const sortStr = (rest.sort as string) || '-createdAt';
+  const sortDir = sortStr.startsWith('-') ? -1 : 1;
+  const sortField = sortStr.replace('-', '');
+  pipeline.push({ $sort: { [sortField]: sortDir } });
+
+  // Pagination
+  const page = Number(rest.page) || 1;
+  const limit = Number(rest.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  pipeline.push({
+    $facet: {
+      metadata: [{ $count: 'total' }],
+      data: [{ $skip: skip }, { $limit: limit }],
+    },
+  });
+
+  const result = await Payment.aggregate(pipeline);
+
+  const total = result[0]?.metadata[0]?.total || 0;
+  const data = result[0]?.data || [];
+  const totalPage = Math.ceil(total / limit);
+
+  return { 
+    meta: { total, limit, page, totalPage }, 
+    ...(isProvider && { balance: userData.providerDetails?.wallet || 0 }), 
+    data 
+  };
 };
 
 // Get detailed information for a specific payment record
@@ -349,16 +412,17 @@ const getPaymentDetails = async (id: string) => {
     paymentStatus: info.paymentStatus,
     dateAndTime: info.createdAt,
     customer: info.customer
-      ? { name: info.customer.name, email: info.customer.email, address: info.customer.address }
+      ? { name: info.customer.name, email: info.customer.email, address: info.customer.address, customId: info.customer.customId }
       : null,
     provider: info.provider
-      ? { name: info.provider.name, email: info.provider.email, address: info.provider.address }
+      ? { name: info.provider.name, email: info.provider.email, address: info.provider.address, customId: info.provider.customId }
       : null,
     service: info.service
       ? {
         category: info.service.category,
         subCategory: info.service.subCategory,
         price: info.service.price,
+        customId: info.service.customId,
       }
       : null,
   };

@@ -116,9 +116,9 @@ const getBookings = async (user: JwtPayload, query: any, role: 'client' | 'provi
 
   const bookingQuery = new QueryBuilder(
     Booking.find({...filter, bookingStatus: {$ne: BOOKING_STATUS.CREATED}}).populate([
-      { path: 'customer', select: 'name image address contact whatsApp' },
-      { path: 'provider', select: 'name image contact whatsApp providerDetails.category' },
-      { path: 'service', select: 'name image price category subCategory' },
+      { path: 'customer', select: 'name image address contact whatsApp customId' },
+      { path: 'provider', select: 'name image contact whatsApp customId providerDetails.category' },
+      { path: 'service', select: 'name image price category subCategory customId' },
     ]),
     query,
   )
@@ -137,9 +137,9 @@ const getBookings = async (user: JwtPayload, query: any, role: 'client' | 'provi
 const getBookingById = async (id: string) => {
   const booking = await Booking.findById(id)
     .populate([
-      { path: 'service', select: 'image price category subCategory' },
-      { path: 'provider', select: 'name image address providerDetails.category contact whatsApp' },
-      { path: 'customer', select: 'name image address contact whatsApp' },
+      { path: 'service', select: 'image price category subCategory customId' },
+      { path: 'provider', select: 'name image address customId providerDetails.category contact whatsApp' },
+      { path: 'customer', select: 'name image address customId contact whatsApp' },
     ])
     .lean()
     .exec();

@@ -1,0 +1,10 @@
+{Sun Apr 12 2026 10:01:35} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 1.052 ms
+{Sun Apr 12 2026 10:13:51} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.680 ms
+{Sun Apr 12 2026 10:13:55} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 1.857 ms
+{Sun Apr 12 2026 10:13:57} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.280 ms
+{Sun Apr 12 2026 10:13:58} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.585 ms
+{Sun Apr 12 2026 10:14:08} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.484 ms
+{Sun Apr 12 2026 10:14:09} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.696 ms
+{Sun Apr 12 2026 10:14:09} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.638 ms
+{Sun Apr 12 2026 10:14:09} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.277 ms
+{Sun Apr 12 2026 10:14:49} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.267 ms

@@ -72,7 +72,7 @@ const getAllRequests = async (query: any) => {
       localField: 'user',
       foreignField: '_id',
       pipeline: [
-        { $project: { _id: 1, name: 1, image: 1, email: 1, contact: 1, address: 1 } }
+        { $project: { _id: 1, name: 1, image: 1, email: 1, contact: 1, address: 1, customId: 1 } }
       ],
       as: 'user',
     }

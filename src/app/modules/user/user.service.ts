@@ -174,8 +174,14 @@ const downloadUsers = async (query: Record<string, unknown>) => {
 
 // Retrieve a paginated list of non-admin users
 const getUsers = async (query: Record<string, unknown>) => {
-  const userQuery = new QueryBuilder(User.find({ role: { $ne: USER_ROLES.ADMIN }, status: { $ne: USER_STATUS.DELETED } }), query)
-    .search(['name', 'email', 'address'])
+  const userQuery = new QueryBuilder(
+    User.find({
+      role: { $ne: USER_ROLES.ADMIN },
+      status: { $ne: USER_STATUS.DELETED },
+    }).select('name email contact image role status customId address providerDetails createdAt'),
+    query
+  )
+    .search(['name', 'email', 'address', 'customId'])
     .filter()
     .sort()
     .paginate()

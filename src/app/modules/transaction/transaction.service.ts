@@ -35,7 +35,7 @@ const recordTransaction = async (data: {
 
 const getAllTransactions = async (query: Record<string, unknown>) => {
   const transactionQuery = new QueryBuilder(
-    Transaction.find().populate('user', 'name email contact role').populate('booking', 'customId category'),
+    Transaction.find().populate('user', 'name email contact role customId').populate('booking', 'customId category'),
     query
   )
     .filter()
@@ -131,7 +131,7 @@ const downloadTransactions = async (query: Record<string, unknown>) => {
 
 const getTransactionById = async (id: string) => {
   const result = await Transaction.findById(id)
-    .populate('user', 'name email contact role image')
+    .populate('user', 'name email contact role image customId')
     .populate('booking', 'customId category subCategory price')
     .lean()
     .exec();
