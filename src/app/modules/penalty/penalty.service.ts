@@ -6,9 +6,9 @@ import { Penalty } from './penalty.model';
 import { User } from '../user/user.model';
 import { Booking } from '../booking/booking.model';
 import { NotificationService } from '../notification/notification.service';
-import QueryBuilder from '../../builder/QueryBuilder';
 import { TransactionService } from '../transaction/transaction.service';
 import exceljs from 'exceljs';
+import QueryBuilder from '../../builder/QueryBuilder';
 
 // crete penalty by admin
 const createPenaltyByAdmin = async (payload: {
@@ -92,21 +92,65 @@ const createPenaltyByAdmin = async (payload: {
 
 // get all penalties
 const getAllPenalties = async (query: Record<string, unknown>) => {
-  const penaltyQuery = new QueryBuilder(
-    Penalty.find().sort('-createdAt'),
-    query,
-  )
-    .search(['customId', 'user', 'booking'])
-    .filter()
-    .paginate()
-    .fields();
+  const { searchTerm, ...rest } = query;
 
-  const [data, meta] = await Promise.all([
-    penaltyQuery.modelQuery.lean().exec(),
-    penaltyQuery.getPaginationInfo(),
-  ]);
+  const matchStage: any = {};
+  if (rest.status) {
+    const statusArray = (rest.status as string).split(',').map(s => s.trim());
+    matchStage.status = { $in: statusArray };
+  }
 
-  return { meta, data };
+  const pipeline: any[] = [{ $match: matchStage }];
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: 'customId',
+        pipeline: [{ $project: { name: 1, image: 1, customId: 1 } }],
+        as: 'user_data',
+      },
+    },
+    { $unwind: { path: '$user_data', preserveNullAndEmptyArrays: true } },
+  );
+
+  if (searchTerm) {
+    pipeline.push({
+      $match: {
+        $or: [
+          { customId: { $regex: searchTerm, $options: 'i' } },
+          { user: { $regex: searchTerm, $options: 'i' } },
+          { booking: { $regex: searchTerm, $options: 'i' } },
+          { 'user_data.name': { $regex: searchTerm, $options: 'i' } },
+        ],
+      },
+    });
+  }
+
+  const sortStr = (rest.sort as string) || '-createdAt';
+  const sortDir = sortStr.startsWith('-') ? -1 : 1;
+  const sortField = sortStr.replace('-', '');
+  pipeline.push({ $sort: { [sortField]: sortDir } });
+
+  const page = Number(rest.page) || 1;
+  const limit = Number(rest.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  pipeline.push({
+    $facet: {
+      metadata: [{ $count: 'total' }],
+      data: [{ $skip: skip }, { $limit: limit }],
+    },
+  });
+
+  const result = await Penalty.aggregate(pipeline);
+
+  const total = result[0]?.metadata[0]?.total || 0;
+  const data = result[0]?.data || [];
+  const totalPage = Math.ceil(total / limit);
+
+  return { meta: { total, limit, page, totalPage }, data };
 };
 
 // get my penalties
@@ -217,8 +261,6 @@ const getPenaltyById = async (id: string) => {
   if (!result) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Penalty not found');
   }
-
-  // Manually populate user and booking since they are stored as customId strings
   const [user, booking] = await Promise.all([
     User.findOne({ customId: result.user }).select('name email contact image role').lean(),
     Booking.findOne({ customId: result.booking })

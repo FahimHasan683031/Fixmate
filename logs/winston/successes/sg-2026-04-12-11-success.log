@@ -1,0 +1,87 @@
+{Sun Apr 12 2026 11:00:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 12 2026 11:00:03} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-USR-000002&limit=20 200 - 8.970 ms
+{Sun Apr 12 2026 11:00:04} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-USR-00000&limit=20 200 - 7.040 ms
+{Sun Apr 12 2026 11:00:05} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-USR-000001&limit=20 200 - 6.835 ms
+{Sun Apr 12 2026 11:00:07} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-USR-00000&limit=20 200 - 9.891 ms
+{Sun Apr 12 2026 11:00:07} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-USR-0000&limit=20 200 - 14.107 ms
+{Sun Apr 12 2026 11:00:07} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-USR-000&limit=20 200 - 7.872 ms
+{Sun Apr 12 2026 11:00:07} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-USR-00&limit=20 200 - 7.322 ms
+{Sun Apr 12 2026 11:00:07} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-USR-0&limit=20 200 - 7.485 ms
+{Sun Apr 12 2026 11:00:07} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-USR-&limit=20 200 - 7.084 ms
+{Sun Apr 12 2026 11:00:07} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-USR&limit=20 200 - 13.562 ms
+{Sun Apr 12 2026 11:00:08} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-US&limit=20 200 - 9.214 ms
+{Sun Apr 12 2026 11:00:08} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-U&limit=20 200 - 10.462 ms
+{Sun Apr 12 2026 11:00:08} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM-&limit=20 200 - 14.584 ms
+{Sun Apr 12 2026 11:00:08} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=FM&limit=20 200 - 13.411 ms
+{Sun Apr 12 2026 11:00:08} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?searchTerm=F&limit=20 200 - 6.831 ms
+{Sun Apr 12 2026 11:00:08} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?limit=20 200 - 6.972 ms
+{Sun Apr 12 2026 11:00:13} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?type=WITHDRAWAL&limit=20 200 - 4.139 ms
+{Sun Apr 12 2026 11:00:15} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?type=REFUND&limit=20 200 - 3.909 ms
+{Sun Apr 12 2026 11:00:17} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?type=EARNINGS&limit=20 200 - 3.442 ms
+{Sun Apr 12 2026 11:00:19} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?type=PAYMENT&limit=20 200 - 5.526 ms
+{Sun Apr 12 2026 11:00:21} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?type=WITHDRAWAL&limit=20 200 - 2.366 ms
+{Sun Apr 12 2026 11:00:27} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/transactions?type=PENALTY&limit=20 200 - 3.696 ms
+{Sun Apr 12 2026 11:00:31} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?limit=20 200 - 18.478 ms
+{Sun Apr 12 2026 11:00:41} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PRV-000001&limit=20 200 - 13.557 ms
+{Sun Apr 12 2026 11:00:44} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?limit=20 200 - 3.275 ms
+{Sun Apr 12 2026 11:01:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 12 2026 11:02:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 12 2026 11:02:24} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Apr 12 2026 11:02:24} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Apr 12 2026 11:02:24} [APP 🚀] info: Unverified account cleanup job scheduled to run every minute.
+{Sun Apr 12 2026 11:02:24} [APP 🚀] info: Booking SLA job scheduled to run every 15 minutes (Threshold: 5 hours).
+{Sun Apr 12 2026 11:02:24} [APP 🚀] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Sun Apr 12 2026 11:02:24} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Apr 12 2026 11:02:24} [APP 🚀] info: [33m♻️  Application listening on port:5001[39m
+{Sun Apr 12 2026 11:03:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 12 2026 11:04:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 12 2026 11:04:42} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Apr 12 2026 11:04:42} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Apr 12 2026 11:04:42} [APP 🚀] info: Unverified account cleanup job scheduled to run every minute.
+{Sun Apr 12 2026 11:04:42} [APP 🚀] info: Booking SLA job scheduled to run every 15 minutes (Threshold: 5 hours).
+{Sun Apr 12 2026 11:04:42} [APP 🚀] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Sun Apr 12 2026 11:04:42} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Apr 12 2026 11:04:42} [APP 🚀] info: [33m♻️  Application listening on port:5001[39m
+{Sun Apr 12 2026 11:04:50} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Apr 12 2026 11:04:50} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Apr 12 2026 11:04:50} [APP 🚀] info: Unverified account cleanup job scheduled to run every minute.
+{Sun Apr 12 2026 11:04:50} [APP 🚀] info: Booking SLA job scheduled to run every 15 minutes (Threshold: 5 hours).
+{Sun Apr 12 2026 11:04:50} [APP 🚀] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Sun Apr 12 2026 11:04:50} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Apr 12 2026 11:04:50} [APP 🚀] info: [33m♻️  Application listening on port:5001[39m
+{Sun Apr 12 2026 11:05:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 12 2026 11:05:58} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PNL-000008&limit=20 200 - 44.128 ms
+{Sun Apr 12 2026 11:06:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 12 2026 11:06:01} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?limit=20 200 - 5.236 ms
+{Sun Apr 12 2026 11:06:07} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PRV-000001&limit=20 200 - 3.832 ms
+{Sun Apr 12 2026 11:06:08} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PRV-00000&limit=20 200 - 3.601 ms
+{Sun Apr 12 2026 11:06:09} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PRV-000002&limit=20 200 - 3.070 ms
+{Sun Apr 12 2026 11:06:10} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PRV-00000&limit=20 200 - 4.667 ms
+{Sun Apr 12 2026 11:06:10} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PRV-0000&limit=20 200 - 4.587 ms
+{Sun Apr 12 2026 11:06:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PRV-000&limit=20 200 - 3.716 ms
+{Sun Apr 12 2026 11:06:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PRV-00&limit=20 200 - 5.169 ms
+{Sun Apr 12 2026 11:06:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PRV-0&limit=20 200 - 3.572 ms
+{Sun Apr 12 2026 11:06:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PRV-&limit=20 200 - 4.052 ms
+{Sun Apr 12 2026 11:06:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PRV&limit=20 200 - 4.473 ms
+{Sun Apr 12 2026 11:06:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-PR&limit=20 200 - 5.357 ms
+{Sun Apr 12 2026 11:06:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-P&limit=20 200 - 4.881 ms
+{Sun Apr 12 2026 11:06:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM&limit=20 200 - 3.541 ms
+{Sun Apr 12 2026 11:06:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=FM-&limit=20 200 - 6.460 ms
+{Sun Apr 12 2026 11:06:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?searchTerm=F&limit=20 200 - 3.766 ms
+{Sun Apr 12 2026 11:06:11} [APP 🚀] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?limit=20 200 - 4.133 ms
+{Sun Apr 12 2026 11:06:50} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Apr 12 2026 11:06:51} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Apr 12 2026 11:06:51} [APP 🚀] info: Unverified account cleanup job scheduled to run every minute.
+{Sun Apr 12 2026 11:06:51} [APP 🚀] info: Booking SLA job scheduled to run every 15 minutes (Threshold: 5 hours).
+{Sun Apr 12 2026 11:06:51} [APP 🚀] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Sun Apr 12 2026 11:06:51} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Apr 12 2026 11:06:51} [APP 🚀] info: [33m♻️  Application listening on port:5001[39m
+{Sun Apr 12 2026 11:06:53} [APP 🚀] info: [32m🚀 Database connected successfully[39m
+{Sun Apr 12 2026 11:06:53} [APP 🚀] info: [33m✅ Admin account already exists![39m
+{Sun Apr 12 2026 11:06:53} [APP 🚀] info: Unverified account cleanup job scheduled to run every minute.
+{Sun Apr 12 2026 11:06:53} [APP 🚀] info: Booking SLA job scheduled to run every 15 minutes (Threshold: 5 hours).
+{Sun Apr 12 2026 11:06:53} [APP 🚀] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Sun Apr 12 2026 11:06:53} [APP 🚀] info: [32m🍁 Server connected successfully[39m
+{Sun Apr 12 2026 11:06:53} [APP 🚀] info: [33m♻️  Application listening on port:5001[39m
+{Sun Apr 12 2026 11:07:00} [APP 🚀] info: Deleted 0 unverified accounts.
+{Sun Apr 12 2026 11:08:00} [APP 🚀] info: Deleted 0 unverified accounts.

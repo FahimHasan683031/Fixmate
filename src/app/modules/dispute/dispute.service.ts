@@ -6,7 +6,6 @@ import { Dispute } from './dispute.model';
 import { BookingStateMachine } from '../booking/bookingStateMachine';
 import { BOOKING_STATUS } from '../../../enum/booking';
 import { JwtPayload } from 'jsonwebtoken';
-import QueryBuilder from '../../builder/QueryBuilder';
 import { Payment } from '../payment/payment.model';
 import { PAYMENT_STATUS } from '../../../enum/payment';
 import { refundPaystackTransaction } from '../../../helpers/paystackHelper';
@@ -17,6 +16,7 @@ import { settlePendingPenaltyDues } from '../penalty/penalty.utils';
 import mongoose, { Types as MongooseTypes } from 'mongoose';
 import { TransactionService } from '../transaction/transaction.service';
 
+// Create a new dispute
 const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
   const session = await mongoose.startSession();
   
@@ -69,26 +69,88 @@ const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
   }
 };
 
+// Get all disputes
 const getAllDisputes = async (query: Record<string, unknown>) => {
-  const disputeQuery = new QueryBuilder(
-    Dispute.find().populate('user', 'name email contact image role customId').populate({
-      path: 'bookingId',
-      select: 'customId bookingStatus service date',
-      populate: { path: 'service', select: 'name category price image customId' },
-    }),
-    query
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  const { searchTerm, ...rest } = query;
 
-  const result = await disputeQuery.modelQuery;
-  const meta = await disputeQuery.getPaginationInfo();
+  const matchStage: any = {};
+  if (rest.status) matchStage.status = rest.status;
 
-  return { meta, result };
+  const pipeline: any[] = [{ $match: matchStage }];
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        pipeline: [{ $project: { name: 1, image: 1, customId: 1 } }],
+        as: 'user',
+      },
+    },
+    { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'bookings',
+        localField: 'bookingId',
+        foreignField: '_id',
+        pipeline: [
+          { $project: { customId: 1, service: 1 } },
+          {
+            $lookup: {
+              from: 'services',
+              localField: 'service',
+              foreignField: '_id',
+              pipeline: [{ $project: { name: 1, category: 1, customId: 1 } }],
+              as: 'service',
+            },
+          },
+          { $unwind: { path: '$service', preserveNullAndEmptyArrays: true } },
+        ],
+        as: 'bookingId',
+      },
+    },
+    { $unwind: { path: '$bookingId', preserveNullAndEmptyArrays: true } },
+  );
+
+  if (searchTerm) {
+    pipeline.push({
+      $match: {
+        $or: [
+          { customId: { $regex: searchTerm, $options: 'i' } },
+          { 'user.customId': { $regex: searchTerm, $options: 'i' } },
+          { 'bookingId.customId': { $regex: searchTerm, $options: 'i' } },
+        ],
+      },
+    });
+  }
+
+  const sortStr = (rest.sort as string) || '-createdAt';
+  const sortDir = sortStr.startsWith('-') ? -1 : 1;
+  const sortField = sortStr.replace('-', '');
+  pipeline.push({ $sort: { [sortField]: sortDir } });
+
+  const page = Number(rest.page) || 1;
+  const limit = Number(rest.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  pipeline.push({
+    $facet: {
+      metadata: [{ $count: 'total' }],
+      data: [{ $skip: skip }, { $limit: limit }],
+    },
+  });
+
+  const result = await Dispute.aggregate(pipeline);
+
+  const total = result[0]?.metadata[0]?.total || 0;
+  const data = result[0]?.data || [];
+  const totalPage = Math.ceil(total / limit);
+
+  return { meta: { total, limit, page, totalPage }, result: data };
 };
 
+// Get a single dispute by ID
 const getDisputeById = async (id: string) => {
   const result = await Dispute.findById(id).populate('user', 'name email contact image role address customId').populate({
     path: 'bookingId',
@@ -101,6 +163,7 @@ const getDisputeById = async (id: string) => {
   return result;
 };
 
+// Resolve a dispute
 const resolveDispute = async (id: string, payload: { type: string; amount?: number; note?: string }) => {
   const dispute = await Dispute.findById(id);
   if (!dispute) {

@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { JwtPayload } from 'jsonwebtoken';
 import exceljs from 'exceljs';
 import { StatusCodes } from 'http-status-codes';
@@ -8,7 +9,6 @@ import { BOOKING_STATUS } from '../../../enum/booking';
 import { Service } from '../service/service.model';
 import { User } from '../user/user.model';
 import { SERVICE_DAY } from '../../../enum/service';
-import QueryBuilder from '../../builder/QueryBuilder';
 import { BookingStateMachine } from './bookingStateMachine';
 import { createPaystackCheckout } from '../../../helpers/paystackHelper';
 import { Request } from 'express';
@@ -98,39 +98,97 @@ const createBooking = async (user: JwtPayload, data: IBooking, req: Request) => 
 
 // Retrieve a list of bookings based on user role and query filters
 const getBookings = async (user: JwtPayload, query: any, role: 'client' | 'provider' | 'admin') => {
+  const { searchTerm, ...rest } = query;
   const userId = user.id || user.authId;
-  let filter: any = { isDeleted: { $ne: true } };
+
+  const matchStage: any = { isDeleted: { $ne: true }, bookingStatus: { $ne: BOOKING_STATUS.CREATED } };
 
   if (role === 'client') {
-    filter.customer = userId;
+    matchStage.customer = new Types.ObjectId(userId);
   } else if (role === 'provider') {
-    filter.provider = userId;
-    filter.isPaid = true;
+    matchStage.provider = new Types.ObjectId(userId);
+    matchStage.isPaid = true;
   }
 
-  if (query.status) {
-    const statusArray = (query.status as string).split(',').map(s => s.trim());
-    filter.bookingStatus = { $in: statusArray };
-    delete query.status;
+  if (rest.status) {
+    const statusArray = (rest.status as string).split(',').map(s => s.trim());
+    matchStage.bookingStatus = { $in: statusArray };
   }
 
-  const bookingQuery = new QueryBuilder(
-    Booking.find({...filter, bookingStatus: {$ne: BOOKING_STATUS.CREATED}}).populate([
-      { path: 'customer', select: 'name image address contact whatsApp customId' },
-      { path: 'provider', select: 'name image contact whatsApp customId providerDetails.category' },
-      { path: 'service', select: 'name image price category subCategory customId' },
-    ]),
-    query,
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  const pipeline: any[] = [{ $match: matchStage }];
 
-  const data = await bookingQuery.modelQuery.lean().exec();
-  const meta = await bookingQuery.getPaginationInfo();
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'customer',
+        foreignField: '_id',
+        pipeline: [{ $project: { name: 1, image: 1, address: 1, contact: 1, whatsApp: 1, customId: 1, email: 1 } }],
+        as: 'customer',
+      },
+    },
+    { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'provider',
+        foreignField: '_id',
+        pipeline: [{ $project: { name: 1, image: 1, contact: 1, whatsApp: 1, customId: 1, email: 1, 'providerDetails.category': 1 } }],
+        as: 'provider',
+      },
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'services',
+        localField: 'service',
+        foreignField: '_id',
+        pipeline: [{ $project: { name: 1, image: 1, price: 1, category: 1, subCategory: 1, customId: 1 } }],
+        as: 'service',
+      },
+    },
+    { $unwind: { path: '$service', preserveNullAndEmptyArrays: true } },
+  );
 
-  return { meta, data };
+  if (searchTerm) {
+    pipeline.push({
+      $match: {
+        $or: [
+          { customId: { $regex: searchTerm, $options: 'i' } },
+          { 'customer.customId': { $regex: searchTerm, $options: 'i' } },
+          { 'customer.email': { $regex: searchTerm, $options: 'i' } },
+          { 'provider.customId': { $regex: searchTerm, $options: 'i' } },
+          { 'provider.email': { $regex: searchTerm, $options: 'i' } },
+          { 'service.customId': { $regex: searchTerm, $options: 'i' } },
+          { 'service.category': { $regex: searchTerm, $options: 'i' } },
+        ],
+      },
+    });
+  }
+
+  const sortStr = (rest.sort as string) || '-createdAt';
+  const sortDir = sortStr.startsWith('-') ? -1 : 1;
+  const sortField = sortStr.replace('-', '');
+  pipeline.push({ $sort: { [sortField]: sortDir } });
+
+  const page = Number(rest.page) || 1;
+  const limit = Number(rest.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  pipeline.push({
+    $facet: {
+      metadata: [{ $count: 'total' }],
+      data: [{ $skip: skip }, { $limit: limit }],
+    },
+  });
+
+  const result = await Booking.aggregate(pipeline);
+
+  const total = result[0]?.metadata[0]?.total || 0;
+  const data = result[0]?.data || [];
+  const totalPage = Math.ceil(total / limit);
+
+  return { meta: { total, limit, page, totalPage }, data };
 };
 
 // Get a single booking's details by its ID

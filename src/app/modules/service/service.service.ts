@@ -1,4 +1,4 @@
-// Service Service
+import { Types } from 'mongoose';
 import { JwtPayload } from 'jsonwebtoken';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
@@ -6,7 +6,7 @@ import { Service } from './service.model';
 import { IService } from './service.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
 import unlinkFile from '../../../shared/unlinkFile';
-import { USER_ROLE } from '../../../helpers/pdfMaker';
+import { USER_ROLES } from '../../../enum/user';
 import { User } from '../user/user.model';
 
 // Add a new service offered by a provider
@@ -34,7 +34,7 @@ const getHomeServices = async (user: JwtPayload, query: any) => {
   const { distance, minRating, maxRating, ...queryParams } = query;
 
   if (distance || minRating || maxRating) {
-    const providerCriteria: any = { role: USER_ROLE.PROVIDER };
+    const providerCriteria: any = { role: USER_ROLES.PROVIDER };
 
     if (minRating || maxRating) {
       providerCriteria['providerDetails.averageRating'] = {};
@@ -83,25 +83,65 @@ const getHomeServices = async (user: JwtPayload, query: any) => {
 
 // Retrieve all available services
 const getServices = async (user: JwtPayload, query: any) => {
-  if(user.role === USER_ROLE.PROVIDER){
-    query.creator = user.authId;
-  }
-  const serviceQuery = new QueryBuilder(
-    Service.find({ isDeleted: false }).populate(
-      'creator',
-      'name image customId',
-    ),
-    query,
-  )
-    .filter()
-    .search(['category', 'subCategory',"customId"])
-    .sort()
-    .paginate()
-    .fields();
+  const { searchTerm, ...rest } = query;
 
-  const data = await serviceQuery.modelQuery.lean().exec();
-  const meta = await serviceQuery.getPaginationInfo();
-  return { meta, data };
+  const matchStage: any = { isDeleted: false };
+
+  if (user.role === USER_ROLES.PROVIDER) {
+    matchStage.creator = new Types.ObjectId(user.authId || user.id);
+  }
+
+  const pipeline: any[] = [{ $match: matchStage }];
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'creator',
+        foreignField: '_id',
+        pipeline: [{ $project: { name: 1, image: 1, customId: 1 } }],
+        as: 'creator',
+      },
+    },
+    { $unwind: { path: '$creator', preserveNullAndEmptyArrays: true } },
+  );
+
+  if (searchTerm) {
+    pipeline.push({
+      $match: {
+        $or: [
+          { category: { $regex: searchTerm, $options: 'i' } },
+          { subCategory: { $regex: searchTerm, $options: 'i' } },
+          { customId: { $regex: searchTerm, $options: 'i' } },
+          { 'creator.customId': { $regex: searchTerm, $options: 'i' } },
+        ],
+      },
+    });
+  }
+
+  const sortStr = (rest.sort as string) || '-createdAt';
+  const sortDir = sortStr.startsWith('-') ? -1 : 1;
+  const sortField = sortStr.replace('-', '');
+  pipeline.push({ $sort: { [sortField]: sortDir } });
+
+  const page = Number(rest.page) || 1;
+  const limit = Number(rest.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  pipeline.push({
+    $facet: {
+      metadata: [{ $count: 'total' }],
+      data: [{ $skip: skip }, { $limit: limit }],
+    },
+  });
+
+  const result = await Service.aggregate(pipeline);
+
+  const total = result[0]?.metadata[0]?.total || 0;
+  const data = result[0]?.data || [];
+  const totalPage = Math.ceil(total / limit);
+
+  return { meta: { total, limit, page, totalPage }, data };
 };
 
 // Get detailed information about a specific service by its ID

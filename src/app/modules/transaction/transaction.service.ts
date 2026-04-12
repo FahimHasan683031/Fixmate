@@ -1,7 +1,6 @@
 import { Types } from 'mongoose';
 import { ITransaction, ITransactionType } from './transaction.interface';
 import { Transaction } from './transaction.model';
-import QueryBuilder from '../../builder/QueryBuilder';
 import exceljs from 'exceljs';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
@@ -34,19 +33,73 @@ const recordTransaction = async (data: {
 };
 
 const getAllTransactions = async (query: Record<string, unknown>) => {
-  const transactionQuery = new QueryBuilder(
-    Transaction.find().populate('user', 'name email contact role customId').populate('booking', 'customId category'),
-    query
-  )
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  const { searchTerm, ...rest } = query;
 
-  const data = await transactionQuery.modelQuery.lean().exec();
-  const meta = await transactionQuery.getPaginationInfo();
+  const matchStage: any = {};
+  if (rest.status) matchStage.status = rest.status;
+  if (rest.type) matchStage.type = rest.type;
 
-  return { meta, data };
+  const pipeline: any[] = [{ $match: matchStage }];
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        pipeline: [{ $project: { name: 1, image: 1, customId: 1 } }],
+        as: 'user',
+      },
+    },
+    { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'bookings',
+        localField: 'booking',
+        foreignField: '_id',
+        pipeline: [{ $project: { customId: 1 } }],
+        as: 'booking',
+      },
+    },
+    { $unwind: { path: '$booking', preserveNullAndEmptyArrays: true } },
+  );
+
+  if (searchTerm) {
+    pipeline.push({
+      $match: {
+        $or: [
+          { customId: { $regex: searchTerm, $options: 'i' } },
+          { 'user.customId': { $regex: searchTerm, $options: 'i' } },
+          { 'user.name': { $regex: searchTerm, $options: 'i' } },
+          { 'booking.customId': { $regex: searchTerm, $options: 'i' } },
+        ],
+      },
+    });
+  }
+
+  const sortStr = (rest.sort as string) || '-createdAt';
+  const sortDir = sortStr.startsWith('-') ? -1 : 1;
+  const sortField = sortStr.replace('-', '');
+  pipeline.push({ $sort: { [sortField]: sortDir } });
+
+  const page = Number(rest.page) || 1;
+  const limit = Number(rest.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  pipeline.push({
+    $facet: {
+      metadata: [{ $count: 'total' }],
+      data: [{ $skip: skip }, { $limit: limit }],
+    },
+  });
+
+  const result = await Transaction.aggregate(pipeline);
+
+  const total = result[0]?.metadata[0]?.total || 0;
+  const data = result[0]?.data || [];
+  const totalPage = Math.ceil(total / limit);
+
+  return { meta: { total, limit, page, totalPage }, data };
 };
 
 const downloadTransactions = async (query: Record<string, unknown>) => {
