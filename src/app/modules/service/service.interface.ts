@@ -10,4 +10,5 @@ export interface IService {
   price: number;
   expertise: string;
   isDeleted: boolean;
+  isSuspended: boolean;
 }

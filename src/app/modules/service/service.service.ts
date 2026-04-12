@@ -15,7 +15,7 @@ const addService = async (user: JwtPayload, payload: Partial<IService>) => {
   return service;
 };
 
-// Update an existing service's details and handle image replacement
+// Update an existing service's
 const updateService = async (id: string, payload: Partial<IService>) => {
   const existingService = await Service.findById(id).lean().exec();
   if (!existingService) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service details you\'re looking for.');
@@ -28,14 +28,6 @@ const updateService = async (id: string, payload: Partial<IService>) => {
   return service;
 };
 
-// Soft-delete a service by setting isDeleted to true
-const deleteService = async (id: string) => {
-  const service = await Service.findByIdAndUpdate(id, { isDeleted: true }, { new: true })
-    .lean()
-    .exec();
-  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service you want to delete.');
-  return service;
-};
 
 // Retrieve all services created by a specific provider
 const getHomeServices = async (user: JwtPayload, query: any) => {
@@ -71,7 +63,7 @@ const getHomeServices = async (user: JwtPayload, query: any) => {
   }
 
   const serviceQuery = new QueryBuilder(
-    Service.find({ isDeleted: false }).populate(
+    Service.find({ isDeleted: false, isSuspended: false }).populate(
       'creator',
       'name providerDetails.businessName location',
     ),
@@ -89,15 +81,15 @@ const getHomeServices = async (user: JwtPayload, query: any) => {
 };
 
 
-// Retrieve all available services across the platform with pagination and filtering
+// Retrieve all available services
 const getServices = async (user: JwtPayload, query: any) => {
   if(user.role === USER_ROLE.PROVIDER){
     query.creator = user.authId;
   }
-   const serviceQuery = new QueryBuilder(
+  const serviceQuery = new QueryBuilder(
     Service.find({ isDeleted: false }).populate(
       'creator',
-      'name providerDetails.businessName location',
+      'name image customId',
     ),
     query,
   )
@@ -115,10 +107,25 @@ const getServices = async (user: JwtPayload, query: any) => {
 // Get detailed information about a specific service by its ID
 const getServiceById = async (id: string) => {
   const service = await Service.findById(id)
-    .populate('creator', 'name image email contact location')
+    .populate('creator', 'name image email contact location customId address')
     .lean()
     .exec();
   if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service details in our system.');
+  return service;
+};
+
+// Soft-delete a service by setting isDeleted to true
+const deleteService = async (id: string) => {
+  const service = await Service.findByIdAndUpdate(id, { isDeleted: true }, { new: true })
+    .lean()
+    .exec();
+  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service you want to delete.');
+  return service;
+};
+
+const toggleServiceSuspension = async (id: string, isSuspended: boolean) => {
+  const service = await Service.findByIdAndUpdate(id, { isSuspended }, { new: true }).lean().exec();
+  if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service you want to update.');
   return service;
 };
 
@@ -129,4 +136,5 @@ export const ServiceService = {
   getHomeServices,
   getServices,
   getServiceById,
+  toggleServiceSuspension,
 };

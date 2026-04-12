@@ -84,6 +84,18 @@ const getServiceById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const toggleServiceSuspension = catchAsync(async (req: Request, res: Response) => {
+  const { isSuspended } = req.body;
+  const result = await ServiceService.toggleServiceSuspension(req.params.id, isSuspended);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: `Service ${isSuspended ? 'suspended' : 'unsuspended'} successfully`,
+    data: result,
+  });
+});
+
 export const ServiceController = {
   addService,
   updateService,
@@ -91,4 +103,5 @@ export const ServiceController = {
   getHomeServices,
   getServices,
   getServiceById,
+  toggleServiceSuspension,
 };

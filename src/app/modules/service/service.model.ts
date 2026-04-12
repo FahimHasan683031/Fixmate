@@ -32,6 +32,10 @@ const serviceSchema = new Schema<IService>(
       type: Boolean,
       default: false,
     },
+    isSuspended: {
+      type: Boolean,
+      default: false,
+    },
     customId: {
       type: String,
       unique: true,
