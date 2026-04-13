@@ -11,4 +11,5 @@ export interface IService {
   expertise: string;
   isDeleted: boolean;
   isSuspended: boolean;
+  isCreatorSubscribed: boolean;
 }

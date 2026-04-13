@@ -41,6 +41,10 @@ const serviceSchema = new Schema<IService>(
       unique: true,
       sparse: true,
     },
+    isCreatorSubscribed: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

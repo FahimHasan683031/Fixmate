@@ -5,6 +5,7 @@ import { IDispute } from './dispute.interface';
 import { Dispute } from './dispute.model';
 import { BookingStateMachine } from '../booking/bookingStateMachine';
 import { BOOKING_STATUS } from '../../../enum/booking';
+import { USER_ROLES } from '../../../enum/user';
 import { JwtPayload } from 'jsonwebtoken';
 import { Payment } from '../payment/payment.model';
 import { PAYMENT_STATUS } from '../../../enum/payment';
@@ -60,6 +61,20 @@ const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
     const result = await Dispute.create([disputeData], { session });
     
     await session.commitTransaction();
+
+    // Notify admins asynchronously
+    Promise.all([
+      User.find({ role: USER_ROLES.ADMIN }),
+      User.findById(user.authId).select('name email').lean()
+    ]).then(([admins, raisedByUser]) => {
+      admins.forEach(admin => {
+        NotificationService.insertNotification({
+          for: admin._id,
+          message: `A new dispute has been raised by ${raisedByUser?.name || 'a user'} for booking ID: ${booking.customId || 'unspecified'}. Please review it at your earliest convenience.`,
+        }).catch(err => console.error("Failed to notify admin about dispute:", err));
+      });
+    }).catch(err => console.error("Failed to fetch users for dispute notification:", err));
+
     return result[0];
   } catch (error) {
     await session.abortTransaction();
@@ -337,7 +352,12 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
       if (payment.paymentStatus !== PAYMENT_STATUS.SETTLED) {
           const providerShare = payment.servicePrice - refundAmount;
           if (providerShare > 0) {
-              const providerPayout = Number((providerShare * 0.82).toFixed(2));
+              const providerInfo = await User.findById(payment.provider).lean().session(session);
+              const isSubscribed = providerInfo?.providerDetails?.subscription?.isSubscribed && 
+                   (providerInfo.providerDetails.subscription.expiryDate ? new Date(providerInfo.providerDetails.subscription.expiryDate) > new Date() : false);
+              const providerPayRatio = isSubscribed ? 0.85 : 0.82;
+              
+              const providerPayout = Number((providerShare * providerPayRatio).toFixed(2));
               const creditAmount = await settlePendingPenaltyDues((payment.provider as MongooseTypes.ObjectId).toString(), providerPayout);
               await User.findByIdAndUpdate(payment.provider, {
                 $inc: { 'providerDetails.wallet': creditAmount, 'providerDetails.metrics.totalReceivedJobs': 1 },

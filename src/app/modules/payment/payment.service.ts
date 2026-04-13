@@ -59,8 +59,15 @@ const handlePaymentSuccessLogic = async (
     if (providerData.providerDetails?.isVatRegistered) {
       vat = Number((servicePrice * 0.15).toFixed(2));
     }
-    const platformFee = Number((servicePrice * 0.18).toFixed(2));
-    const providerPay = Number((servicePrice * 0.82).toFixed(2));
+    const isSubscribed = 
+      providerData.providerDetails?.subscription?.isSubscribed && 
+      (providerData.providerDetails?.subscription?.expiryDate ? new Date(providerData.providerDetails.subscription.expiryDate) > new Date() : false);
+    
+    const platformFeeRatio = isSubscribed ? 0.15 : 0.18;
+    const providerPayRatio = isSubscribed ? 0.85 : 0.82;
+
+    const platformFee = Number((servicePrice * platformFeeRatio).toFixed(2));
+    const providerPay = Number((servicePrice * providerPayRatio).toFixed(2));
     const paystackGatewayFee = Number((servicePrice * 0.03).toFixed(2));
 
     await Payment.create({

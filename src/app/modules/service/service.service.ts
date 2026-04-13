@@ -11,7 +11,15 @@ import { User } from '../user/user.model';
 
 // Add a new service offered by a provider
 const addService = async (user: JwtPayload, payload: Partial<IService>) => {
-  const service = await Service.create({ ...payload, creator: user.id || user.authId });
+  const userData = await User.findById(user.id || user.authId).select('providerDetails.subscription').lean();
+  const isSubscribed = userData?.providerDetails?.subscription?.isSubscribed && 
+    (userData.providerDetails.subscription.expiryDate ? new Date(userData.providerDetails.subscription.expiryDate) > new Date() : false);
+
+  const service = await Service.create({ 
+    ...payload, 
+    creator: user.id || user.authId,
+    isCreatorSubscribed: isSubscribed
+  });
   return service;
 };
 
@@ -70,10 +78,12 @@ const getHomeServices = async (user: JwtPayload, query: any) => {
     queryParams,
   )
     .filter()
-    .search(['category', 'subCategory'])
-    .sort()
-    .paginate()
-    .fields();
+    .search(['category', 'subCategory']);
+
+  // Priority to subscribed providers
+  serviceQuery.modelQuery = serviceQuery.modelQuery.sort('-isCreatorSubscribed');
+
+  serviceQuery.sort().paginate().fields();
 
   const data = await serviceQuery.modelQuery.lean().exec();
   const meta = await serviceQuery.getPaginationInfo();

@@ -45,4 +45,16 @@ export default {
     publicKey: process.env.PAYSTACK_PUBLIC_KEY,
     secretKey: process.env.PAYSTACK_SECRET_KEY,
   },
+  appleIap: {
+    sharedSecret: process.env.APPLE_IAP_SHARED_SECRET,
+    keyId: process.env.APPLE_KEY_ID,
+    issuerId: process.env.APPLE_ISSUER_ID,
+    bundleId: process.env.APPLE_BUNDLE_ID,
+    privateKey: process.env.APPLE_PRIVATE_KEY,
+  },
+  googleIap: {
+    serviceAccountEmail: process.env.GOOGLE_IAP_SERVICE_ACCOUNT_EMAIL,
+    privateKey: process.env.GOOGLE_IAP_PRIVATE_KEY,
+    packageName: process.env.GOOGLE_PACKAGE_NAME,
+  },
 };

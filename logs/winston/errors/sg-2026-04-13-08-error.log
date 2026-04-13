@@ -1,0 +1,10 @@
+{Mon Apr 13 2026 08:25:21} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/auth/verify-email 404 - 0.781 ms
+{Mon Apr 13 2026 08:25:27} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/auth/verify-email 404 - 0.371 ms
+{Mon Apr 13 2026 08:26:44} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/auth/verify-account 400 - 7.969 ms
+{Mon Apr 13 2026 08:27:59} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/auth/reset-password 400 - 20.551 ms
+{Mon Apr 13 2026 08:28:08} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/auth/reset-password 400 - 2.119 ms
+{Mon Apr 13 2026 08:30:28} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/auth/reset-password 400 - 3.749 ms
+{Mon Apr 13 2026 08:31:56} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/auth/reset-password 400 - 2.543 ms
+{Mon Apr 13 2026 08:32:02} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/auth/reset-password 400 - 3.547 ms
+{Mon Apr 13 2026 08:36:23} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/auth/reset-password 400 - 31.988 ms
+{Mon Apr 13 2026 08:37:12} [APP 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/auth/reset-password 400 - 20.983 ms

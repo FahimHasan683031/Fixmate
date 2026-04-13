@@ -69,6 +69,14 @@ export type IUser = {
       totalResponseTime?: number;
       totalResponseCount?: number;
     };
+    subscription?: {
+      isSubscribed: boolean;
+      platform: 'none' | 'apple' | 'google';
+      status: 'active' | 'canceled' | 'expired' | 'past_due' | 'none';
+      expiryDate: Date | null;
+      originalTransactionId: string | null;
+      latestReceiptToken: string | null;
+    };
   }
 };
 

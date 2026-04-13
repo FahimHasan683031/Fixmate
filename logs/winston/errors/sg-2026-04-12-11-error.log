@@ -1,0 +1,11 @@
+{Sun Apr 12 2026 11:10:32} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 1.016 ms
+{Sun Apr 12 2026 11:32:28} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 38.473 ms
+{Sun Apr 12 2026 11:32:29} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.841 ms
+{Sun Apr 12 2026 11:35:01} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.829 ms
+{Sun Apr 12 2026 11:35:21} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.447 ms
+{Sun Apr 12 2026 11:38:10} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 1.407 ms
+{Sun Apr 12 2026 11:38:23} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 2.037 ms
+{Sun Apr 12 2026 11:41:27} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.620 ms
+{Sun Apr 12 2026 11:46:12} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 1.041 ms
+{Sun Apr 12 2026 11:46:42} [APP 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/client 404 - 0.488 ms
+{Sun Apr 12 2026 11:46:45} [APP 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/notification/markAllAsRead 404 - 30.816 ms

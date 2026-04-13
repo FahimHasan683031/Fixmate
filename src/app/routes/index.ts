@@ -20,6 +20,8 @@ import { UserRoutes } from '../modules/user/user.route';
 import { PenaltyRoutes } from '../modules/penalty/penalty.route';
 import { DisputeRoutes } from '../modules/dispute/dispute.route';
 import { TransactionRoutes } from '../modules/transaction/transaction.route';
+import { SettingRoutes } from '../modules/setting/setting.route';
+import { SubscriptionRoutes } from '../modules/subscription/subscription.route';
 
 const router = express.Router();
 
@@ -45,6 +47,8 @@ const apiRoutes = [
   { path: '/penalty', route: PenaltyRoutes },
   { path: '/dispute', route: DisputeRoutes },
   { path: '/transactions', route: TransactionRoutes },
+  { path: '/settings', route: SettingRoutes },
+  { path: '/subscriptions', route: SubscriptionRoutes },
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));
