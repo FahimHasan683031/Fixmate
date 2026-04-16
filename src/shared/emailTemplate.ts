@@ -57,7 +57,7 @@ const createAccount = (values: ICreateAccount) => {
              style="background-color:#0062EB; color:#ffffff; padding:14px 32px; font-size:16px; 
                     font-weight:600; border-radius:10px; text-decoration:none; display:inline-block; 
                     box-shadow:0 4px 12px rgba(0,98,235,0.3); transition:all 0.3s;">
-            Open App 🚀
+            Open Fixmate 🚀
           </a>
         </div>
       </td>
@@ -404,7 +404,7 @@ const userContactConfirmationEmail = (payload: {
              style="background-color:#0062EB; color:#ffffff; padding:14px 32px; font-size:16px; 
                     font-weight:600; border-radius:10px; text-decoration:none; display:inline-block; 
                     box-shadow:0 4px 12px rgba(0,98,235,0.3); transition:all 0.3s;">
-            Open App 
+            Open Fixmate 
           </a>
         </div>
       </td>

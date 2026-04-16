@@ -1,5 +1,5 @@
 {
-  "name": "backend-template",
+  "name": "fixmate-backend",
   "version": "1.0.0",
   "main": "app.ts",
   "scripts": {

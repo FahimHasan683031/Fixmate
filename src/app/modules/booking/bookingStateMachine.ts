@@ -12,7 +12,6 @@ const VALID_TRANSITIONS: Record<string, BOOKING_STATUS[]> = {
   [BOOKING_STATUS.CREATED]: [BOOKING_STATUS.REQUESTED, BOOKING_STATUS.CANCELLED],
   [BOOKING_STATUS.REQUESTED]: [
     BOOKING_STATUS.ACCEPTED,
-    BOOKING_STATUS.EXPIRED,
     BOOKING_STATUS.CANCELLED,
   ],
   [BOOKING_STATUS.ACCEPTED]: [BOOKING_STATUS.IN_PROGRESS, BOOKING_STATUS.CANCELLED],
@@ -31,7 +30,6 @@ const VALID_TRANSITIONS: Record<string, BOOKING_STATUS[]> = {
   [BOOKING_STATUS.SETTLED]: [BOOKING_STATUS.DISPUTED],
   [BOOKING_STATUS.AUTO_SETTLED]: [BOOKING_STATUS.DISPUTED],
 
-  [BOOKING_STATUS.EXPIRED]: [],
   [BOOKING_STATUS.CANCELLED]: [],
   [BOOKING_STATUS.DISPUTED]: [
     BOOKING_STATUS.SETTLED,
@@ -100,8 +98,6 @@ export class BookingStateMachine {
       metricsUpdate.$inc['providerDetails.metrics.totalResponseTime'] = responseTime;
       metricsUpdate.$inc['providerDetails.metrics.totalResponseCount'] = 1;
       booking.respondedAt = now;
-    } else if (targetState === BOOKING_STATUS.EXPIRED) {
-      metricsUpdate.$inc['providerDetails.metrics.declinedJobs'] = 1;
     } else if (targetState === BOOKING_STATUS.COMPLETED_BY_PROVIDER) {
       metricsUpdate.$inc['providerDetails.metrics.completedJobs'] = 1;
     } else if (targetState === BOOKING_STATUS.DISPUTED) {
@@ -191,10 +187,6 @@ export class BookingStateMachine {
         case BOOKING_STATUS.AUTO_SETTLED:
           notificationTarget = booking.provider;
           message = `Your earnings for the ${serviceName} job have been added to your wallet. Well done!`;
-          break;
-        case BOOKING_STATUS.EXPIRED:
-          notificationTarget = booking.customer;
-          message = `Unfortunately, your booking request for ${serviceName} has expired as it wasn't accepted in time.`;
           break;
       }
 

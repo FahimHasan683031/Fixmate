@@ -28,11 +28,11 @@ createLogDirs();
 
 const logger = createLogger({
   level: 'info',
-  format: combine(label({ label: 'APP 🚀' }), timestamp(), myFormat),
+  format: combine(label({ label: 'FIXMATE 🛠️' }), timestamp(), myFormat),
   transports: [
     new transports.Console(),
     new DailyRotateFile({
-      filename: path.join(process.cwd(), 'logs', 'winston', 'successes', 'sg-%DATE%-success.log'),
+      filename: path.join(process.cwd(), 'logs', 'winston', 'successes', 'fixmate-%DATE%-success.log'),
       datePattern: 'YYYY-MM-DD-HH',
       zippedArchive: true,
       maxSize: '20m',
@@ -43,11 +43,11 @@ const logger = createLogger({
 
 const errorLogger = createLogger({
   level: 'error',
-  format: combine(label({ label: 'APP 🐞' }), timestamp(), myFormat),
+  format: combine(label({ label: 'FIXMATE 🐞' }), timestamp(), myFormat),
   transports: [
     new transports.Console(),
     new DailyRotateFile({
-      filename: path.join(process.cwd(), 'logs', 'winston', 'errors', 'sg-%DATE%-error.log'),
+      filename: path.join(process.cwd(), 'logs', 'winston', 'errors', 'fixmate-%DATE%-error.log'),
       datePattern: 'YYYY-MM-DD-HH',
       zippedArchive: true,
       maxSize: '20m',

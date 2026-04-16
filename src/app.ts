@@ -40,7 +40,7 @@ app.use(express.static('uploads'));
 app.use('/api/v1', router);
 
 app.get('/', (_req: Request, res: Response) => {
-  res.send('Welcome to the Backend Template!');
+  res.send('Welcome to the Fixmate API!');
 });
 
 app.use(globalErrorHandler);

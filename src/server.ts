@@ -7,8 +7,8 @@ import { errorLogger, logger } from './shared/logger';
 import seedAdmin from './app/DB';
 import { socketHelper } from './helpers/socketHelper';
 import { scheduleUnverifiedAccountCleanup } from './cronjob/scheduleUnverifiedAccountCleanup';
-import { bookingSLAJob } from './cronjob/bookingSLAJob';
 import { bookingAutoSettleJob } from './cronjob/bookingAutoSettleJob';
+import { bookingCleanupJob } from './cronjob/bookingCleanupJob';
 
 process.on('uncaughtException', error => {
   errorLogger.error('UnhandledException Detected', error);
@@ -24,8 +24,8 @@ async function main() {
     await seedAdmin();
 
     scheduleUnverifiedAccountCleanup();
-    bookingSLAJob();
     bookingAutoSettleJob();
+    bookingCleanupJob();
 
     const port = typeof config.port === 'number' ? config.port : Number(config.port);
 
