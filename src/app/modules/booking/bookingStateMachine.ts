@@ -128,6 +128,20 @@ export class BookingStateMachine {
     // Send notifications for status transitions
     await this.sendStateNotification(booking, targetState, _role, _reason);
 
+    // Emit real-time socket event for both customer and provider
+    if (global.io) {
+      const eventData = {
+        bookingId: booking._id,
+        status: targetState,
+        customer: booking.customer,
+        provider: booking.provider,
+        updatedAt: new Date()
+      };
+      
+      global.io.emit(`booking_status_updated::${booking.customer.toString()}`, eventData);
+      global.io.emit(`booking_status_updated::${booking.provider.toString()}`, eventData);
+    }
+
     return booking;
   }
 

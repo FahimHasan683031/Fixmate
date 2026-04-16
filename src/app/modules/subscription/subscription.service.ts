@@ -15,9 +15,6 @@ interface IReceiptPayload {
   productId?: string; // For Google
 }
 
-/**
- * Syncs the user's subscription status to all their created services
- */
 const syncUserSubscriptionToServices = async (userId: string, isSubscribed: boolean) => {
   await Service.updateMany(
     { creator: userId },
@@ -196,7 +193,7 @@ const handleGoogleWebhook = async (body: any) => {
     
     if (!subscriptionNotification) return;
 
-    const { purchaseToken, subscriptionId, notificationType } = subscriptionNotification;
+    const { purchaseToken, subscriptionId } = subscriptionNotification;
 
     if (!config.googleIap.serviceAccountEmail || !config.googleIap.privateKey || !config.googleIap.packageName) {
         return;

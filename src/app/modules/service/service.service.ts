@@ -8,6 +8,7 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import unlinkFile from '../../../shared/unlinkFile';
 import { USER_ROLES } from '../../../enum/user';
 import { User } from '../user/user.model';
+import { calculateDistance } from '../../../shared/calculateDistance';
 
 // Add a new service offered by a provider
 const addService = async (user: JwtPayload, payload: Partial<IService>) => {
@@ -41,6 +42,13 @@ const updateService = async (id: string, payload: Partial<IService>) => {
 const getHomeServices = async (user: JwtPayload, query: any) => {
   const { distance, minRating, maxRating, ...queryParams } = query;
 
+  const client = await User.findById(user.id || user.authId).select('location').lean();
+  if (!client || !client.location || !Array.isArray(client.location.coordinates) || client.location.coordinates.length < 2) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Please update your location with valid coordinates to see available services.');
+  }
+
+  const clientCoords = client.location.coordinates as [number, number];
+
   if (distance || minRating || maxRating) {
     const providerCriteria: any = { role: USER_ROLES.PROVIDER };
 
@@ -51,18 +59,15 @@ const getHomeServices = async (user: JwtPayload, query: any) => {
     }
 
     if (distance) {
-      const client = await User.findById(user.id || user.authId);
-      if (client && client.location && client.location.coordinates) {
-        providerCriteria.location = {
-          $near: {
-            $geometry: {
-              type: 'Point',
-              coordinates: client.location.coordinates,
-            },
-            $maxDistance: Number(distance) * 1000,
+      providerCriteria.location = {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: clientCoords,
           },
-        };
-      }
+          $maxDistance: Number(distance) * 1000,
+        },
+      };
     }
 
     const providers = await User.find(providerCriteria).select('_id');
@@ -73,7 +78,7 @@ const getHomeServices = async (user: JwtPayload, query: any) => {
   const serviceQuery = new QueryBuilder(
     Service.find({ isDeleted: false, isSuspended: false }).populate(
       'creator',
-      'name providerDetails.businessName location',
+      'name image address location providerDetails.averageRating',
     ),
     queryParams,
   )
@@ -87,7 +92,20 @@ const getHomeServices = async (user: JwtPayload, query: any) => {
 
   const data = await serviceQuery.modelQuery.lean().exec();
   const meta = await serviceQuery.getPaginationInfo();
-  return { meta, data };
+
+  const formattedData = data.map((service: any) => {
+    let serviceDistance = null;
+    const providerLocation = service.creator?.location?.coordinates;
+    if (providerLocation && Array.isArray(providerLocation) && providerLocation.length >= 2) {
+      serviceDistance = calculateDistance(clientCoords, providerLocation as [number, number]);
+    }
+    return {
+      ...service,
+      distance: serviceDistance,
+    };
+  });
+
+  return { meta, data: formattedData };
 };
 
 
@@ -155,12 +173,25 @@ const getServices = async (user: JwtPayload, query: any) => {
 };
 
 // Get detailed information about a specific service by its ID
-const getServiceById = async (id: string) => {
+const getServiceById = async (id: string, user?: JwtPayload) => {
   const service = await Service.findById(id)
-    .populate('creator', 'name image email contact location customId address')
+    .populate('creator', 'name image email contact location customId address providerDetails.averageRating providerDetails.totalRating providerDetails.availableDay providerDetails.startTime providerDetails.endTime providerDetails.language providerDetails.overView providerDetails.category')
     .lean()
     .exec();
   if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service details in our system.');
+
+  if (user && user.role === USER_ROLES.CLIENT) {
+    const client = await User.findById(user.authId).select('location').lean();
+    const clientCoords = client?.location?.coordinates as [number, number];
+    const providerCoords = (service.creator as any)?.location?.coordinates as [number, number];
+
+    if (clientCoords && providerCoords && Array.isArray(clientCoords) && Array.isArray(providerCoords)) {
+      (service as any).distance = calculateDistance(clientCoords, providerCoords);
+    } else {
+      (service as any).distance = null;
+    }
+  }
+
   return service;
 };
 

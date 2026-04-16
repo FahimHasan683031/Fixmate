@@ -59,7 +59,7 @@ const createBooking = async (user: JwtPayload, data: IBooking, req: Request) => 
   if (availableDays.length > 0 && !availableDays.includes(bookingDay)) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      `The provider is not available on ${bookingDay.toUpperCase()}. Please choose a day that matches their schedule.`,
+      `The provider is not available on ${bookingDate.toISOString().split('T')[0]}. Please choose a day that matches their schedule.`,
     );
   }
 

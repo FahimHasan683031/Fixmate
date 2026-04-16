@@ -45,7 +45,6 @@ export type IUser = {
     language?: string;
     overView?: string;
     wallet?: number;
-    distance?: number;
     availableDay?: SERVICE_DAY[];
     startTime?: string;
     endTime?: string;

@@ -73,8 +73,8 @@ const getServices = catchAsync(async (req: Request | any, res: Response) => {
 });
 
 // Controller to get a specific service's data
-const getServiceById = catchAsync(async (req: Request, res: Response) => {
-  const result = await ServiceService.getServiceById(req.params.id);
+const getServiceById = catchAsync(async (req: Request | any, res: Response) => {
+  const result = await ServiceService.getServiceById(req.params.id, req.user);
 
   sendResponse(res, {
     success: true,

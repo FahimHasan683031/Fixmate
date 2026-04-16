@@ -149,10 +149,6 @@ const UserSchema = new Schema<IUser, UserModel>(
           type: Number,
           default: 0,
         },
-        distance: {
-          type: Number,
-          default: 0,
-        },
         availableDay: {
           type: [String],
           enum: Object.values(SERVICE_DAY),

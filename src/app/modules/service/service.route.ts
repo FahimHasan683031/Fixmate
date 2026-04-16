@@ -25,7 +25,10 @@ router.get('/',
   auth(USER_ROLES.PROVIDER, USER_ROLES.ADMIN),
   ServiceController.getServices);
 
-router.get('/:id', ServiceController.getServiceById);
+router.get('/:id',
+  auth(USER_ROLES.CLIENT, USER_ROLES.PROVIDER, USER_ROLES.ADMIN),
+   ServiceController.getServiceById
+  );
 
 router.patch(
   '/update-service/:id',

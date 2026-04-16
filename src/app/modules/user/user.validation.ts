@@ -10,7 +10,6 @@ const updateUserProfileZodSchema = z.object({
       whatsApp: z.string().optional(),
       contact: z.string().optional(),
       location: z.object({
-        type: z.literal('Point'),
         coordinates: z.array(z.number()),
       }).optional(),
       image: z.string().optional(),
@@ -27,7 +26,6 @@ const updateProviderProfileZodSchema = z.object({
       whatsApp: z.string().optional(),
       contact: z.string().optional(),
       location: z.object({
-        type: z.literal('Point'),
         coordinates: z.array(z.number()),
       }).optional(),
       image: z.string().optional(),
@@ -39,7 +37,6 @@ const updateProviderProfileZodSchema = z.object({
           experience: z.string().optional(),
           language: z.string().optional(),
           overView: z.string().optional(),
-          distance: z.coerce.number().optional(),
           availableDay: z.array(z.string()).optional(),
           startTime: z.string().optional(),
           endTime: z.string().optional(),
