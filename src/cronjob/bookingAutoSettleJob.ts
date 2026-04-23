@@ -4,7 +4,6 @@ import { BOOKING_STATUS } from '../enum/booking';
 import { BookingStateMachine } from '../app/modules/booking/bookingStateMachine';
 import { logger } from '../shared/logger';
 import { Payment } from '../app/modules/payment/payment.model';
-import { PAYMENT_STATUS } from '../enum/payment';
 
 export const bookingAutoSettleJob = () => {
   const SETTLE_THRESHOLD_HOURS = 48;
@@ -42,10 +41,6 @@ export const bookingAutoSettleJob = () => {
             'system',
             BOOKING_STATUS.AUTO_SETTLED,
           );
-
-          await Payment.findByIdAndUpdate(payment._id, {
-            paymentStatus: PAYMENT_STATUS.SETTLED,
-          });
           
         } catch (bookingError) {
           logger.error(`Auto-Settle Job: Error processing booking ${booking._id}:`, bookingError);

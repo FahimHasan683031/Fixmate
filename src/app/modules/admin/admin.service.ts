@@ -78,10 +78,7 @@ export const overview = async (yearChart: string) => {
     };
   });
 
-  const [{ totalPlatformFee = 0 } = {}] = await Payment.aggregate([
-    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
-    { $group: { _id: null, totalPlatformFee: { $sum: '$platformFee' } } },
-  ]);
+
 
   const [{ totalClientPenalty = 0 } = {}] = await Penalty.aggregate([
     { $match: { type: 'CLIENT' } },
@@ -92,14 +89,38 @@ export const overview = async (yearChart: string) => {
     { $group: { _id: null, totalProviderPenalty: { $sum: '$taken' } } },
   ]);
 
-  const totalRevenue = totalPlatformFee + totalClientPenalty + totalProviderPenalty;
+  const [{ totalRevenueValue = 0 } = {}] = await Payment.aggregate([
+    {
+      $lookup: {
+        from: 'bookings',
+        localField: 'booking',
+        foreignField: '_id',
+        as: 'bookingDetails',
+      },
+    },
+    { $unwind: '$bookingDetails' },
+    {
+      $match: {
+        'bookingDetails.bookingStatus': { $in: [BOOKING_STATUS.SETTLED, BOOKING_STATUS.AUTO_SETTLED] }
+      }
+    },
+    { $group: { _id: null, totalRevenueValue: { $sum: '$servicePrice' } } },
+  ]);
+
+  const [{ totalPlatformFee = 0 } = {}] = await Payment.aggregate([
+    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
+    { $group: { _id: null, totalPlatformFee: { $sum: '$platformFee' } } },
+  ]);
+
+  const totalRevenue = totalRevenueValue;
+  const totalEarning = totalPlatformFee + totalClientPenalty + totalProviderPenalty;
 
   const year = Number(yearChart) || new Date().getFullYear();
 
   const monthlyPlatformFees = await Payment.aggregate([
     {
       $match: {
-        paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] },
+        paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.PARTIAL_REFUNDED] },
         createdAt: {
           $gte: new Date(`${year}-01-01`),
           $lte: new Date(`${year}-12-31`),
@@ -155,6 +176,7 @@ export const overview = async (yearChart: string) => {
     totalProviders,
     upCommingOrders,
     totalRevenue,
+    totalEarning,
     recentServices: enhancedRecentServices,
     topProviders,
     monthlyEarning,
@@ -184,7 +206,7 @@ export const find = async (query: any) => {
 // Advanced Endpoint for direct mathematical breakdown mapping platform profit logic
 export const getRevenueTracking = async () => {
   const [{ totalPlatformFee = 0 } = {}] = await Payment.aggregate([
-    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.SETTLED, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
+    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
     { $group: { _id: null, totalPlatformFee: { $sum: '$platformFee' } } },
   ]);
 

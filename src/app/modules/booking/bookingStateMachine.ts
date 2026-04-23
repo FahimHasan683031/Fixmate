@@ -4,7 +4,7 @@ import { BOOKING_STATUS } from '../../../enum/booking';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { User } from '../user/user.model';
-import { handleBookingSettlement } from '../payment/payment.service';
+import { handleBookingSettlement } from '../payment/payment.utils';
 import { NotificationService } from '../notification/notification.service';
 import { Service } from '../service/service.model';
 
@@ -117,7 +117,7 @@ export class BookingStateMachine {
     await booking.save(session ? { session } : undefined);
 
     if (targetState === BOOKING_STATUS.SETTLED || targetState === BOOKING_STATUS.AUTO_SETTLED) {
-      await handleBookingSettlement(bookingId.toString());
+      await handleBookingSettlement(bookingId.toString(), session);
     }
 
     // Send notifications for status transitions

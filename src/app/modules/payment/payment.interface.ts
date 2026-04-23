@@ -5,6 +5,7 @@ export interface IPayment {
   _id?: Types.ObjectId;
   customId?: string;
   paymentStatus: PAYMENT_STATUS;
+  isSettled: boolean;
   customer?: Types.ObjectId;
   provider?: Types.ObjectId;
   service?: Types.ObjectId;

@@ -200,31 +200,12 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
     session.startTransaction();
 
     if (payload.type === 'release_payment') {
-      // release full payment to provider
-      await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.SETTLED, payload.note || 'Resolved by admin: release payment');
-      
-      const creditAmount = await settlePendingPenaltyDues((payment.provider as MongooseTypes.ObjectId).toString(), payment.providerPay);
-
-      await User.findByIdAndUpdate(payment.provider, {
-        $inc: { 'providerDetails.wallet': creditAmount, 'providerDetails.metrics.totalReceivedJobs': 1 },
-      }, { session });
-
-      payment.paymentStatus = PAYMENT_STATUS.SETTLED;
-      await payment.save({ session });
-
-      await TransactionService.recordTransaction({
-        type: 'EARNINGS',
-        user: (payment.provider as MongooseTypes.ObjectId),
-        booking: bookingId,
-        amount: payment.providerPay,
-        status: 'COMPLETED',
-      });
-
+      await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.SETTLED, payload.note || 'Resolved by admin: release payment', session);
     } else if (payload.type === 'refund') {
       // full refund to client
-      await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.CANCELLED, payload.note || 'Resolved by admin: full refund');
+      await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.CANCELLED, payload.note || 'Resolved by admin: full refund', session);
       
-      if (payment.paymentStatus === PAYMENT_STATUS.SETTLED) {
+      if (payment.isSettled) {
         // RECLAIM logic: provider already received money, take it back
         const reclaimAmount = payment.providerPay;
         const providerData = await User.findById(payment.provider).session(session);
@@ -295,9 +276,9 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
         throw new ApiError(StatusCodes.BAD_REQUEST, 'The refund amount must be less than or equal to the total service price.');
       }
 
-      await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.SETTLED, payload.note || `Resolved by admin: partial refund of ${refundAmount}`);
+      await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.SETTLED, payload.note || `Resolved by admin: partial refund of ${refundAmount}`, session);
 
-      if (payment.paymentStatus === PAYMENT_STATUS.SETTLED) {
+      if (payment.isSettled) {
           // RECLAIM logic for partial refund
           const reclaimAmount = refundAmount; 
           const providerData = await User.findById(payment.provider).session(session);
@@ -349,13 +330,15 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
            await refundPaystackTransaction(booking.transactionId, refundAmount);
       }
 
-      if (payment.paymentStatus !== PAYMENT_STATUS.SETTLED) {
+      if (!payment.isSettled) {
           const providerShare = payment.servicePrice - refundAmount;
           if (providerShare > 0) {
               const providerInfo = await User.findById(payment.provider).lean().session(session);
               const isSubscribed = providerInfo?.providerDetails?.subscription?.isSubscribed && 
                    (providerInfo.providerDetails.subscription.expiryDate ? new Date(providerInfo.providerDetails.subscription.expiryDate) > new Date() : false);
               const providerPayRatio = isSubscribed ? 0.85 : 0.82;
+              
+              const platformFee = Number((providerShare * (1 - providerPayRatio)).toFixed(2));
               
               const providerPayout = Number((providerShare * providerPayRatio).toFixed(2));
               const creditAmount = await settlePendingPenaltyDues((payment.provider as MongooseTypes.ObjectId).toString(), providerPayout);
@@ -370,6 +353,11 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
                 amount: providerPayout,
                 status: 'COMPLETED',
               });
+
+              // Update platform fee in the payment record
+              payment.platformFee = platformFee;
+              // Mark as settled since payout happened
+              payment.isSettled = true;
           }
       }
 

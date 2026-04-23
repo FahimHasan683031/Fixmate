@@ -10,6 +10,10 @@ const paymentSchema = new Schema<any>(
       required: true,
       enum: Object.values(PAYMENT_STATUS),
     },
+    isSettled: {
+      type: Boolean,
+      default: false,
+    },
     customer: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     provider: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     service: { type: Schema.Types.ObjectId, ref: 'Service', default: null },

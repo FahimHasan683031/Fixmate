@@ -586,7 +586,7 @@ export async function generateInvoiceAPI(req: Request, res: Response) {
     }
 
     const docs = await Payment.find({ paymentId: req.params.id }).populate(
-      'customer service provider',
+      'customer service provider booking',
     );
     const doc = docs[0] as any;
     if (!doc) throw new ApiError(StatusCodes.NOT_FOUND, 'Payment details not found!');

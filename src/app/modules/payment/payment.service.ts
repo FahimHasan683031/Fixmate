@@ -22,9 +22,7 @@ import { BOOKING_STATUS } from '../../../enum/booking';
 import { JwtPayload } from 'jsonwebtoken';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { IUser } from '../user/user.interface';
-import { Types as MongooseTypes } from 'mongoose';
 import { Transaction } from '../transaction/transaction.model';
-import { settlePendingPenaltyDues } from '../penalty/penalty.utils';
 import { TransactionService } from '../transaction/transaction.service';
 
 // Handle post-payment logic: update booking, create SERVICE_PAYMENT record, notify provider
@@ -105,47 +103,7 @@ const handlePaymentSuccessLogic = async (
   }
 };
 
-export const handleBookingSettlement = async (bookingId: string) => {
-  try {
-    const payment = await Payment.findOne({ booking: new MongooseTypes.ObjectId(bookingId) });
-    if (!payment || !payment.provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find a payment record for this booking.');
 
-    if (payment.paymentStatus === PAYMENT_STATUS.SETTLED) {
-      return; // Already settled
-    }
-
-    const providerId = payment.provider.toString();
-    const providerPay = payment.providerPay;
-
-    // Settle pending penalty dues automatically from provider's earnings
-    const creditAmount = await settlePendingPenaltyDues(providerId, providerPay);
-
-    // Credit provider wallet
-    await User.findByIdAndUpdate(providerId, {
-      $inc: { 'providerDetails.wallet': creditAmount, 'providerDetails.metrics.totalReceivedJobs': 1 },
-    });
-
-    // Update Payment record status
-    payment.paymentStatus = PAYMENT_STATUS.SETTLED;
-    await payment.save();
-
-    await TransactionService.recordTransaction({
-      type: 'EARNINGS',
-      user: providerId,
-      booking: bookingId,
-      amount: providerPay,
-      status: 'COMPLETED',
-    });
-
-    await NotificationService.insertNotification({
-      for: payment.provider as any,
-      message: `Great news! The booking has been settled. $${creditAmount.toFixed(2)} has been added to your wallet after any necessary adjustments.`,
-    });
-  } catch (error) {
-    console.error('Booking Settlement Error:', error);
-    throw error;
-  }
-};
 
 export const createCancellationRefundRecord = async (
   bookingId: string,
@@ -154,7 +112,7 @@ export const createCancellationRefundRecord = async (
   const status = PAYMENT_STATUS.REFUNDED;
 
   return Payment.findOneAndUpdate(
-    { booking: new MongooseTypes.ObjectId(bookingId) },
+    { booking: new Types.ObjectId(bookingId) },
     {
       paymentStatus: status,
       refundAmount: refundedAmount,
@@ -176,8 +134,8 @@ export const createCancellationRefundRecord = async (
 
 export const createSettlementRecord = async (bookingId: string) => {
   return Payment.findOneAndUpdate(
-    { booking: new MongooseTypes.ObjectId(bookingId) },
-    { paymentStatus: PAYMENT_STATUS.SETTLED },
+    { booking: new Types.ObjectId(bookingId) },
+    { isSettled: true },
     { new: true }
   );
 };
@@ -187,7 +145,7 @@ export const createDisputeRefundRecord = async (
   refundedAmount: number,
 ) => {
   return Payment.findOneAndUpdate(
-    { booking: new MongooseTypes.ObjectId(bookingId) },
+    { booking: new Types.ObjectId(bookingId) },
     {
       paymentStatus: PAYMENT_STATUS.REFUNDED,
       refundAmount: refundedAmount,
