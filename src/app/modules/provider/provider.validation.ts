@@ -107,7 +107,6 @@ const getPaginationZodSchema = z.object({
           'EXPIRED',
           'CANCELLED',
           'DISPUTED',
-          'REFUNDED',
         ])
         .optional(),
     })

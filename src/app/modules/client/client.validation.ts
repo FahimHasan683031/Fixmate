@@ -89,7 +89,6 @@ const getBookingZodSchema = z.object({
           'EXPIRED',
           'CANCELLED',
           'DISPUTED',
-          'REFUNDED',
         ])
         .optional(),
     })

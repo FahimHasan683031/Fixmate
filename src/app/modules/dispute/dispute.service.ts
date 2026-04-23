@@ -222,7 +222,7 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
 
     } else if (payload.type === 'refund') {
       // full refund to client
-      await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.REFUNDED, payload.note || 'Resolved by admin: full refund');
+      await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.CANCELLED, payload.note || 'Resolved by admin: full refund');
       
       if (payment.paymentStatus === PAYMENT_STATUS.SETTLED) {
         // RECLAIM logic: provider already received money, take it back

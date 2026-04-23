@@ -33,10 +33,9 @@ const VALID_TRANSITIONS: Record<string, BOOKING_STATUS[]> = {
   [BOOKING_STATUS.CANCELLED]: [],
   [BOOKING_STATUS.DISPUTED]: [
     BOOKING_STATUS.SETTLED,
-    BOOKING_STATUS.REFUNDED,
     BOOKING_STATUS.CANCELLED,
   ],
-  [BOOKING_STATUS.REFUNDED]: [],
+
 };
 
 export class BookingStateMachine {
@@ -179,10 +178,7 @@ export class BookingStateMachine {
           notificationTarget = role === 'client' ? booking.provider : booking.customer;
           message = `A dispute has been raised for the booking ${serviceName}.`;
           break;
-        case BOOKING_STATUS.REFUNDED:
-          notificationTarget = booking.customer;
-          message = `Great news! Your refund for ${serviceName} has been processed and returned to your wallet.`;
-          break;
+
         case BOOKING_STATUS.SETTLED:
         case BOOKING_STATUS.AUTO_SETTLED:
           notificationTarget = booking.provider;

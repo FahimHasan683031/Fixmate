@@ -175,7 +175,7 @@ const getServices = async (user: JwtPayload, query: any) => {
 // Get detailed information about a specific service by its ID
 const getServiceById = async (id: string, user?: JwtPayload) => {
   const service = await Service.findById(id)
-    .populate('creator', 'name image email contact location customId address providerDetails.averageRating providerDetails.totalRating providerDetails.availableDay providerDetails.startTime providerDetails.endTime providerDetails.language providerDetails.overView providerDetails.category')
+    .populate('creator', 'name image email contact location customId address providerDetails.averageRating providerDetails.totalRating providerDetails.availableDay providerDetails.startTime providerDetails.endTime providerDetails.language providerDetails.overView providerDetails.category providerDetails.isVatRegistered')
     .lean()
     .exec();
   if (!service) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service details in our system.');
