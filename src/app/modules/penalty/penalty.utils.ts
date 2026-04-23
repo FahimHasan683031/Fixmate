@@ -18,7 +18,7 @@ export const applyClientCancellationPenalty = async (
 ) => {
   const refundedAmount = originalPrice - penaltyFee;
 
-  await createCancellationRefundRecord(bookingId, refundedAmount, penaltyFee, 0);
+  await createCancellationRefundRecord(bookingId, refundedAmount);
 
   if (refundedAmount > 0) {
     await refundPaystackTransaction(transactionId, refundedAmount);
@@ -65,7 +65,7 @@ export const applyProviderCancellationPenalty = async (
   originalPrice: number,
   penaltyFee: number
 ) => {
-  await createCancellationRefundRecord(bookingId, originalPrice, 0, penaltyFee);
+  await createCancellationRefundRecord(bookingId, originalPrice);
 
   if (originalPrice > 0) {
     await refundPaystackTransaction(transactionId, originalPrice);

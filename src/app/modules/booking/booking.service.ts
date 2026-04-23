@@ -237,7 +237,7 @@ const cancelBooking = async (user: JwtPayload, id: string, reason?: string) => {
   // No penalty if cancelled at the REQUESTED stage
   if (currentStatus === BOOKING_STATUS.REQUESTED) {
     if (originalAmount > 0) {
-      await createCancellationRefundRecord(id, originalAmount, 0, 0);
+      await createCancellationRefundRecord(id, originalAmount);
       await refundPaystackTransaction(booking.transactionId, originalAmount);
     }
     await BookingStateMachine.transitionState(id, role, BOOKING_STATUS.CANCELLED, reason);

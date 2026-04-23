@@ -5,6 +5,7 @@ import { StatusCodes } from 'http-status-codes';
 import { Payment } from '../app/modules/payment/payment.model';
 import axios from 'axios';
 import { PAYMENT_STATUS } from '../enum/payment';
+import { Penalty } from '../app/modules/penalty/penalty.model';
 
 export enum USER_ROLE {
   CLIENT = 'CLIENT',
@@ -558,9 +559,9 @@ function mapPaymentToData(data: any, requestingRole: string): PaymentData {
     paystackGatewayFee: data.paystackGatewayFee || 0,
     providerPay: data.providerPay || 0,
 
-    // Cancellation / refund fields — mapped from IPayment
-    clientPenalty: data.clientPenalty,
-    providerPenalty: data.providerPenalty,
+    // Cancellation / refund fields
+    clientPenalty: data.clientPenalty || 0,
+    providerPenalty: data.providerPenalty || 0,
     refundAmount: data.refundAmount,
     cancellationReason: data.cancellationReason,
     disputeReason: data.disputeReason,
@@ -591,7 +592,19 @@ export async function generateInvoiceAPI(req: Request, res: Response) {
     if (!doc) throw new ApiError(StatusCodes.NOT_FOUND, 'Payment details not found!');
 
     const requestingRole = (req as any).user?.role || USER_ROLE.ADMIN;
-    const paymentData = mapPaymentToData(doc, requestingRole);
+
+    // Fetch related penalties from the Penalty collection
+    const penalties = await Penalty.find({ 
+      booking: doc.booking?.customId 
+    }).lean();
+
+    const clientPenalty = penalties.find(p => p.type === 'CLIENT')?.amount || 0;
+    const providerPenalty = penalties.find(p => p.type === 'PROVIDER')?.amount || 0;
+
+    const paymentData = mapPaymentToData(
+      { ...doc.toObject(), clientPenalty, providerPenalty }, 
+      requestingRole
+    );
 
     const pdfMaker = new PDFInvoiceMaker();
     pdfMaker.streamPDFToResponse(res, paymentData, `invoice-${paymentData.customId || Date.now()}.pdf`);

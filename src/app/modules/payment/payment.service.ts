@@ -150,8 +150,6 @@ export const handleBookingSettlement = async (bookingId: string) => {
 export const createCancellationRefundRecord = async (
   bookingId: string,
   refundedAmount: number,
-  clientPenalty: number = 0,
-  providerPenalty: number = 0,
 ) => {
   const status = PAYMENT_STATUS.REFUNDED;
 
@@ -160,8 +158,6 @@ export const createCancellationRefundRecord = async (
     {
       paymentStatus: status,
       refundAmount: refundedAmount,
-      clientPenalty,
-      providerPenalty,
     },
     { new: true }
   ).then(async (res) => {

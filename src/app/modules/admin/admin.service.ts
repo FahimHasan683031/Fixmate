@@ -57,7 +57,7 @@ export const overview = async (yearChart: string) => {
   const recentServices = await Booking.find({
     bookingStatus: { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.SETTLED] },
   })
-    .select('provider bookingStatus customer date service')
+    .select('provider bookingStatus customer date service customId createdAt')
     .populate('provider', 'name contact address providerDetails.category')
     .populate('customer', 'name')
     .populate('service', 'price')
@@ -83,8 +83,9 @@ export const overview = async (yearChart: string) => {
     { $group: { _id: null, totalPlatformFee: { $sum: '$platformFee' } } },
   ]);
 
-  const [{ totalClientPenalty = 0 } = {}] = await Payment.aggregate([
-    { $group: { _id: null, totalClientPenalty: { $sum: '$clientPenalty' } } },
+  const [{ totalClientPenalty = 0 } = {}] = await Penalty.aggregate([
+    { $match: { type: 'CLIENT' } },
+    { $group: { _id: null, totalClientPenalty: { $sum: '$taken' } } },
   ]);
 
   const [{ totalProviderPenalty = 0 } = {}] = await Penalty.aggregate([
@@ -108,17 +109,18 @@ export const overview = async (yearChart: string) => {
     { $group: { _id: { $month: '$createdAt' }, totalProfit: { $sum: '$platformFee' } } },
   ]);
 
-  const monthlyClientPenalties = await Payment.aggregate([
+  const monthlyClientPenalties = await Penalty.aggregate([
     {
       $match: {
-        clientPenalty: { $gt: 0 },
+        type: 'CLIENT',
+        taken: { $gt: 0 },
         createdAt: {
           $gte: new Date(`${year}-01-01`),
           $lte: new Date(`${year}-12-31`),
         },
       },
     },
-    { $group: { _id: { $month: '$createdAt' }, totalProfit: { $sum: '$clientPenalty' } } },
+    { $group: { _id: { $month: '$createdAt' }, totalProfit: { $sum: '$taken' } } },
   ]);
 
   const monthlyProviderPenalties = await Penalty.aggregate([
@@ -186,8 +188,9 @@ export const getRevenueTracking = async () => {
     { $group: { _id: null, totalPlatformFee: { $sum: '$platformFee' } } },
   ]);
 
-  const [{ totalClientPenalty = 0 } = {}] = await Payment.aggregate([
-    { $group: { _id: null, totalClientPenalty: { $sum: '$clientPenalty' } } },
+  const [{ totalClientPenalty = 0 } = {}] = await Penalty.aggregate([
+    { $match: { type: 'CLIENT' } },
+    { $group: { _id: null, totalClientPenalty: { $sum: '$taken' } } },
   ]);
 
   const [{ totalProviderPenalty = 0 } = {}] = await Penalty.aggregate([
