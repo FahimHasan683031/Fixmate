@@ -15,10 +15,10 @@ export const providerHome = async (payload: JwtPayload) => {
   const id = new Types.ObjectId(payload.id || payload.authId);
   const now = new Date();
 
-  const [balanceResult, newRequests, upCommingOrder, completedOrder, availableDayResult] =
+  const [balanceResult, ongoingBooking, upCommingOrder, completedOrder, availableDayResult] =
     await Promise.all([
       User.findById(id).select('providerDetails.wallet').lean(),
-      Booking.countDocuments({ provider: id, bookingStatus: BOOKING_STATUS.REQUESTED }),
+      Booking.countDocuments({ provider: id, bookingStatus: { $in: [ BOOKING_STATUS.IN_PROGRESS, BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.DISPUTED] } }),
       Booking.countDocuments({ provider: id, bookingStatus: BOOKING_STATUS.ACCEPTED }),
       Booking.countDocuments({
         provider: id,
@@ -43,7 +43,6 @@ export const providerHome = async (payload: JwtPayload) => {
 
   return {
     balance: balanceResult?.providerDetails?.wallet || 0,
-    pendigTask: newRequests, // Current field (misspelled)
     complitedTask: completedOrder, // Current field (misspelled)
     availableDay: availableDayResult.length > 0 ? availableDayResult[0].date : null, // Current field
 
@@ -51,7 +50,7 @@ export const providerHome = async (payload: JwtPayload) => {
     totalEarning: balanceResult?.providerDetails?.wallet || 0,
     completedOrder: completedOrder,
     upCommingOrder: upCommingOrder,
-    newRequests: newRequests,
+    ongoingBooking: ongoingBooking,
   };
 };
 
@@ -67,7 +66,7 @@ export const getCustomer = async (id: string) => {
 
 // Retrieve a summarized view of a booking for the provider's "see booking" screen
 export const seeBooking = async (user: JwtPayload, id: string) => {
-  const provider = await User.findById(user.id || user.authId)
+  const provider = await User.findById(user.authId)
     .lean()
     .exec();
   if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your service provider account details.');
@@ -85,7 +84,6 @@ export const seeBooking = async (user: JwtPayload, id: string) => {
   return {
     service: { ...booking.service, date: booking.date },
     details: {
-      distance: provider.providerDetails?.distance,
       status: booking.bookingStatus,
       fee: booking.service?.price,
       address: booking.address,
@@ -99,7 +97,7 @@ export const seeBooking = async (user: JwtPayload, id: string) => {
 // Retrieve and summarize all reviews and ratings received by the provider
 const myReviews = async (user: JwtPayload, query: IPaginationOptions) => {
   const reviewQuery = new QueryBuilder(
-    Review.find({ provider: new Types.ObjectId(user.id || user.authId) }),
+    Review.find({ provider: new Types.ObjectId(user.authId) }),
     query,
   )
     .filter()

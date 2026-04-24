@@ -26,7 +26,7 @@ const createReview = async (user: JwtPayload, payload: any) => {
       [
         {
           ...payload,
-          creator: user.id || user.authId,
+          creator: user.authId,
           provider: (booking.provider as any)._id || booking.provider,
           service: (booking.service as any)._id || booking.service,
         },

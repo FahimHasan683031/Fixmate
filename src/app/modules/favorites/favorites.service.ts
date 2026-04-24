@@ -9,7 +9,7 @@ import { Types } from 'mongoose';
 
 // Toggle favorite status for a provider: adds if not present, removes if it is
 const addOrRemoveFavorite = async (user: JwtPayload, providerId: string) => {
-  const userId = user.id || user.authId;
+  const userId = user.authId;
   const existingFavorite = await CustomerFavorite.findOne({
     customer: new Types.ObjectId(userId),
     provider: providerId,
@@ -37,7 +37,7 @@ const addOrRemoveFavorite = async (user: JwtPayload, providerId: string) => {
 // Explicitly remove a provider from the user's favorite list
 const removeFavorite = async (user: JwtPayload, providerId: string) => {
   const favorite = await CustomerFavorite.findOneAndDelete({
-    customer: new Types.ObjectId(user.id || user.authId),
+    customer: new Types.ObjectId(user.authId),
     provider: providerId,
   })
     .lean()
@@ -48,7 +48,7 @@ const removeFavorite = async (user: JwtPayload, providerId: string) => {
 
 // Fetch all favorite providers for the current user with pagination
 const getFavorites = async (user: JwtPayload, query: any) => {
-  const userId = user.id || user.authId;
+  const userId = user.authId;
   const favoriteQuery = new QueryBuilder(
     CustomerFavorite.find({ customer: new Types.ObjectId(userId) })
       .populate('provider', 'name image overView')

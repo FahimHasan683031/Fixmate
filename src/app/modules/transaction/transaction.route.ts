@@ -22,7 +22,7 @@ router.get(
 // Get single transaction details (Admin only)
 router.get(
   '/:id',
-  auth(USER_ROLES.ADMIN),
+  auth(USER_ROLES.ADMIN, USER_ROLES.PROVIDER, USER_ROLES.CLIENT),
   TransactionController.getTransactionById
 );
 

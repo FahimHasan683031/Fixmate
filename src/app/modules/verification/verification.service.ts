@@ -10,7 +10,7 @@ import { NotificationService } from '../notification/notification.service';
 
 // Submit or update a provider's verification request with identity documents
 const sendRequest = async (user: JwtPayload, payload: Partial<IVerificaiton>) => {
-  const existingRequest = await Verification.findOne({ user: user.id || user.authId });
+  const existingRequest = await Verification.findOne({ user: user.authId });
   if (existingRequest && existingRequest.status === VERIFICATION_STATUS.PENDING) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'You already have a verification request in progress. Please wait for our team to review it.');
   }
@@ -25,14 +25,14 @@ const sendRequest = async (user: JwtPayload, payload: Partial<IVerificaiton>) =>
 
   return await Verification.create({
     ...payload,
-    user: user.id || user.authId,
+    user: user.authId,
     status: VERIFICATION_STATUS.PENDING,
   });
 };
 
 // Retrieve the current verification status for the logged-in user
 const getStatus = async (user: JwtPayload) => {
-  const verification = await Verification.findOne({ user: user.id || user.authId })
+  const verification = await Verification.findOne({ user: user.authId })
     .lean()
     .exec();
   if (!verification) return { status: VERIFICATION_STATUS.UNVERIFIED };

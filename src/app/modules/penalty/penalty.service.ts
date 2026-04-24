@@ -155,7 +155,7 @@ const getAllPenalties = async (query: Record<string, unknown>) => {
 
 // get my penalties
 const getMyPenalties = async (user: JwtPayload, query: Record<string, unknown>) => {
-  const userId = user.id || user.authId;
+  const userId = user.authId;
 
   const authUser = await User.findById(userId).select('customId').lean();
 

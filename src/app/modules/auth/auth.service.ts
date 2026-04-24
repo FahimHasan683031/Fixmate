@@ -575,7 +575,7 @@ const changePassword = async (user: JwtPayload, currentPassword: string, newPass
 // Update the FCM token for push notifications
 const refreshFcmToken = async (user: JwtPayload, token: string) => {
   const result = await User.findByIdAndUpdate(
-    user.id || user.authId,
+    user.authId,
     { fcmToken: token },
     { new: true },
   );

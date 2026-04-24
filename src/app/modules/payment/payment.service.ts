@@ -248,14 +248,26 @@ const webhook = async (req: Request) => {
 
 // Retrieve wallet balance and transaction history for a provider
 const getWallet = async (user: JwtPayload, query: any) => {
-  const userId = user.id || user.authId;
+  const userId = user.authId;
   const provider = (await User.findById(userId).lean().exec()) as IUser;
   if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your service provider profile.');
 
   const walletQuery = new QueryBuilder(
-    Transaction.find({ user: new Types.ObjectId(userId) }),
+    Transaction.find({ user: new Types.ObjectId(userId) })
+      .populate({
+        path: 'booking',
+        select: 'customId service',
+        populate: {
+          path: 'service',
+          select: 'name category image',
+        },
+      })
+      .sort('-createdAt'),
     query,
-  ).filter().sort().paginate().fields();
+  )
+    .filter()
+    .paginate()
+    .fields();
 
   const data = await walletQuery.modelQuery.lean().exec();
   const meta = await walletQuery.getPaginationInfo();
@@ -266,7 +278,7 @@ const getWallet = async (user: JwtPayload, query: any) => {
 // Retrieve filtered payment history for a user
 const getPaymentHistory = async (user: JwtPayload, query: any) => {
   const { startTime, endTime, paymentType, searchTerm, ...rest } = query;
-  const userId = user.id || user.authId;
+  const userId = user.authId;
   const userData = (await User.findById(userId).lean().exec()) as IUser;
   if (!userData) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account details.');
 
@@ -407,7 +419,7 @@ const withdraw = async (
   user: JwtPayload,
   data: { amount: number },
 ) => {
-  const provider = (await User.findById(user.id || user.authId)
+  const provider = (await User.findById(user.authId)
     .lean()
     .exec()) as IUser;
   if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your service provider profile to process the withdrawal.');

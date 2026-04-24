@@ -16,7 +16,7 @@ import { Verification } from '../verification/verification.model';
 
 // Retrieve the current user's profile information
 const getProfile = async (user: JwtPayload) => {
-  const existingUser = await User.findById(user.id || user.authId)
+  const existingUser = await User.findById(user.authId)
     .select('-password -authentication -isDeleted')
     .lean()
     .exec();
@@ -27,7 +27,7 @@ const getProfile = async (user: JwtPayload) => {
 
 // Update standard user profile (Admin/Customer)
 const updateUserProfile = async (user: JwtPayload, payload: Partial<IUser>) => {
-  const userId = user.id || user.authId;
+  const userId = user.authId;
   const existingUser = await User.findById(userId).lean().exec();
   if (!existingUser) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account information.');
 
@@ -54,7 +54,7 @@ const updateUserProfile = async (user: JwtPayload, payload: Partial<IUser>) => {
 
 // Update provider profile (with providerDetails)
 const updateProviderProfile = async (user: JwtPayload, payload: any) => {
-  const userId = user.id || user.authId;
+  const userId = user.authId;
   const existingUser = await User.findById(userId).lean().exec();
   if (!existingUser) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account information.');
 
@@ -88,7 +88,7 @@ const updateProviderProfile = async (user: JwtPayload, payload: any) => {
 
 // Soft-delete the user's account after verifying their password
 const deleteProfile = async (user: JwtPayload, payload: { password: string }) => {
-  const userId = user.id || user.authId;
+  const userId = user.authId;
   const existingUser = await User.findById(userId).select('+password').lean().exec();
   if (!existingUser) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account information.');
 

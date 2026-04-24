@@ -19,12 +19,12 @@ const createSupport = async (user: JwtPayload, data: Partial<ISupport>) => {
     attachment: data.attachment,
     description: data.description,
     title: data.title,
-    user: new Types.ObjectId(user.id || user.authId),
+    user: new Types.ObjectId(user.authId),
   });
 
   const [getAdmins, getUser] = await Promise.all([
     User.find({ role: USER_ROLES.ADMIN }),
-    User.findById(user.id || user.authId)
+    User.findById(user.authId)
       .select('name email')
       .lean(),
   ]);

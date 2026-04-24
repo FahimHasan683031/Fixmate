@@ -63,7 +63,7 @@ const createBooking = async (user: JwtPayload, data: IBooking, req: Request) => 
     );
   }
 
-  const customer = await User.findById(user.id || user.authId)
+  const customer = await User.findById(user.authId)
     .lean()
     .exec();
   if (!customer) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account details. Please ensure you are logged in correctly.');
@@ -99,7 +99,7 @@ const createBooking = async (user: JwtPayload, data: IBooking, req: Request) => 
 // Retrieve a list of bookings based on user role and query filters
 const getBookings = async (user: JwtPayload, query: any, role: 'client' | 'provider' | 'admin') => {
   const { searchTerm, ...rest } = query;
-  const userId = user.id || user.authId;
+  const userId = user.authId;
 
   const matchStage: any = { isDeleted: { $ne: true }, bookingStatus: { $ne: BOOKING_STATUS.CREATED } };
 

@@ -12,13 +12,13 @@ import { calculateDistance } from '../../../shared/calculateDistance';
 
 // Add a new service offered by a provider
 const addService = async (user: JwtPayload, payload: Partial<IService>) => {
-  const userData = await User.findById(user.id || user.authId).select('providerDetails.subscription').lean();
+  const userData = await User.findById(user.authId).select('providerDetails.subscription').lean();
   const isSubscribed = userData?.providerDetails?.subscription?.isSubscribed && 
     (userData.providerDetails.subscription.expiryDate ? new Date(userData.providerDetails.subscription.expiryDate) > new Date() : false);
 
   const service = await Service.create({ 
     ...payload, 
-    creator: user.id || user.authId,
+    creator: user.authId,
     isCreatorSubscribed: isSubscribed
   });
   return service;
@@ -42,7 +42,7 @@ const updateService = async (id: string, payload: Partial<IService>) => {
 const getHomeServices = async (user: JwtPayload, query: any) => {
   const { distance, minRating, maxRating, ...queryParams } = query;
 
-  const client = await User.findById(user.id || user.authId).select('location').lean();
+  const client = await User.findById(user.authId).select('location').lean();
   if (!client || !client.location || !Array.isArray(client.location.coordinates) || client.location.coordinates.length < 2) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Please update your location with valid coordinates to see available services.');
   }

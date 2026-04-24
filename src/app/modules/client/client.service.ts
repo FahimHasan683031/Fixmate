@@ -49,7 +49,7 @@ export const getProviderById = async (user: JwtPayload, id: string, query: any) 
   const validationRequest = await Verification.findOne({ user: id }).lean().exec();
 
   const isFavorite = await CustomerFavorite.findOne({
-    customer: user.id || user.authId,
+    customer: user.authId,
     provider: id,
   })
     .lean()
