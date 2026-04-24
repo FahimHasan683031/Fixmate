@@ -221,17 +221,15 @@ const UserSchema = new Schema<IUser, UserModel>(
     },
   },
   {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
 );
 
 UserSchema.index({ location: '2dsphere' });
 
-UserSchema.virtual('fullName').get(function (this: IUser) {
-  return this.name;
-});
-
-UserSchema.virtual('metrics.acceptance_rate').get(function (this: IUser) {
+UserSchema.virtual('providerDetails.metrics.acceptance_rate').get(function (this: IUser) {
   const metrics = this.providerDetails?.metrics;
   if (!metrics) return 0;
   const totalReceivedJobs = metrics.totalReceivedJobs || 0;
@@ -239,7 +237,7 @@ UserSchema.virtual('metrics.acceptance_rate').get(function (this: IUser) {
   return totalReceivedJobs > 0 ? Math.round((acceptedJobs / totalReceivedJobs) * 100) : 0;
 });
 
-UserSchema.virtual('metrics.decline_rate').get(function (this: IUser) {
+UserSchema.virtual('providerDetails.metrics.decline_rate').get(function (this: IUser) {
   const metrics = this.providerDetails?.metrics;
   if (!metrics) return 0;
   const totalReceivedJobs = metrics.totalReceivedJobs || 0;
@@ -247,15 +245,24 @@ UserSchema.virtual('metrics.decline_rate').get(function (this: IUser) {
   return totalReceivedJobs > 0 ? Math.round((declinedJobs / totalReceivedJobs) * 100) : 0;
 });
 
-UserSchema.virtual('metrics.avg_response_time').get(function (this: IUser) {
+UserSchema.virtual('providerDetails.metrics.averageResponseTime').get(function (this: IUser) {
   const metrics = this.providerDetails?.metrics;
-  if (!metrics) return 0;
+  if (!metrics) return 'N/A';
   const totalResponseCount = metrics.totalResponseCount || 0;
   const totalResponseTime = metrics.totalResponseTime || 0;
-  return totalResponseCount > 0 ? Math.round(totalResponseTime / totalResponseCount) : 0;
+
+  if (totalResponseCount === 0) return 'N/A';
+
+  const avgMs = totalResponseTime / totalResponseCount;
+  const totalMinutes = Math.round(avgMs / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours > 0) return `${hours} hr ${minutes} min`;
+  return `${minutes} min`;
 });
 
-UserSchema.virtual('metrics.completion_rate').get(function (this: IUser) {
+UserSchema.virtual('providerDetails.metrics.completion_rate').get(function (this: IUser) {
   const metrics = this.providerDetails?.metrics;
   if (!metrics) return 0;
   const acceptedJobs = metrics.acceptedJobs || 0;
@@ -263,7 +270,7 @@ UserSchema.virtual('metrics.completion_rate').get(function (this: IUser) {
   return acceptedJobs > 0 ? Math.round((completedJobs / acceptedJobs) * 100) : 0;
 });
 
-UserSchema.virtual('metrics.dispute_rate').get(function (this: IUser) {
+UserSchema.virtual('providerDetails.metrics.dispute_rate').get(function (this: IUser) {
   const metrics = this.providerDetails?.metrics;
   if (!metrics) return 0;
   const acceptedJobs = metrics.acceptedJobs || 0;

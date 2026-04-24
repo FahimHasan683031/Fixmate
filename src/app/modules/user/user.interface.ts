@@ -67,6 +67,7 @@ export type IUser = {
       disputedJobs?: number;
       totalResponseTime?: number;
       totalResponseCount?: number;
+      averageResponseTime?: string;
     };
     subscription?: {
       isSubscribed: boolean;

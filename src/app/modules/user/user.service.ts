@@ -254,7 +254,38 @@ const getUser = async (id: string) => {
       experience: result.providerDetails?.experience,
       totalDoneWork: completedWork,
       review: averageRating,
-
+      metrics: {
+        ...result.providerDetails?.metrics,
+        averageResponseTime: (() => {
+          const m = result.providerDetails?.metrics;
+          if (!m || !m.totalResponseCount) return 'N/A';
+          const avgMs = m.totalResponseTime / m.totalResponseCount;
+          const totalMinutes = Math.round(avgMs / 60000);
+          const hrs = Math.floor(totalMinutes / 60);
+          const mins = totalMinutes % 60;
+          return hrs > 0 ? `${hrs} hr ${mins} min` : `${mins} min`;
+        })(),
+        acceptance_rate: (() => {
+          const m = result.providerDetails?.metrics;
+          if (!m || !m.totalReceivedJobs) return 0;
+          return Math.round((m.acceptedJobs / m.totalReceivedJobs) * 100);
+        })(),
+        completion_rate: (() => {
+          const m = result.providerDetails?.metrics;
+          if (!m || !m.acceptedJobs) return 0;
+          return Math.round((m.completedJobs / m.acceptedJobs) * 100);
+        })(),
+        decline_rate: (() => {
+          const m = result.providerDetails?.metrics;
+          if (!m || !m.totalReceivedJobs) return 0;
+          return Math.round((m.declinedJobs / m.totalReceivedJobs) * 100);
+        })(),
+        dispute_rate: (() => {
+          const m = result.providerDetails?.metrics;
+          if (!m || !m.acceptedJobs) return 0;
+          return Math.round((m.disputedJobs / m.acceptedJobs) * 100);
+        })(),
+      },
       expertise: result.providerDetails?.category,
       country: result.nationality,
       serviceArea: result.address,

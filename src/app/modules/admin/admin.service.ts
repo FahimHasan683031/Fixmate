@@ -1,11 +1,9 @@
-import { USER_ROLES } from '../../../enum/user';
+import { USER_ROLES, USER_STATUS } from '../../../enum/user';
 import { User } from '../user/user.model';
 import { Booking } from '../booking/booking.model';
 import { Payment } from '../payment/payment.model';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { BOOKING_STATUS } from '../../../enum/booking';
-
-import { Review } from '../review/review.model';
 import { PAYMENT_STATUS } from '../../../enum/payment';
 import { Penalty } from '../penalty/penalty.model';
 
@@ -15,49 +13,37 @@ export const overview = async (yearChart: string) => {
   const totalUsers = await User.countDocuments({ role: { $ne: USER_ROLES.ADMIN } });
   const upCommingOrders = await Booking.countDocuments({ bookingStatus: BOOKING_STATUS.ACCEPTED });
 
-  const topProviders = await Review.aggregate([
-    {
-      $group: {
-        _id: '$provider',
-        reviewCount: { $sum: 1 },
-        avgRating: { $avg: '$rating' },
-        lastReviewAt: { $max: '$createdAt' },
-      },
-    },
-    {
-      $lookup: {
-        from: 'users',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'user',
-      },
-    },
-    { $unwind: '$user' },
+  const topProviders = await User.aggregate([
     {
       $match: {
-        'user.role': USER_ROLES.PROVIDER,
+        role: USER_ROLES.PROVIDER,
+        status: USER_STATUS.ACTIVE,
+        verified: true,
       },
     },
-    { $sort: { reviewCount: -1, avgRating: -1, lastReviewAt: -1 } },
-    { $limit: 3 },
+    {
+      $sort: {
+        'providerDetails.metrics.completedJobs': -1,
+        'providerDetails.averageRating': -1,
+      },
+    },
+    { $limit: 10 },
     {
       $project: {
         _id: 0,
-        userId: '$user._id',
-        name: '$user.name',
-        image: '$user.image',
-        category: '$user.providerDetails.category',
-        reviewCount: 1,
-        avgRating: { $round: ['$avgRating', 2] },
-        lastReviewAt: 1,
+        userId: '$_id',
+        name: 1,
+        image: 1,
+        category: '$providerDetails.category',
+        reviewCount: '$providerDetails.totalRating',
+        avgRating: { $round: ['$providerDetails.averageRating', 2] },
+        completedJobs: '$providerDetails.metrics.completedJobs',
       },
     },
   ]);
 
-  const recentServices = await Booking.find({
-    bookingStatus: { $in: [BOOKING_STATUS.COMPLETED_BY_PROVIDER, BOOKING_STATUS.SETTLED] },
-  })
-    .select('provider bookingStatus customer date service customId createdAt')
+  const recentServices = await Booking.find({bookingStatus: {$ne: BOOKING_STATUS.CREATED}})
+    .select('provider bookingStatus customer date service customId paymentId createdAt')
     .populate('provider', 'name contact address providerDetails.category')
     .populate('customer', 'name')
     .populate('service', 'price')
@@ -73,7 +59,6 @@ export const overview = async (yearChart: string) => {
     const payment = payments.find((p) => p.booking && p.booking.toString() === service._id.toString());
     return {
       ...service,
-      paymentId: payment ? payment._id : null,
       paymentStatus: payment ? payment.paymentStatus : null,
     };
   });

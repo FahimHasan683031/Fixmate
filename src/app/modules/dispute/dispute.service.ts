@@ -20,7 +20,7 @@ import { TransactionService } from '../transaction/transaction.service';
 // Create a new dispute
 const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
   const session = await mongoose.startSession();
-  
+
   try {
     session.startTransaction();
 
@@ -59,7 +59,7 @@ const createDispute = async (user: JwtPayload, payload: Partial<IDispute>) => {
     };
 
     const result = await Dispute.create([disputeData], { session });
-    
+
     await session.commitTransaction();
 
     // Notify admins asynchronously
@@ -204,69 +204,72 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
     } else if (payload.type === 'refund') {
       // full refund to client
       await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.CANCELLED, payload.note || 'Resolved by admin: full refund', session);
-      
+
       if (payment.isSettled) {
         // RECLAIM logic: provider already received money, take it back
         const reclaimAmount = payment.providerPay;
         const providerData = await User.findById(payment.provider).session(session);
         if (providerData) {
-            const currentWallet = providerData.providerDetails?.wallet || 0;
-            const taken = currentWallet > 0 ? Math.min(currentWallet, reclaimAmount) : 0;
-            const due = reclaimAmount - taken;
+          const currentWallet = providerData.providerDetails?.wallet || 0;
+          const taken = currentWallet > 0 ? Math.min(currentWallet, reclaimAmount) : 0;
+          const due = reclaimAmount - taken;
 
-            if (due > 0) {
-              const pendingDueTotal = await Penalty.aggregate([
-                { $match: { user: providerData.customId, status: 'PENDING' } },
-                { $group: { _id: null, total: { $sum: '$due' } } },
-              ]).session(session);
+          if (due > 0) {
+            const pendingDueTotal = await Penalty.aggregate([
+              { $match: { user: providerData.customId, status: 'PENDING' } },
+              { $group: { _id: null, total: { $sum: '$due' } } },
+            ]).session(session);
 
-              const newTotalDue = (pendingDueTotal[0]?.total || 0) + due;
-              await User.findByIdAndUpdate(providerData._id, { 'providerDetails.wallet': -newTotalDue }, { session });
-            } else {
-              await User.findByIdAndUpdate(providerData._id, { $inc: { 'providerDetails.wallet': -taken } }, { session });
-            }
+            const newTotalDue = (pendingDueTotal[0]?.total || 0) + due;
+            await User.findByIdAndUpdate(providerData._id, { 'providerDetails.wallet': -newTotalDue }, { session });
+          } else {
+            await User.findByIdAndUpdate(providerData._id, { $inc: { 'providerDetails.wallet': -taken } }, { session });
+          }
 
-            await Penalty.create([{
-              user: providerData.customId,
-              type: 'PROVIDER',
-              booking: (await Booking.findById(bookingId).select('customId'))?.customId,
-              amount: reclaimAmount,
-              taken,
-              due,
-              reason: `Dispute Refund: Reclaim for already settled booking (ID: ${payment.customId})`,
-              status: due > 0 ? 'PENDING' : 'COMPLETED',
-            }], { session });
+          await Penalty.create([{
+            user: providerData.customId,
+            type: 'PROVIDER',
+            booking: (await Booking.findById(bookingId).select('customId'))?.customId,
+            amount: reclaimAmount,
+            taken,
+            due,
+            reason: `Dispute Refund: Reclaim for already settled booking (ID: ${payment.customId})`,
+            status: due > 0 ? 'PENDING' : 'COMPLETED',
+          }], { session });
 
-            await TransactionService.recordTransaction({
-              type: 'PENALTY',
-              user: providerData._id,
-              booking: bookingId,
-              amount: reclaimAmount,
-              status: 'COMPLETED',
-            });
+          await TransactionService.recordTransaction({
+            type: 'PENALTY',
+            user: providerData._id,
+            booking: bookingId,
+            amount: reclaimAmount,
+            status: 'COMPLETED',
+          });
 
-            await TransactionService.recordTransaction({
-              type: 'PENALTY',
-              user: providerData._id,
-              booking: bookingId,
-              amount: reclaimAmount,
-              status: 'COMPLETED',
-            });
+          await TransactionService.recordTransaction({
+            type: 'PENALTY',
+            user: providerData._id,
+            booking: bookingId,
+            amount: reclaimAmount,
+            status: 'COMPLETED',
+          });
 
-            await NotificationService.insertNotification({
-              for: providerData._id,
-              message: `A refund of $${reclaimAmount.toFixed(2)} was reclaimed from your wallet following a dispute resolution. ($${taken.toFixed(2)} was deducted, with $${due.toFixed(2)} remaining as outstanding).`,
-            });
+          await NotificationService.insertNotification({
+            for: providerData._id,
+            message: `A refund of $${reclaimAmount.toFixed(2)} was reclaimed from your wallet following a dispute resolution. ($${taken.toFixed(2)} was deducted, with $${due.toFixed(2)} remaining as outstanding).`,
+          });
         }
       }
 
       const booking = await Booking.findById(bookingId);
-      if(booking && booking.transactionId){
-          await refundPaystackTransaction(booking.transactionId, payment.servicePrice);
+      if (booking && booking.transactionId) {
+        await refundPaystackTransaction(booking.transactionId, payment.servicePrice);
       }
 
       payment.paymentStatus = PAYMENT_STATUS.REFUNDED;
       payment.refundAmount = payment.servicePrice;
+      payment.platformFee = 0;
+      payment.providerPay = 0;
+      payment.vat = 0;
       await payment.save({ session });
 
     } else if (payload.type === 'partial_refund') {
@@ -279,86 +282,91 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
       await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.SETTLED, payload.note || `Resolved by admin: partial refund of ${refundAmount}`, session);
 
       if (payment.isSettled) {
-          // RECLAIM logic for partial refund
-          const reclaimAmount = refundAmount; 
-          const providerData = await User.findById(payment.provider).session(session);
-          if (providerData) {
-              const currentWallet = providerData.providerDetails?.wallet || 0;
-              const taken = currentWallet > 0 ? Math.min(currentWallet, reclaimAmount) : 0;
-              const due = reclaimAmount - taken;
+        // RECLAIM logic for partial refund
+        const reclaimAmount = refundAmount;
+        const providerData = await User.findById(payment.provider).session(session);
+        if (providerData) {
+          const currentWallet = providerData.providerDetails?.wallet || 0;
+          const taken = currentWallet > 0 ? Math.min(currentWallet, reclaimAmount) : 0;
+          const due = reclaimAmount - taken;
 
-              if (due > 0) {
-                const pendingDueTotal = await Penalty.aggregate([
-                  { $match: { user: providerData.customId, status: 'PENDING' } },
-                  { $group: { _id: null, total: { $sum: '$due' } } },
-                ]).session(session);
-  
-                const newTotalDue = (pendingDueTotal[0]?.total || 0) + due;
-                await User.findByIdAndUpdate(providerData._id, { 'providerDetails.wallet': -newTotalDue }, { session });
-              } else {
-                await User.findByIdAndUpdate(providerData._id, { $inc: { 'providerDetails.wallet': -taken } }, { session });
-              }
-  
-              await Penalty.create([{
-                user: providerData.customId,
-                type: 'PROVIDER',
-                booking: (await Booking.findById(bookingId).select('customId'))?.customId,
-                amount: reclaimAmount,
-                taken,
-                due,
-                reason: `Dispute Partial Refund: Reclaim for already settled booking (ID: ${payment.customId})`,
-                status: due > 0 ? 'PENDING' : 'COMPLETED',
-              }], { session });
+          if (due > 0) {
+            const pendingDueTotal = await Penalty.aggregate([
+              { $match: { user: providerData.customId, status: 'PENDING' } },
+              { $group: { _id: null, total: { $sum: '$due' } } },
+            ]).session(session);
 
-              await TransactionService.recordTransaction({
-                type: 'PENALTY',
-                user: providerData._id,
-                booking: bookingId,
-                amount: reclaimAmount,
-                status: 'COMPLETED',
-              });
-
-              await NotificationService.insertNotification({
-                for: providerData._id,
-                message: `A partial refund of $${reclaimAmount.toFixed(2)} was reclaimed from your wallet following a dispute resolution. ($${taken.toFixed(2)} was deducted, with $${due.toFixed(2)} remaining as outstanding).`,
-              });
+            const newTotalDue = (pendingDueTotal[0]?.total || 0) + due;
+            await User.findByIdAndUpdate(providerData._id, { 'providerDetails.wallet': -newTotalDue }, { session });
+          } else {
+            await User.findByIdAndUpdate(providerData._id, { $inc: { 'providerDetails.wallet': -taken } }, { session });
           }
+
+          await Penalty.create([{
+            user: providerData.customId,
+            type: 'PROVIDER',
+            booking: (await Booking.findById(bookingId).select('customId'))?.customId,
+            amount: reclaimAmount,
+            taken,
+            due,
+            reason: `Dispute Partial Refund: Reclaim for already settled booking (ID: ${payment.customId})`,
+            status: due > 0 ? 'PENDING' : 'COMPLETED',
+          }], { session });
+
+          await TransactionService.recordTransaction({
+            type: 'PENALTY',
+            user: providerData._id,
+            booking: bookingId,
+            amount: reclaimAmount,
+            status: 'COMPLETED',
+          });
+
+          await NotificationService.insertNotification({
+            for: providerData._id,
+            message: `A partial refund of $${reclaimAmount.toFixed(2)} was reclaimed from your wallet following a dispute resolution. ($${taken.toFixed(2)} was deducted, with $${due.toFixed(2)} remaining as outstanding).`,
+          });
+        }
       }
 
       const booking = await Booking.findById(bookingId);
-      if(booking && booking.transactionId){
-           await refundPaystackTransaction(booking.transactionId, refundAmount);
+      if (booking && booking.transactionId) {
+        await refundPaystackTransaction(booking.transactionId, refundAmount);
       }
 
       if (!payment.isSettled) {
           const providerShare = payment.servicePrice - refundAmount;
           if (providerShare > 0) {
-              const providerInfo = await User.findById(payment.provider).lean().session(session);
-              const isSubscribed = providerInfo?.providerDetails?.subscription?.isSubscribed && 
-                   (providerInfo.providerDetails.subscription.expiryDate ? new Date(providerInfo.providerDetails.subscription.expiryDate) > new Date() : false);
-              const providerPayRatio = isSubscribed ? 0.85 : 0.82;
-              
-              const platformFee = Number((providerShare * (1 - providerPayRatio)).toFixed(2));
-              
-              const providerPayout = Number((providerShare * providerPayRatio).toFixed(2));
-              const creditAmount = await settlePendingPenaltyDues((payment.provider as MongooseTypes.ObjectId).toString(), providerPayout);
-              await User.findByIdAndUpdate(payment.provider, {
-                $inc: { 'providerDetails.wallet': creditAmount, 'providerDetails.metrics.totalReceivedJobs': 1 },
-              }, { session });
+            const providerInfo = await User.findById(payment.provider).lean().session(session);
+            const isSubscribed = providerInfo?.providerDetails?.subscription?.isSubscribed &&
+              (providerInfo.providerDetails.subscription.expiryDate ? new Date(providerInfo.providerDetails.subscription.expiryDate) > new Date() : false);
+            const providerPayRatio = isSubscribed ? 0.85 : 0.82;
 
-              await TransactionService.recordTransaction({
-                type: 'EARNINGS',
-                user: (payment.provider as MongooseTypes.ObjectId),
-                booking: bookingId,
-                amount: providerPayout,
-                status: 'COMPLETED',
-              });
+            if (payment.vat > 0) {
+              payment.vat = Number((providerShare * 0.15).toFixed(2));
+            }
 
-              // Update platform fee in the payment record
-              payment.platformFee = platformFee;
-              // Mark as settled since payout happened
-              payment.isSettled = true;
-          }
+            const platformFee = Number((providerShare * (1 - providerPayRatio)).toFixed(2));
+
+            const providerPayout = Number((providerShare * providerPayRatio).toFixed(2));
+          const creditAmount = await settlePendingPenaltyDues((payment.provider as MongooseTypes.ObjectId).toString(), providerPayout);
+          await User.findByIdAndUpdate(payment.provider, {
+            $inc: { 'providerDetails.wallet': creditAmount, 'providerDetails.metrics.totalReceivedJobs': 1 },
+          }, { session });
+
+          await TransactionService.recordTransaction({
+            type: 'EARNINGS',
+            user: (payment.provider as MongooseTypes.ObjectId),
+            booking: bookingId,
+            amount: providerPayout,
+            status: 'COMPLETED',
+          });
+
+          // Update platform fee and provider share in the payment record
+          payment.platformFee = platformFee;
+          payment.providerPay = providerPayout;
+          // Mark as settled since payout happened
+          payment.isSettled = true;
+        }
       }
 
       payment.paymentStatus = PAYMENT_STATUS.PARTIAL_REFUNDED;

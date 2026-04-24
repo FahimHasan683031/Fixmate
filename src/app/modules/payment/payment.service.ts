@@ -57,10 +57,10 @@ const handlePaymentSuccessLogic = async (
     if (providerData.providerDetails?.isVatRegistered) {
       vat = Number((servicePrice * 0.15).toFixed(2));
     }
-    const isSubscribed = 
-      providerData.providerDetails?.subscription?.isSubscribed && 
+    const isSubscribed =
+      providerData.providerDetails?.subscription?.isSubscribed &&
       (providerData.providerDetails?.subscription?.expiryDate ? new Date(providerData.providerDetails.subscription.expiryDate) > new Date() : false);
-    
+
     const platformFeeRatio = isSubscribed ? 0.15 : 0.18;
     const providerPayRatio = isSubscribed ? 0.85 : 0.82;
 
@@ -149,6 +149,9 @@ export const createDisputeRefundRecord = async (
     {
       paymentStatus: PAYMENT_STATUS.REFUNDED,
       refundAmount: refundedAmount,
+      platformFee: 0,
+      providerPay: 0,
+      vat: 0,
     },
     { new: true }
   ).then(async (res) => {
@@ -355,10 +358,10 @@ const getPaymentHistory = async (user: JwtPayload, query: any) => {
   const data = result[0]?.data || [];
   const totalPage = Math.ceil(total / limit);
 
-  return { 
-    meta: { total, limit, page, totalPage }, 
-    ...(isProvider && { balance: userData.providerDetails?.wallet || 0 }), 
-    data 
+  return {
+    meta: { total, limit, page, totalPage },
+    ...(isProvider && { balance: userData.providerDetails?.wallet || 0 }),
+    data
   };
 };
 
@@ -411,7 +414,7 @@ const withdraw = async (
 
   const walletBalance = provider.providerDetails?.wallet || 0;
   const maxWithdrawable = walletBalance * 0.9;
-  
+
   if (data.amount <= 0) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'The withdrawal amount must be greater than zero.');
   }
@@ -439,12 +442,12 @@ const withdraw = async (
   const transferRes = await initiateTransfer(netPayout, recipientCode, `Withdrawal for ${provider.name}`);
 
   if (!transferRes || !transferRes.reference) {
-  throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'Transfer failed. Please try again.');
-}
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'Transfer failed. Please try again.');
+  }
 
   // Deduct the requested amount from the wallet using $inc for safety
-  await User.findByIdAndUpdate(provider._id, { 
-    $inc: { 'providerDetails.wallet': -data.amount } 
+  await User.findByIdAndUpdate(provider._id, {
+    $inc: { 'providerDetails.wallet': -data.amount }
   }).lean().exec();
 
   await TransactionService.recordTransaction({

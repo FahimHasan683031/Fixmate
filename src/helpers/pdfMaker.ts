@@ -223,7 +223,16 @@ export class PDFInvoiceMaker {
     this.doc.fontSize(13).font('Helvetica-Bold').fillColor('#0062EB').text('PAYMENT INFORMATION', leftColX, infoStartY);
     this.doc.fontSize(11).font('Helvetica').fillColor('#2c3e50');
     this.doc.text(`Invoice ID: ${data.customId || 'N/A'}`, leftColX, infoStartY + 20);
-    this.doc.text(`Status: ${data.paymentStatus || 'N/A'}`, leftColX, infoStartY + 40);
+
+    // Conditional color for status
+    const status = (data.paymentStatus || 'N/A').toUpperCase();
+    let statusColor = '#2c3e50'; // default dark blue/grey
+    if (status === 'PAID') statusColor = '#27ae60'; // Green
+    else if (status.includes('REFUNDED') || status.includes('CANCEL')) statusColor = '#e74c3c'; // Red
+    else if (status.includes('PENDING')) statusColor = '#f39c12'; // Orange
+
+    this.doc.fillColor('#2c3e50').text('Status: ', leftColX, infoStartY + 40, { continued: true })
+      .fillColor(statusColor).text(status);
 
     // Right: customer information
     let rightY = infoStartY;
@@ -530,26 +539,26 @@ function mapPaymentToData(data: any, requestingRole: string): PaymentData {
 
     customer: data.customer
       ? {
-          name: data.customer.name || 'N/A',
-          address: data.customer.address || 'N/A',
-          email: data.customer.email || 'N/A',
-        }
+        name: data.customer.name || 'N/A',
+        address: data.customer.address || 'N/A',
+        email: data.customer.email || 'N/A',
+      }
       : undefined,
 
     provider: data.provider
       ? {
-          name: data.provider.name || 'N/A',
-          email: data.provider.email || 'N/A',
-          companyName: data.provider.providerDetails?.companyName || undefined,
-        }
+        name: data.provider.name || 'N/A',
+        email: data.provider.email || 'N/A',
+        companyName: data.provider.providerDetails?.companyName || undefined,
+      }
       : undefined,
 
     service: data.service && typeof data.service === 'object'
       ? {
-          customId: data.service.customId || undefined,
-          name: data.service.name || undefined,
-          subCategory: data.service.subCategory || undefined,
-        }
+        customId: data.service.customId || undefined,
+        name: data.service.name || undefined,
+        subCategory: data.service.subCategory || undefined,
+      }
       : undefined,
 
     // Core price fields — mapped directly from IPayment
@@ -594,15 +603,15 @@ export async function generateInvoiceAPI(req: Request, res: Response) {
     const requestingRole = (req as any).user?.role || USER_ROLE.ADMIN;
 
     // Fetch related penalties from the Penalty collection
-    const penalties = await Penalty.find({ 
-      booking: doc.booking?.customId 
+    const penalties = await Penalty.find({
+      booking: doc.booking?.customId
     }).lean();
 
     const clientPenalty = penalties.find(p => p.type === 'CLIENT')?.amount || 0;
     const providerPenalty = penalties.find(p => p.type === 'PROVIDER')?.amount || 0;
 
     const paymentData = mapPaymentToData(
-      { ...doc.toObject(), clientPenalty, providerPenalty }, 
+      { ...doc.toObject(), clientPenalty, providerPenalty },
       requestingRole
     );
 
