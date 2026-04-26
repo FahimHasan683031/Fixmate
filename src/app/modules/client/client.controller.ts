@@ -71,7 +71,6 @@ const seeBooking = catchAsync(async (req: Request | any, res: Response) => {
 
 const getCategories = CategoryController.getCategories;
 
-const addFavorite = FavoritesController.addFavorite;
 const removeFavorite = FavoritesController.removeFavorite;
 const getFavorites = FavoritesController.getFavorites;
 
@@ -89,7 +88,6 @@ export const ClientControllers = {
   getServices,
   getProviderById,
   getFavorites,
-  addFavorite,
   removeFavorite,
   createBooking,
   updateBooking,

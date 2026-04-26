@@ -181,7 +181,7 @@ const getUsers = async (query: Record<string, unknown>) => {
     }).select('name email contact image role status customId address providerDetails createdAt'),
     query
   )
-    .search(['name', 'email', 'address', 'customId'])
+    .search(['name', 'email', 'contact', 'customId'])
     .filter()
     .sort()
     .paginate()
