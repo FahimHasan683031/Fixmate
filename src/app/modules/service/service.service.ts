@@ -6,13 +6,17 @@ import { Service } from './service.model';
 import { IService } from './service.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
 import unlinkFile from '../../../shared/unlinkFile';
-import { USER_ROLES } from '../../../enum/user';
+import { USER_ROLES, VERIFICATION_STATUS } from '../../../enum/user';
 import { User } from '../user/user.model';
 import { calculateDistance } from '../../../shared/calculateDistance';
 
 // Add a new service offered by a provider
 const addService = async (user: JwtPayload, payload: Partial<IService>) => {
   const userData = await User.findById(user.authId).select('providerDetails.subscription').lean();
+  
+  if(userData?.providerDetails?.verificationStatus !== VERIFICATION_STATUS.APPROVED){
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Your account is not verified, please verify your account to add service.');
+  }
   const isSubscribed = userData?.providerDetails?.subscription?.isSubscribed && 
     (userData.providerDetails.subscription.expiryDate ? new Date(userData.providerDetails.subscription.expiryDate) > new Date() : false);
 

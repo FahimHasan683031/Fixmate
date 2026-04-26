@@ -1,0 +1,8 @@
+{Sun Apr 26 2026 12:05:42} [FIXMATE 🐞] error: ::ffff:10.10.7.94 - PATCH /api/v1/notification/markAllAsRead 404 - 2.470 ms
+{Sun Apr 26 2026 12:25:57} [FIXMATE 🐞] error: ::ffff:10.10.7.34 - POST /api/v1/auth/login 400 - 13.878 ms
+{Sun Apr 26 2026 12:26:00} [FIXMATE 🐞] error: ::ffff:10.10.7.34 - POST /api/v1/auth/login 400 - 3.170 ms
+{Sun Apr 26 2026 12:53:56} [FIXMATE 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/user/profile 500 - 10.981 ms
+{Sun Apr 26 2026 12:53:57} [FIXMATE 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/user/profile 500 - 1.479 ms
+{Sun Apr 26 2026 12:54:01} [FIXMATE 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/user/profile 500 - 3.583 ms
+{Sun Apr 26 2026 12:54:02} [FIXMATE 🐞] error: ::ffff:10.10.7.94 - GET /api/v1/user/profile 500 - 3.062 ms
+{Sun Apr 26 2026 12:54:02} [FIXMATE 🐞] error: ::ffff:10.10.7.94 - POST /api/v1/auth/login 400 - 4.868 ms

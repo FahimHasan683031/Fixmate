@@ -4,6 +4,8 @@ import { Secret } from 'jsonwebtoken';
 import config from '../../config';
 import { jwtHelper } from '../../helpers/jwtHelper';
 import ApiError from '../../errors/ApiError';
+import { User } from '../modules/user/user.model';
+import { USER_STATUS } from '../../enum/user';
 
 const auth =
   (...roles: string[]) =>
@@ -66,6 +68,22 @@ export const tempAuth =
           console.log({ verifyUser });
 
           req.user = verifyUser;
+
+          const isExistUser = await User.findOne({email: verifyUser.email})
+
+          if (!isExistUser) {
+            throw new ApiError(
+              StatusCodes.FORBIDDEN,
+              "You don't have permission to access this API",
+            );
+          }
+
+          if(isExistUser.status !== USER_STATUS.ACTIVE){
+            throw new ApiError(
+              StatusCodes.FORBIDDEN,
+              "Your account is not active. Please contact the administrator.",
+            );
+          }
 
           if (roles.length && !roles.includes(verifyUser.role)) {
             throw new ApiError(

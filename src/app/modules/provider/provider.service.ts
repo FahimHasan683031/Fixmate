@@ -24,8 +24,7 @@ export const providerHome = async (payload: JwtPayload) => {
         provider: id,
         bookingStatus: {
           $in: [
-            BOOKING_STATUS.COMPLETED_BY_PROVIDER,
-            BOOKING_STATUS.CONFIRMED_BY_CLIENT,
+            BOOKING_STATUS.AUTO_SETTLED,
             BOOKING_STATUS.SETTLED,
           ],
         },

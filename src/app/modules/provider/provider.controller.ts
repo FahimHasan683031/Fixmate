@@ -29,7 +29,6 @@ const providerHome = catchAsync(async (req: Request, res: Response) => {
 const providerVerification = VerificationController.getStatus;
 const sendVerification = VerificationController.sendRequest;
 
-const providerServices = ServiceController.getProviderServices;
 const addService = ServiceController.addService;
 const updateService = ServiceController.updateService;
 const deleteService = ServiceController.deleteService;
@@ -85,7 +84,6 @@ export const ProviderControllers = {
   providerProfileDelete,
   providerVerification,
   sendVerification,
-  providerServices,
   addService,
   deleteService,
   updateService,
