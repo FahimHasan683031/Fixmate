@@ -199,17 +199,20 @@ const getUser = async (id: string) => {
 
   if (result.role === USER_ROLES.CLIENT) {
     return {
+      id: result._id,
+      customId: result.customId,
       role: result.role,
+      status: result.status,
       name: result.name,
       image: result.image,
-      category: result.category,
       gender: result.gender,
       dateOfBirth: result.dateOfBirth,
-      nationality: result.nationality,
       email: result.email,
       whatsapp: result.whatsApp,
       contact: result.contact,
       address: result.address,
+      location: result.location,
+      createdAt: result.createdAt,
     };
   }
 
@@ -235,17 +238,21 @@ const getUser = async (id: string) => {
     const verificationFile: any = await Verification.findOne({ user: result._id }).lean().exec();
 
     return {
+      id: result._id,
+      customId: result.customId,
+      status: result.status,
+      createdAt: result.createdAt,
       name: result.name,
       role: result.role,
       image: result.image,
-      category: result.category,
       gender: result.gender,
       dateOfBirth: result.dateOfBirth,
-      nationality: result.nationality,
+      nationality: result.providerDetails?.nationality,
       email: result.email,
       whatsapp: result.whatsApp,
       contact: result.contact,
       address: result.address,
+      location: result.location,
 
       completedWork,
       upCommingWork,
@@ -287,15 +294,25 @@ const getUser = async (id: string) => {
         })(),
       },
       expertise: result.providerDetails?.category,
-      country: result.nationality,
+      category: result.providerDetails?.category,
+      country: result.providerDetails?.nationality,
       serviceArea: result.address,
-      serviceDistance: result.providerDetails?.distance,
+      serviceDistance: result.providerDetails?.serviceDistance,
       availableTime: {
         startTime: result.providerDetails?.startTime ?? '',
         endTime: result.providerDetails?.endTime ?? '',
       },
       availableDay: result.providerDetails?.availableDay,
       overview: result.providerDetails?.overView,
+
+      language: result.providerDetails?.language,
+      isVatRegistered: result.providerDetails?.isVatRegistered,
+      vatNumber: result.providerDetails?.vatNumber,
+      companyName: result.providerDetails?.companyName,
+      companyRegistrationNumber: result.providerDetails?.companyRegistrationNumber,
+      verificationStatus: result.providerDetails?.verificationStatus,
+      subscription: result.providerDetails?.subscription,
+      nationalId: result.providerDetails?.nationalId,
 
       licenses: verificationFile ? [verificationFile.license, verificationFile.nid] : [],
     };

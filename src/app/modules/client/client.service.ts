@@ -13,9 +13,7 @@ import { Verification } from '../verification/verification.model';
 // Get a detailed view of a provider including their favorite status for the client
 export const getProviderById = async (user: JwtPayload, id: string, query: any) => {
   const provider: any = await User.findById(id)
-    .select(
-      'name image providerDetails.overView address providerDetails.distance gender providerDetails.language providerDetails.experience nationality providerDetails.category providerDetails.metrics providerDetails.availableDay providerDetails.startTime providerDetails.endTime',
-    )
+    .select('-password -authentication -isDeleted')
     .lean()
     .exec();
   if (!provider) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the service provider you\'re looking for.');
@@ -81,16 +79,21 @@ export const getProviderById = async (user: JwtPayload, id: string, query: any) 
       rating: averageRating,
       isFavorite: !!isFavorite,
       metrics: provider.providerDetails?.metrics,
+      isVatRegistered: provider.providerDetails?.isVatRegistered,
+      vatNumber: provider.providerDetails?.vatNumber,
+      companyName: provider.providerDetails?.companyName,
+      companyRegistrationNumber: provider.providerDetails?.companyRegistrationNumber,
     },
     overView: {
       overView: provider.providerDetails?.overView,
       language: provider.providerDetails?.language,
       address: provider.address,
-      serviceDestance: provider.providerDetails?.distance,
+      serviceDistance: provider.providerDetails?.serviceDistance,
       availableDay: provider.providerDetails?.availableDay,
       startTime: provider.providerDetails?.startTime,
       endTime: provider.providerDetails?.endTime,
       license: validationRequest?.license ?? '',
+      nationalId: provider.providerDetails?.nationalId,
     },
   };
 };
@@ -105,7 +108,7 @@ export const seeBooking = async (_user: JwtPayload, id: string) => {
       {
         path: 'provider',
         select:
-          'name image address providerDetails.distance gender providerDetails.language providerDetails.experience nationality providerDetails.category whatsApp contact',
+          'name image address providerDetails.serviceDistance gender providerDetails.language providerDetails.experience nationality providerDetails.category whatsApp contact',
       },
     ])
     .lean()

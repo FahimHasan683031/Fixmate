@@ -277,7 +277,7 @@ const getWallet = async (user: JwtPayload, query: any) => {
 
 // Retrieve filtered payment history for a user
 const getPaymentHistory = async (user: JwtPayload, query: any) => {
-  const { startTime, endTime, paymentType, searchTerm, ...rest } = query;
+  const { startTime, endTime, paymentStatus, searchTerm, ...rest } = query;
   const userId = user.authId;
   const userData = (await User.findById(userId).lean().exec()) as IUser;
   if (!userData) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find your account details.');
@@ -295,8 +295,9 @@ const getPaymentHistory = async (user: JwtPayload, query: any) => {
     matchStage.createdAt = { $gte: new Date(startTime), $lte: new Date(endTime) };
   }
 
-  if (paymentType) {
-    matchStage.paymentStatus = paymentType;
+  if (paymentStatus) {
+    const statusArray = (paymentStatus as string).split(',').map((s) => s.trim());
+    matchStage.paymentStatus = statusArray.length > 1 ? { $in: statusArray } : statusArray[0];
   }
 
   const pipeline: any[] = [{ $match: matchStage }];

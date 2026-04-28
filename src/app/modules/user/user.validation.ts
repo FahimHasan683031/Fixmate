@@ -43,6 +43,8 @@ const updateProviderProfileZodSchema = z.object({
           isVatRegistered: z.boolean().optional(),
           vatNumber: z.string().optional(),
           companyName: z.string().optional(),
+          companyRegistrationNumber: z.string().optional(),
+          serviceDistance: z.number().optional(),
         }).optional(),
     }).strict(),
 });

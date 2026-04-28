@@ -12,7 +12,7 @@ import { calculateDistance } from '../../../shared/calculateDistance';
 
 // Add a new service offered by a provider
 const addService = async (user: JwtPayload, payload: Partial<IService>) => {
-  const userData = await User.findById(user.authId).select('providerDetails.subscription').lean();
+  const userData = await User.findById(user.authId);
   
   if(userData?.providerDetails?.verificationStatus !== VERIFICATION_STATUS.APPROVED){
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Your account is not verified, please verify your account to add service.');

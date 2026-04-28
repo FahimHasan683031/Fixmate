@@ -51,6 +51,7 @@ export type IUser = {
     isVatRegistered?: boolean;
     vatNumber?: string;
     companyName?: string;
+    companyRegistrationNumber?: string;
     paystackRecipientCode?: string;
     paystackAccountId?: string;
     bankName?: string;
@@ -59,6 +60,7 @@ export type IUser = {
     totalRating?: number;
     averageRating?: number;
     verificationStatus?: VERIFICATION_STATUS;
+    serviceDistance?: number;
     metrics?: {
       acceptedJobs?: number;
       declinedJobs?: number;

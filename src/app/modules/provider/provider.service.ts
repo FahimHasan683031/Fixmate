@@ -56,7 +56,7 @@ export const providerHome = async (payload: JwtPayload) => {
 // Fetch detailed profile information for a specific customer
 export const getCustomer = async (id: string) => {
   const customer = await User.findById(id)
-    .select('name image address gender dateOfBirth nationality contact whatsApp')
+    .select('-password -authentication -isDeleted')
     .lean()
     .exec();
   if (!customer) throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find the customer\'s profile details.');

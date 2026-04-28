@@ -174,6 +174,13 @@ const UserSchema = new Schema<IUser, UserModel>(
           type: String,
           default: '',
         },
+        serviceDistance: {
+          type: Number,
+          default: 50,
+        },
+        companyRegistrationNumber: {
+          type: String,
+        },
         paystackRecipientCode: {
           type: String,
           default: '',

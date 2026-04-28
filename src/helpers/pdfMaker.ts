@@ -186,7 +186,7 @@ export class PDFInvoiceMaker {
       const logoBuffer = Buffer.from(response.data);
       this.doc.image(logoBuffer, this.margins, headerY - 15, { fit: [200, 80] });
     } catch {
-      this.doc.fontSize(24).font('Helvetica-Bold').fillColor('#0062EB').text('Fixmate', this.margins, headerY);
+      this.doc.fontSize(24).font('Helvetica-Bold').fillColor('#0062EB').text('FIXMATE-SA', this.margins, headerY);
     }
 
     this.doc
@@ -210,7 +210,7 @@ export class PDFInvoiceMaker {
     // Title block
     this.addText('PAYMENT RECEIPT', { fontSize: 20, bold: true, align: 'center', color: '#0062EB' });
     this.addSpacing(1);
-    this.addText('Thank you for choosing Fixmate', { fontSize: 11, align: 'center', color: '#7f8c8d' });
+    this.addText('Thank you for choosing FIXMATE-SA', { fontSize: 11, align: 'center', color: '#7f8c8d' });
     this.addSpacing(8);
     this.addHorizontalLine();
 
@@ -335,7 +335,7 @@ export class PDFInvoiceMaker {
       color: '#7f8c8d',
     });
     this.addSpacing(5);
-    this.addText('Fixmate - Quality Services at Your Fingertips', {
+    this.addText('FIXMATE-SA - Quality Services at Your Fingertips', {
       fontSize: 10,
       align: 'center',
       color: '#0062EB',

@@ -38,7 +38,9 @@ const getNotificationFromDB = async (
   user: JwtPayload,
   query: FilterQuery<any>,
 ): Promise<Object> => {
-  const result = new QueryBuilder(Notification.find({ for: user.authId }), query).paginate();
+  const result = new QueryBuilder(Notification.find({ for: user.authId }), query)
+  .sort()
+  .paginate();
   const notifications = await result.modelQuery;
   const pagination = await result.getPaginationInfo();
 

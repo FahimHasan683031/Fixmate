@@ -134,6 +134,7 @@ const getAllDisputes = async (query: Record<string, unknown>) => {
         $or: [
           { customId: { $regex: searchTerm, $options: 'i' } },
           { 'user.customId': { $regex: searchTerm, $options: 'i' } },
+          { 'user.name': { $regex: searchTerm, $options: 'i' } },
           { 'bookingId.customId': { $regex: searchTerm, $options: 'i' } },
         ],
       },
@@ -190,6 +191,7 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
   }
 
   const bookingId = dispute.bookingId;
+
   const payment = await Payment.findOne({ booking: bookingId });
   if (!payment) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'We couldn\'t find a payment record associated with this booking.');
@@ -200,6 +202,9 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
     session.startTransaction();
 
     if (payload.type === 'release_payment') {
+      if (dispute.previousBookingStatus === BOOKING_STATUS.SETTLED || dispute.previousBookingStatus === BOOKING_STATUS.AUTO_SETTLED || payment.isSettled) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, 'Payment for this booking has already been released to the provider.');
+      }
       await BookingStateMachine.adminForceState(bookingId, BOOKING_STATUS.SETTLED, payload.note || 'Resolved by admin: release payment', session);
     } else if (payload.type === 'refund') {
       // full refund to client
@@ -395,6 +400,33 @@ const resolveDispute = async (id: string, payload: { type: string; amount?: numb
       note: payload.note,
     };
     await dispute.save({ session });
+
+    // Dedicated dispute resolution notification for both ends
+    const bookingDetails = await Booking.findById(bookingId).select('customId').lean();
+    
+    let resolutionTypeMsg = '';
+    if (payload.type === 'release_payment') {
+      resolutionTypeMsg = 'Administration has released the full payment to the provider.';
+    } else if (payload.type === 'refund') {
+      resolutionTypeMsg = 'Administration has processed a full refund to the client.';
+    } else if (payload.type === 'partial_refund') {
+      resolutionTypeMsg = `Administration has processed a partial refund of $${payload.amount} to the client.`;
+    } else if (payload.type === 'rejected') {
+      resolutionTypeMsg = 'Administration has reviewed and rejected the dispute request.';
+    }
+
+    const disputeMsg = `The dispute for booking ID: ${bookingDetails?.customId || 'unspecified'} has been resolved. Resolution: ${resolutionTypeMsg}}`;
+
+    await Promise.all([
+      NotificationService.insertNotification({
+        for: payment.customer as any,
+        message: disputeMsg
+      }),
+      NotificationService.insertNotification({
+        for: payment.provider as any,
+        message: disputeMsg
+      })
+    ]).catch(err => console.error("Failed to send dedicated dispute resolution notifications:", err));
 
     await session.commitTransaction();
   } catch (error) {

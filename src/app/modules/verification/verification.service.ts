@@ -15,6 +15,10 @@ const sendRequest = async (user: JwtPayload, payload: Partial<IVerificaiton>) =>
     throw new ApiError(StatusCodes.BAD_REQUEST, 'You already have a verification request in progress. Please wait for our team to review it.');
   }
 
+  if (existingRequest && existingRequest.status === VERIFICATION_STATUS.APPROVED) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'You are already verified.');
+  }
+
   if (existingRequest) {
     return await Verification.findByIdAndUpdate(
       existingRequest._id,

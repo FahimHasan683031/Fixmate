@@ -1,0 +1,53 @@
+{Tue Apr 28 2026 16:00:00} [FIXMATE 🛠️] info: Booking Cleanup Job: Checking for stale 'CREATED' bookings older than 1 hour(s).
+{Tue Apr 28 2026 16:00:00} [FIXMATE 🛠️] info: Deleted 0 unverified accounts.
+{Tue Apr 28 2026 16:01:00} [FIXMATE 🛠️] info: Deleted 0 unverified accounts.
+{Tue Apr 28 2026 16:01:20} [FIXMATE 🛠️] info: [32m🚀 Database connected successfully[39m
+{Tue Apr 28 2026 16:01:20} [FIXMATE 🛠️] info: [33m✅ Admin account already exists![39m
+{Tue Apr 28 2026 16:01:20} [FIXMATE 🛠️] info: Unverified account cleanup job scheduled to run every minute.
+{Tue Apr 28 2026 16:01:20} [FIXMATE 🛠️] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Tue Apr 28 2026 16:01:20} [FIXMATE 🛠️] info: Booking Cleanup Job scheduled to run every hour (Threshold: 1 hour(s)).
+{Tue Apr 28 2026 16:01:20} [FIXMATE 🛠️] info: [32m🍁 Server connected successfully[39m
+{Tue Apr 28 2026 16:01:20} [FIXMATE 🛠️] info: [33m♻️  Application listening on port:5005[39m
+{Tue Apr 28 2026 16:01:21} [FIXMATE 🛠️] info: [34mA user connected[39m
+{Tue Apr 28 2026 16:02:00} [FIXMATE 🛠️] info: Deleted 0 unverified accounts.
+{Tue Apr 28 2026 16:03:00} [FIXMATE 🛠️] info: Deleted 0 unverified accounts.
+{Tue Apr 28 2026 16:04:00} [FIXMATE 🛠️] info: Deleted 0 unverified accounts.
+{Tue Apr 28 2026 16:04:19} [FIXMATE 🛠️] info: [32m🚀 Database connected successfully[39m
+{Tue Apr 28 2026 16:04:19} [FIXMATE 🛠️] info: [33m✅ Admin account already exists![39m
+{Tue Apr 28 2026 16:04:19} [FIXMATE 🛠️] info: Unverified account cleanup job scheduled to run every minute.
+{Tue Apr 28 2026 16:04:19} [FIXMATE 🛠️] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Tue Apr 28 2026 16:04:19} [FIXMATE 🛠️] info: Booking Cleanup Job scheduled to run every hour (Threshold: 1 hour(s)).
+{Tue Apr 28 2026 16:04:19} [FIXMATE 🛠️] info: [32m🍁 Server connected successfully[39m
+{Tue Apr 28 2026 16:04:19} [FIXMATE 🛠️] info: [33m♻️  Application listening on port:5005[39m
+{Tue Apr 28 2026 16:04:20} [FIXMATE 🛠️] info: [34mA user connected[39m
+{Tue Apr 28 2026 16:05:00} [FIXMATE 🛠️] info: Deleted 0 unverified accounts.
+{Tue Apr 28 2026 16:05:39} [FIXMATE 🛠️] info: [32m🚀 Database connected successfully[39m
+{Tue Apr 28 2026 16:05:39} [FIXMATE 🛠️] info: [33m✅ Admin account already exists![39m
+{Tue Apr 28 2026 16:05:39} [FIXMATE 🛠️] info: Unverified account cleanup job scheduled to run every minute.
+{Tue Apr 28 2026 16:05:39} [FIXMATE 🛠️] info: Booking Auto-Settle job scheduled to run every hour (Threshold: 48 hours).
+{Tue Apr 28 2026 16:05:39} [FIXMATE 🛠️] info: Booking Cleanup Job scheduled to run every hour (Threshold: 1 hour(s)).
+{Tue Apr 28 2026 16:05:39} [FIXMATE 🛠️] info: [32m🍁 Server connected successfully[39m
+{Tue Apr 28 2026 16:05:39} [FIXMATE 🛠️] info: [33m♻️  Application listening on port:5005[39m
+{Tue Apr 28 2026 16:05:39} [FIXMATE 🛠️] info: [34mA user connected[39m
+{Tue Apr 28 2026 16:06:00} [FIXMATE 🛠️] info: Deleted 0 unverified accounts.
+{Tue Apr 28 2026 16:06:51} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?limit=20 200 - 66.521 ms
+{Tue Apr 28 2026 16:06:51} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?limit=20 200 - 36.292 ms
+{Tue Apr 28 2026 16:06:53} [FIXMATE 🛠️] info: [31mA user disconnect[39m
+{Tue Apr 28 2026 16:06:58} [FIXMATE 🛠️] info: [34mA user connected[39m
+{Tue Apr 28 2026 16:06:58} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/user/profile 200 - 13.639 ms
+{Tue Apr 28 2026 16:06:58} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/user/profile 200 - 4.500 ms
+{Tue Apr 28 2026 16:07:00} [FIXMATE 🛠️] info: Deleted 0 unverified accounts.
+{Tue Apr 28 2026 16:07:00} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/bookings?status=REQUESTED 200 - 14.142 ms
+{Tue Apr 28 2026 16:07:00} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/provider/home 200 - 30.434 ms
+{Tue Apr 28 2026 16:07:01} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?type=PROVIDER&limit=20 200 - 9.219 ms
+{Tue Apr 28 2026 16:07:02} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/user/profile 200 - 3.963 ms
+{Tue Apr 28 2026 16:07:03} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/user/profile 200 - 2.329 ms
+{Tue Apr 28 2026 16:07:06} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?type=CLIENT&limit=20 200 - 6.629 ms
+{Tue Apr 28 2026 16:07:07} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/user/profile 200 - 3.851 ms
+{Tue Apr 28 2026 16:07:07} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/categories 200 - 14.334 ms
+{Tue Apr 28 2026 16:08:00} [FIXMATE 🛠️] info: Deleted 0 unverified accounts.
+{Tue Apr 28 2026 16:08:01} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?type=PROVIDER&limit=20 200 - 5.851 ms
+{Tue Apr 28 2026 16:08:03} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?type=CLIENT&limit=20 200 - 6.348 ms
+{Tue Apr 28 2026 16:08:04} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/penalty?type=PROVIDER&limit=20 200 - 4.021 ms
+{Tue Apr 28 2026 16:08:14} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/categories 200 - 3.428 ms
+{Tue Apr 28 2026 16:08:14} [FIXMATE 🛠️] info: ::ffff:10.10.7.94 - GET /api/v1/user/profile 200 - 2.351 ms

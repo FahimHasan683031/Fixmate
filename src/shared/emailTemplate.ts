@@ -5,7 +5,7 @@ const createAccount = (values: ICreateAccount) => {
   console.log(values, 'values');
   const data = {
     to: values.email,
-    subject: `Verify your Fixmate account, ${values.name}`,
+    subject: `Verify your FIXMATE-SA account, ${values.name}`,
     html: `
 <body style="margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0"
@@ -26,7 +26,7 @@ const createAccount = (values: ICreateAccount) => {
         </h1>
 
         <p style="color:#003060; font-size:16px; line-height:1.6; margin-bottom:25px; text-align:center;">
-          Hey <strong>${values.name}</strong>, welcome to <strong>Fixmate</strong>! 🎉<br>
+          Hey <strong>${values.name}</strong>, welcome to <strong>FIXMATE-SA</strong>! 🎉<br>
           Please verify your email to activate your account.
         </p>
 
@@ -57,7 +57,7 @@ const createAccount = (values: ICreateAccount) => {
              style="background-color:#0062EB; color:#ffffff; padding:14px 32px; font-size:16px; 
                     font-weight:600; border-radius:10px; text-decoration:none; display:inline-block; 
                     box-shadow:0 4px 12px rgba(0,98,235,0.3); transition:all 0.3s;">
-            Open Fixmate 🚀
+            Open FIXMATE-SA 🚀
           </a>
         </div>
       </td>
@@ -67,10 +67,10 @@ const createAccount = (values: ICreateAccount) => {
     <tr>
       <td align="center" style="background:linear-gradient(135deg,#F5FAFF,#E6F0FF); padding:25px 20px; border-top:1px solid #0062EB33;">
         <p style="margin:0; color:#003060; font-size:13px;">
-          © ${new Date().getFullYear()} <strong>Fixmate</strong>. All rights reserved.
+          © ${new Date().getFullYear()} <strong>FIXMATE-SA</strong>. All rights reserved.
         </p>
         <p style="margin:6px 0 0; color:#003060; font-size:13px;">
-          Powered by <strong style="color:#0062EB;">Fixmate API</strong> ✨
+          Powered by <strong style="color:#0062EB;">FIXMATE-SA API</strong> ✨
         </p>
       </td>
     </tr>
@@ -86,7 +86,7 @@ const resetPassword = (values: IResetPassword) => {
   console.log(values, 'values');
   const data = {
     to: values.email,
-    subject: `Reset your Fixmate password, ${values.name}`,
+    subject: `Reset your FIXMATE-SA password, ${values.name}`,
     html: `
 <body style="margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0"
@@ -108,7 +108,7 @@ const resetPassword = (values: IResetPassword) => {
 
         <p style="color:#003060; font-size:16px; line-height:1.6; margin-bottom:25px; text-align:center;">
           Hi <strong>${values.name}</strong>, 👋<br>
-          We received a request to reset your password for your <strong>Fixmate</strong> account.
+          We received a request to reset your password for your <strong>FIXMATE-SA</strong> account.
           <br>Enter the code below to complete the process:
         </p>
 
@@ -129,7 +129,7 @@ const resetPassword = (values: IResetPassword) => {
         <div style="margin-top:35px; background-color:#fff8e1; border-left:6px solid #ffd54f;
                     border-radius:8px; padding:15px 18px;">
           <p style="margin:0; color:#4a4a4a; font-size:14px;">
-            ⚠️ <strong>Security Tip:</strong> Never share your reset code with anyone. Fixmate will never ask for it.
+            ⚠️ <strong>Security Tip:</strong> Never share your reset code with anyone. FIXMATE-SA will never ask for it.
           </p>
         </div>
 
@@ -149,10 +149,10 @@ const resetPassword = (values: IResetPassword) => {
     <tr>
       <td align="center" style="background:linear-gradient(135deg,#F5FAFF,#E6F0FF); padding:25px 20px; border-top:1px solid #0062EB33;">
         <p style="margin:0; color:#003060; font-size:13px;">
-          © ${new Date().getFullYear()} <strong>Fixmate</strong>. All rights reserved.
+          © ${new Date().getFullYear()} <strong>FIXMATE-SA</strong>. All rights reserved.
         </p>
         <p style="margin:6px 0 0; color:#003060; font-size:13px;">
-          Powered by <strong style="color:#0062EB;">Fixmate API</strong> ✨
+          Powered by <strong style="color:#0062EB;">FIXMATE-SA API</strong> ✨
         </p>
       </td>
     </tr>
@@ -199,8 +199,8 @@ const resendOtp = (values: {
         <p style="color:#003060; font-size:16px; line-height:1.6; margin-bottom:25px; text-align:center;">
           Hi <strong>${values.name}</strong>, 👋<br>
           ${isReset
-        ? 'You requested a new verification code to reset your Fixmate password.'
-        : 'Here is your new verification code to complete your Fixmate account setup.'
+        ? 'You requested a new verification code to reset your FIXMATE-SA password.'
+        : 'Here is your new verification code to complete your FIXMATE-SA account setup.'
       }<br>
           Use the code below to continue:
         </p>
@@ -225,7 +225,7 @@ const resendOtp = (values: {
                     border-left:6px solid #ffd54f;
                     border-radius:8px; padding:15px 18px;">
           <p style="margin:0; color:#4a4a4a; font-size:14px;">
-            🔒 <strong>Security Tip:</strong> Never share your OTP with anyone. Fixmate
+            🔒 <strong>Security Tip:</strong> Never share your OTP with anyone. FIXMATE-SA
  will never request it.
           </p>
         </div>
@@ -247,10 +247,10 @@ const resendOtp = (values: {
     <tr>
       <td align="center" style="background-color:#F5FAFF; padding:25px 20px; border-top:1px solid #0062EB33;">
         <p style="margin:0; color:#003060; font-size:13px;">
-          © ${new Date().getFullYear()} <strong>Fixmate</strong>. All rights reserved.
+          © ${new Date().getFullYear()} <strong>FIXMATE-SA</strong>. All rights reserved.
         </p>
         <p style="margin:6px 0 0; color:#003060; font-size:13px;">
-          Powered by <strong style="color:#0062EB;">Fixmate API</strong> 🚀
+          Powered by <strong style="color:#0062EB;">FIXMATE-SA API</strong> 🚀
         </p>
       </td>
     </tr>
@@ -270,7 +270,7 @@ const adminContactNotificationEmail = (payload: {
 }) => {
   return {
     to: config.super_admin.email as string,
-    subject: '📩 New Contact Form Submission – Fixmate',
+    subject: '📩 New Contact Form Submission – FIXMATE-SA',
     html: `
 <body style="margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0"
@@ -292,7 +292,7 @@ const adminContactNotificationEmail = (payload: {
         </h1>
 
         <p style="color:#003060; font-size:16px; text-align:center; margin-bottom:30px;">
-          A new contact message has been submitted on <strong>Fixmate</strong>.
+          A new contact message has been submitted on <strong>FIXMATE-SA</strong>.
         </p>
 
         <!-- Contact Details -->
@@ -338,10 +338,10 @@ const adminContactNotificationEmail = (payload: {
       <td align="center" 
           style="background:linear-gradient(135deg,#F5FAFF,#E6F0FF); padding:25px 20px; border-top:1px solid #0062EB33;">
         <p style="margin:0; color:#003060; font-size:13px;">
-          © ${new Date().getFullYear()} <strong>Fixmate</strong>. All rights reserved.
+          © ${new Date().getFullYear()} <strong>FIXMATE-SA</strong>. All rights reserved.
         </p>
         <p style="margin:6px 0 0; color:#003060; font-size:13px;">
-          Powered by <strong style="color:#0062EB;">Fixmate API</strong> 
+          Powered by <strong style="color:#0062EB;">FIXMATE-SA API</strong> 
         </p>
       </td>
     </tr>
@@ -359,7 +359,7 @@ const userContactConfirmationEmail = (payload: {
 }) => {
   return {
     to: payload.email,
-    subject: '💬 Thank You for Contacting Fixmate',
+    subject: '💬 Thank You for Contacting FIXMATE-SA',
     html: `
 <body style="margin:0; padding:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0"
@@ -394,7 +394,7 @@ const userContactConfirmationEmail = (payload: {
         </div>
 
         <p style="color:#003060; font-size:15px; line-height:1.6; text-align:center;">
-          Thanks for reaching out to <strong>Fixmate</strong>.<br>
+          Thanks for reaching out to <strong>FIXMATE-SA</strong>.<br>
           We truly appreciate your message 💙
         </p>
 
@@ -404,7 +404,7 @@ const userContactConfirmationEmail = (payload: {
              style="background-color:#0062EB; color:#ffffff; padding:14px 32px; font-size:16px; 
                     font-weight:600; border-radius:10px; text-decoration:none; display:inline-block; 
                     box-shadow:0 4px 12px rgba(0,98,235,0.3); transition:all 0.3s;">
-            Open Fixmate 
+            Open FIXMATE-SA 
           </a>
         </div>
       </td>
@@ -415,10 +415,10 @@ const userContactConfirmationEmail = (payload: {
       <td align="center" 
           style="background:linear-gradient(135deg,#F5FAFF,#E6F0FF); padding:25px 20px; border-top:1px solid #0062EB33;">
         <p style="margin:0; color:#003060; font-size:13px;">
-          © ${new Date().getFullYear()} <strong>Fixmate</strong>. All rights reserved.
+          © ${new Date().getFullYear()} <strong>FIXMATE-SA</strong>. All rights reserved.
         </p>
         <p style="margin:6px 0 0; color:#003060; font-size:13px;">
-          Powered by <strong style="color:#0062EB;">Fixmate API</strong> ✨
+          Powered by <strong style="color:#0062EB;">FIXMATE-SA API</strong> ✨
         </p>
       </td>
     </tr>
@@ -445,7 +445,7 @@ const sendPaymentConfirmationEmail = (data: any) => {
 
   return {
     to: data.address_to.email,
-    subject: `✅ Payment Completed – Fixmate Order`,
+    subject: `✅ Payment Completed – FIXMATE-SA Order`,
     html: `
 <body style="margin:0; padding:0; font-family:'Inter','Segoe UI',sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:40px auto; background:#ffffff; border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
@@ -499,7 +499,7 @@ const sendPaymentConfirmationEmail = (data: any) => {
     <!-- Footer -->
     <tr>
       <td align="center" style="background:#f5f5f5; padding:15px; font-size:12px; color:#777;">
-        © ${new Date().getFullYear()} — Fixmate Services. Built with 💙 for your comfort
+        © ${new Date().getFullYear()} — FIXMATE-SA Services. Built with 💙 for your comfort
       </td>
     </tr>
 
@@ -613,7 +613,7 @@ const sendAdminPaymentNotificationEmail = (data: any) => {
     <tr>
       <td align="center" style="background:#f9f9f9; padding:22px; border-top:1px solid #0062EB22;">
         <p style="margin:0; color:#00000099; font-size:12px;">
-          © ${new Date().getFullYear()} — Fixmate Services
+          © ${new Date().getFullYear()} — FIXMATE-SA Services
         </p>
         <p style="margin:5px 0 0; color:#00000099; font-size:12px;">
           Built with 💙 for your comfort
@@ -690,7 +690,7 @@ const businessUserShipmentInfoEmail = (data: any) => {
     <!-- Footer -->
     <tr>
       <td align="center" style="background:#f0f0f0;padding:12px;font-size:12px;color:#555;">
-        © ${new Date().getFullYear()} Fixmate • Business Services
+        © ${new Date().getFullYear()} FIXMATE-SA • Business Services
       </td>
     </tr>
   </table>
@@ -714,7 +714,7 @@ const businessUserRegistrationInviteEmail = (data: any) => {
 
   return {
     to: data.address_from.email,
-    subject: `📦 Action Required – Create Your Fixmate Account`,
+    subject: `📦 Action Required – Create Your FIXMATE-SA Account`,
     html: `
 <body style="margin:0;padding:0;font-family:Inter,Segoe UI,sans-serif;background:#f7f9fc;">
   <table width="100%" cellpadding="0" cellspacing="0"
@@ -759,7 +759,7 @@ const businessUserRegistrationInviteEmail = (data: any) => {
           <a href="${config.frontend_url}/register"
              style="background:#0062EB;color:#fff;padding:12px 28px;border-radius:8px;
              text-decoration:none;font-size:14px;display:inline-block;">
-            Create Your Fixmate Account
+            Create Your FIXMATE-SA Account
           </a>
         </div>
 
@@ -772,7 +772,7 @@ const businessUserRegistrationInviteEmail = (data: any) => {
     <!-- Footer -->
     <tr>
       <td align="center" style="background:#f0f0f0;padding:12px;font-size:12px;color:#555;">
-        © ${new Date().getFullYear()} Fixmate • Business Services
+        © ${new Date().getFullYear()} FIXMATE-SA • Business Services
       </td>
     </tr>
 
@@ -900,7 +900,7 @@ const guestLostItemNotificationEmail = (data: any) => {
     <!-- Footer -->
     <tr>
       <td align="center" style="background:#f0f0f0;padding:12px;font-size:12px;color:#555;">
-        © ${new Date().getFullYear()} Fixmate • Lost & Found Services
+        © ${new Date().getFullYear()} FIXMATE-SA • Lost & Found Services
       </td>
     </tr>
 
@@ -982,7 +982,7 @@ const businessShippingDetailsUpdateEmail = (data: any) => {
     <!-- Footer -->
     <tr>
       <td align="center" style="background:#f0f0f0;padding:12px;font-size:12px;color:#555;">
-        © ${new Date().getFullYear()} Fixmate • Business Portal
+        © ${new Date().getFullYear()} FIXMATE-SA • Business Portal
       </td>
     </tr>
 
@@ -1047,7 +1047,7 @@ const customerShippingDetailsUpdateEmail = (data: any) => {
     <!-- Footer -->
     <tr>
       <td align="center" style="background:#f0f0f0;padding:12px;font-size:12px;color:#555;">
-        © ${new Date().getFullYear()} Fixmate • Customer Services
+        © ${new Date().getFullYear()} FIXMATE-SA • Customer Services
       </td>
     </tr>
 
@@ -1060,7 +1060,7 @@ const customerShippingDetailsUpdateEmail = (data: any) => {
 const subscriptionActivatedEmail = (data: any) => {
   return {
     to: data.user.email,
-    subject: `✅ Subscription Activated – Welcome to Fixmate`,
+    subject: `✅ Subscription Activated – Welcome to FIXMATE-SA`,
     html: `
 <body style="margin:0;padding:0;font-family:Inter,Segoe UI,sans-serif;background:#f7f9fc;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;margin:30px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.06);">
@@ -1091,7 +1091,7 @@ const subscriptionActivatedEmail = (data: any) => {
 const supportResolved = (values: { name: string; email: string }) => {
   return {
     to: values.email,
-    subject: '✅ Support Ticket Resolved - Fixmate',
+    subject: '✅ Support Ticket Resolved - FIXMATE-SA',
     html: `
 <body style="margin:0;padding:0;font-family:Inter,Segoe UI,sans-serif;background:#f7f9fc;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;margin:30px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.06);">
@@ -1115,13 +1115,13 @@ const supportResolved = (values: { name: string; email: string }) => {
           </p>
         </div>
         <p style="font-size:15px;color:#003060;line-height:1.6;margin-bottom:10px;">
-          Thank you for choosing <strong>Fixmate</strong>! 💙
+          Thank you for choosing <strong>FIXMATE-SA</strong>! 💙
         </p>
       </td>
     </tr>
     <tr>
       <td align="center" style="background:#F9FBFF;padding:20px;font-size:12px;color:#666;border-top:1px solid #0062EB11;">
-        © ${new Date().getFullYear()} Fixmate • Happy to help you anytime.
+        © ${new Date().getFullYear()} FIXMATE-SA • Happy to help you anytime.
       </td>
     </tr>
   </table>
