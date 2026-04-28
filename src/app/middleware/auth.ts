@@ -25,6 +25,22 @@ const auth =
 
           req.user = verifyUser;
 
+           const isExistUser = await User.findOne({_id: verifyUser.authId})
+
+          if (!isExistUser) {
+            throw new ApiError(
+              StatusCodes.FORBIDDEN,
+              "You don't have permission to access this API",
+            );
+          }
+
+          if(isExistUser.status !== USER_STATUS.ACTIVE){
+            throw new ApiError(
+              StatusCodes.FORBIDDEN,
+              "Your account is not active. Please contact the administrator.",
+            );
+          }
+
           if (roles.length && !roles.includes(verifyUser.role)) {
             throw new ApiError(
               StatusCodes.FORBIDDEN,

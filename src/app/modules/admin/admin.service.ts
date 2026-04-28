@@ -71,6 +71,7 @@ export const overview = async (yearChart: string) => {
   ]);
 
   const [{ totalProviderPenalty = 0 } = {}] = await Penalty.aggregate([
+    { $match: { type: 'PROVIDER', amount: 30 } },
     { $group: { _id: null, totalProviderPenalty: { $sum: '$taken' } } },
   ]);
 
@@ -93,7 +94,23 @@ export const overview = async (yearChart: string) => {
   ]);
 
   const [{ totalPlatformFee = 0 } = {}] = await Payment.aggregate([
-    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
+    {
+      $lookup: {
+        from: 'bookings',
+        localField: 'booking',
+        foreignField: '_id',
+        as: 'bookingDetails',
+      },
+    },
+    { $unwind: '$bookingDetails' },
+    {
+      $match: {
+        $or: [
+          { 'bookingDetails.bookingStatus': { $in: [BOOKING_STATUS.SETTLED, BOOKING_STATUS.AUTO_SETTLED] } },
+          { paymentStatus: PAYMENT_STATUS.PARTIAL_REFUNDED }
+        ]
+      }
+    },
     { $group: { _id: null, totalPlatformFee: { $sum: '$platformFee' } } },
   ]);
 
@@ -104,8 +121,20 @@ export const overview = async (yearChart: string) => {
 
   const monthlyPlatformFees = await Payment.aggregate([
     {
+      $lookup: {
+        from: 'bookings',
+        localField: 'booking',
+        foreignField: '_id',
+        as: 'bookingDetails',
+      },
+    },
+    { $unwind: '$bookingDetails' },
+    {
       $match: {
-        paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.PARTIAL_REFUNDED] },
+        $or: [
+          { 'bookingDetails.bookingStatus': { $in: [BOOKING_STATUS.SETTLED, BOOKING_STATUS.AUTO_SETTLED] } },
+          { paymentStatus: PAYMENT_STATUS.PARTIAL_REFUNDED }
+        ],
         createdAt: {
           $gte: new Date(`${year}-01-01`),
           $lte: new Date(`${year}-12-31`),
@@ -132,6 +161,8 @@ export const overview = async (yearChart: string) => {
   const monthlyProviderPenalties = await Penalty.aggregate([
     {
       $match: {
+        type: 'PROVIDER',
+        amount: 30,
         taken: { $gt: 0 },
         createdAt: {
           $gte: new Date(`${year}-01-01`),
@@ -191,7 +222,23 @@ export const find = async (query: any) => {
 // Advanced Endpoint for direct mathematical breakdown mapping platform profit logic
 export const getRevenueTracking = async () => {
   const [{ totalPlatformFee = 0 } = {}] = await Payment.aggregate([
-    { $match: { paymentStatus: { $in: [PAYMENT_STATUS.PAID, PAYMENT_STATUS.PARTIAL_REFUNDED] } } },
+    {
+      $lookup: {
+        from: 'bookings',
+        localField: 'booking',
+        foreignField: '_id',
+        as: 'bookingDetails',
+      },
+    },
+    { $unwind: '$bookingDetails' },
+    {
+      $match: {
+        $or: [
+          { 'bookingDetails.bookingStatus': { $in: [BOOKING_STATUS.SETTLED, BOOKING_STATUS.AUTO_SETTLED] } },
+          { paymentStatus: PAYMENT_STATUS.PARTIAL_REFUNDED }
+        ]
+      }
+    },
     { $group: { _id: null, totalPlatformFee: { $sum: '$platformFee' } } },
   ]);
 
@@ -201,6 +248,7 @@ export const getRevenueTracking = async () => {
   ]);
 
   const [{ totalProviderPenalty = 0 } = {}] = await Penalty.aggregate([
+    { $match: { type: 'PROVIDER', amount: 30 } },
     { $group: { _id: null, totalProviderPenalty: { $sum: '$taken' } } },
   ]);
 

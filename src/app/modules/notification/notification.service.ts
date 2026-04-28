@@ -44,10 +44,6 @@ const getNotificationFromDB = async (
   const notifications = await result.modelQuery;
   const pagination = await result.getPaginationInfo();
 
-  const unreadCount = await Notification.countDocuments({
-    for: user.authId,
-    isRead: false,
-  });
 
   await Notification.updateMany(
     { for: user.authId, isRead: false },
@@ -61,20 +57,25 @@ const getNotificationFromDB = async (
 
   const resultData: Record<string, any> = {
     meta: pagination,
-    data: notifications,
-    unreadCount,
-  };
+    data: notifications
+  }
+
+    const io = global.io;
+  if (io && user.authId) {
+    io.emit(`notification::${user.authId.toString()}`, {message:"refatch notication count"});
+  }
 
   return resultData;
 };
 
 // Get the total count of unread notifications for a user
-const getUnreadCountFromDB = async (user: JwtPayload): Promise<number> => {
+const getUnreadCountFromDB = async (user: JwtPayload) => {
   const count = await Notification.countDocuments({
     for: user.authId,
     isRead: false,
   });
-  return count;
+
+  return {unreadCount: count};
 };
 
 export const NotificationService = {

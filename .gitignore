@@ -5,3 +5,4 @@ uploads
 dist/
 .idea/
 serviceAccountKey.json
+logs/
