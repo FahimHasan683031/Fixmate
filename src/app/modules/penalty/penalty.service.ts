@@ -97,7 +97,12 @@ const getAllPenalties = async (query: Record<string, unknown>) => {
   const matchStage: any = {};
   if (rest.status) {
     const statusArray = (rest.status as string).split(',').map(s => s.trim());
-    matchStage.status = { $in: statusArray };
+    matchStage.status = statusArray.length > 1 ? { $in: statusArray } : statusArray[0];
+  }
+
+  if (rest.type) {
+    const typeArray = (rest.type as string).split(',').map(s => s.trim());
+    matchStage.type = typeArray.length > 1 ? { $in: typeArray } : typeArray[0];
   }
 
   const pipeline: any[] = [{ $match: matchStage }];
